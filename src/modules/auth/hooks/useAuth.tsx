@@ -1,4 +1,3 @@
-// src/modules/auth/hooks/useAuth.ts
 import { createContext, useContext, ReactNode } from "react";
 import { Role } from "../../../constants/roles";
 
@@ -11,7 +10,7 @@ const AuthContext = createContext<AuthContextType>({ role: null });
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const userRole: Role = Role.USER; // Giả sử lấy từ API hoặc localStorage
+  const userRole: Role = Role.USER;
 
   return (
     <AuthContext.Provider value={{ role: userRole }}>
