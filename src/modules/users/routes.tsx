@@ -4,9 +4,9 @@ import { Role } from "../../constants/roles";
 
 
 export const userRoutes: RouteObject[] = [
-  {
-    path: "/users",
-    element: <PrivateRoute allowedRoles={[Role.ADMIN]} />,
-    children: [{ path: "", element: <UserManagement /> }],
-  },
+  // {
+  //   path: "/users",
+  //   element: <PrivateRoute allowedRoles={[Role.ADMIN]} />,
+  //   children: [{ path: "", element: <UserManagement /> }],
+  // },
 ];
