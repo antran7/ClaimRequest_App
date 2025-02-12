@@ -3,13 +3,22 @@ import Navbar from "../components/Navbar";
 import { Button } from "@mui/material";
 import { Card, CardContent, CardHeader, Typography } from "@mui/material";
 import { Add as PlusIcon } from "@mui/icons-material";
+import PersonIcon from "@mui/icons-material/Person";
 
 const ProjectManagement = () => {
   return (
     <div className="grid grid-cols-12 min-h-screen bg-gray-100">
       {/* Sidebar */}
-      <div className="col-span-2 bg-white shadow-lg p-4">
+      <div className="col-span-2 bg-white shadow-lg p-4 flex flex-col h-full">
         <Navbar />
+        <div className="mt-auto p-4 border-t border-gray-300">
+          <Button
+            startIcon={<PersonIcon />}
+            className="w-full text-left text-gray-700 hover:bg-gray-100"
+          >
+            Profile
+          </Button>
+        </div>
       </div>
       
       {/* Main Content */}
@@ -18,7 +27,7 @@ const ProjectManagement = () => {
           <Typography variant="h5" className="font-bold text-gray-800">
             Project Management
           </Typography>
-          <Button variant="contained" color="primary" startIcon={<PlusIcon />}>
+          <Button variant="contained" color="primary" startIcon={<PlusIcon />}> 
             Add Project
           </Button>
         </div>
