@@ -3,6 +3,7 @@ import Error from "../modules/auth/pages/Error";
 import { userRoutes } from "../modules/users/routes";
 import { dashboardRoutes } from "../modules/dashboard/routes";
 import { AuthProvider } from "../modules/auth/hooks/useAuth";
+import Login from "../modules/auth/pages/Login";
 
 const AppRoutes = () => {
   return (
