@@ -5,9 +5,9 @@ import { dashboardRoutes } from "../modules/dashboard/routes";
 import { AuthProvider } from "../modules/auth/hooks/useAuth";
 import Login from "../modules/auth/pages/Login";
 import { requestRoutes } from "../modules/requests/routes";
-import RequestPage from "../request_page/RequestPage";
-import AddRequest from "../request_page/AddRequest";
-import EditRequest from "../request_page/EditRequest";
+import RequestPage from "../modules/requests/pages/RequestPage";
+import AddRequest from "../modules/requests/pages/AddRequest";
+import EditRequest from "../modules/requests/pages/EditRequest";
 
 const AppRoutes = () => {
   return (
