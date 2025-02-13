@@ -1,6 +1,4 @@
 import { RouteObject } from "react-router-dom";
-import { Role } from "../../constants/roles";
-import PrivateRoute from "../../routes/PrivateRoute";
 
 export const dashboardRoutes: RouteObject[] = [
   // {
