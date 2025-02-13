@@ -8,9 +8,16 @@ const AddRequestPage = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const existingRequests = JSON.parse(localStorage.getItem("requests") || "[]");
-    const newRequest = { id: existingRequests.length + 1, name, approved: false };
+
+    const existingRequests = JSON.parse(
+      localStorage.getItem("requests") || "[]"
+    );
+    const newRequest = {
+      id: existingRequests.length + 1,
+      name,
+      status: "DRAFT",
+      submittedDate: new Date().toISOString().split("T")[0],
+    };
     const updatedRequests = [...existingRequests, newRequest];
 
     localStorage.setItem("requests", JSON.stringify(updatedRequests));
@@ -31,15 +38,14 @@ const AddRequestPage = () => {
             required
           />
           <div className="button-group">
-            <button 
-              type="button" 
-              onClick={() => navigate("/requestpage")} 
-              className="cancel-button">
+            <button
+              type="button"
+              onClick={() => navigate("/requestpage")}
+              className="cancel-button"
+            >
               Cancel
             </button>
-            <button 
-              type="submit" 
-              className="submit-button">
+            <button type="submit" className="submit-button">
               Add Request
             </button>
           </div>

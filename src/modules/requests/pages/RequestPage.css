@@ -57,7 +57,8 @@
   background: white;
 }
 
-.request-table th, .request-table td {
+.request-table th,
+.request-table td {
   padding: 10px;
   border-bottom: 1px solid #ddd;
   text-align: center;
@@ -66,6 +67,11 @@
 .request-table th {
   background-color: #e0e7ff;
   color: #1e3a8a;
+}
+
+.status-draft {
+  color: #6b7280;
+  font-weight: bold;
 }
 
 .status-pending {
@@ -78,7 +84,14 @@
   font-weight: bold;
 }
 
-.edit-button, .delete-button, .approve-button {
+.status-rejected {
+  color: #dc2626;
+  font-weight: bold;
+}
+
+.edit-button,
+.delete-button,
+.approve-button {
   border: none;
   padding: 7px 10px;
   margin: 0 5px;

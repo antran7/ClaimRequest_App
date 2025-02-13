@@ -2,6 +2,7 @@ import { RouteObject } from "react-router-dom";
 import { Role } from "../../constants/roles";
 import PrivateRoute from "../../routes/PrivateRoute";
 import PaidPage from "./pages/PaidPage";
+import ApprovalPage from "./pages/ApprovalPage";
 
 // export const requestRoutes: RouteObject[] = [
 //   {
@@ -14,5 +15,9 @@ export const requestRoutes: RouteObject[] = [
   {
     path: "/finance/claims",
     element: <PaidPage />, // Bỏ PrivateRoute tạm thời để test
+  },
+  {
+    path: "/approval",
+    element: <ApprovalPage />,
   },
 ];
