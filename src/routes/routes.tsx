@@ -4,6 +4,7 @@ import { userRoutes } from "../modules/users/routes";
 import { dashboardRoutes } from "../modules/dashboard/routes";
 import { AuthProvider } from "../modules/auth/hooks/useAuth";
 import Login from "../modules/auth/pages/Login";
+import { requestRoutes } from "../modules/requests/routes";
 
 const AppRoutes = () => {
   return (
@@ -11,13 +12,17 @@ const AppRoutes = () => {
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/unauthorized" element={<Error/>} />
+          <Route path="/unauthorized" element={<Error />} />
 
           {/* Import route từ các module */}
           {dashboardRoutes.map((route, index) => (
             <Route key={index} path={route.path} element={route.element}>
               {route.children?.map((child, childIndex) => (
-                <Route key={childIndex} path={child.path} element={child.element} />
+                <Route
+                  key={childIndex}
+                  path={child.path}
+                  element={child.element}
+                />
               ))}
             </Route>
           ))}
@@ -25,7 +30,23 @@ const AppRoutes = () => {
           {userRoutes.map((route, index) => (
             <Route key={index} path={route.path} element={route.element}>
               {route.children?.map((child, childIndex) => (
-                <Route key={childIndex} path={child.path} element={child.element} />
+                <Route
+                  key={childIndex}
+                  path={child.path}
+                  element={child.element}
+                />
+              ))}
+            </Route>
+          ))}
+
+          {requestRoutes.map((route, index) => (
+            <Route key={index} path={route.path} element={route.element}>
+              {route.children?.map((child, childIndex) => (
+                <Route
+                  key={childIndex}
+                  path={child.path}
+                  element={child.element}
+                />
               ))}
             </Route>
           ))}
