@@ -21,7 +21,7 @@ interface ClaimRequest {
 const dummyData: ClaimRequest[] = [
   {
     id: 1,
-    employeeName: "Thiên Ân",
+    employeeName: "Thiên An",
     projectName: "Project A",
     amount: 1500,
     status: "APPROVED",
@@ -33,6 +33,24 @@ const dummyData: ClaimRequest[] = [
     employeeName: "Jack97",
     projectName: "Project B",
     amount: 5000,
+    status: "PAID",
+    submittedDate: "2024-02-08",
+    approvedDate: "2024-02-11",
+  },
+  {
+    id: 3,
+    employeeName: "Mixi",
+    projectName: "Project C",
+    amount: 7000,
+    status: "APPROVED",
+    submittedDate: "2024-02-08",
+    approvedDate: "2024-02-11",
+  },
+  {
+    id: 4,
+    employeeName: "The Rock",
+    projectName: "Project B",
+    amount: 10000,
     status: "PAID",
     submittedDate: "2024-02-08",
     approvedDate: "2024-02-11",
