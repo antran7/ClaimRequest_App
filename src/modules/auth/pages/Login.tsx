@@ -1,4 +1,5 @@
 import { useState } from "react";
+import "antd/dist/reset.css";
 import { Button, Checkbox, Col, Flex, Form, Input, Row } from "antd";
 import './Login.css'
 

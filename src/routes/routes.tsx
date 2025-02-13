@@ -3,6 +3,7 @@ import Error from "../modules/auth/pages/Error";
 import { userRoutes } from "../modules/users/routes";
 import { dashboardRoutes } from "../modules/dashboard/routes";
 import { AuthProvider } from "../modules/auth/hooks/useAuth";
+import ProjectManagement from "../modules/projects/pages/ProjectManagement.tsx";
 import Login from "../modules/auth/pages/Login";
 
 const AppRoutes = () => {
@@ -12,6 +13,7 @@ const AppRoutes = () => {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/unauthorized" element={<Error/>} />
+          <Route path="/projectmanager" element={<ProjectManagement/>}/>
 
           {/* Import route từ các module */}
           {dashboardRoutes.map((route, index) => (
