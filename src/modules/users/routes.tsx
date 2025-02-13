@@ -4,7 +4,7 @@ import UserManagement from "./pages/UserManagement";
 export const userRoutes = [
   {
     path: "/users",
-    element: <UserManagement />, // REMOVE PrivateRoute TEMPORARILY
+    element: <UserManagement />,
   },
 ];
 
