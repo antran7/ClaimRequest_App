@@ -1,5 +1,5 @@
 import { createContext, useContext, ReactNode } from "react";
-import { Role } from "../../../constants/roles";
+import { Role } from "../../../shared/constants/roles";
 
 interface AuthContextType {
   role: Role | null;
