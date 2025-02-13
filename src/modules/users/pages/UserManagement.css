@@ -1,0 +1,77 @@
+body {
+  background-color: lightblue;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
+
+.user-management {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  background-color: white;
+  max-width: 800px;
+  margin: 20px auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.search-bar {
+  margin-bottom: 10px;
+  padding: 8px;
+  width: 100%;
+  max-width: 300px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.user-table th, .user-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.user-table th {
+  background-color: #f4f4f4;
+}
+
+.edit-btn, .delete-btn, .lock-btn, .add-user-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 2px;
+  font-size: 14px;
+}
+
+.edit-btn {
+  background-color: #4CAF50;
+  color: white;
+  margin-right: 10px;
+}
+
+.delete-btn {
+  background-color: #f44336;
+  color: white;
+  margin-right: 5px;
+}
+
+.lock-btn {
+  background-color: #ff9800;
+  color: white;
+  display: inline-block;
+  margin-left: 5px;
+}
+
+.add-user-btn {
+  background-color: #008CBA;
+  color: white;
+  padding: 8px 16px;
+  margin-bottom: 10px;
+  margin-right: 30px;
+}
