@@ -5,6 +5,9 @@ import { dashboardRoutes } from "../modules/dashboard/routes";
 import { AuthProvider } from "../modules/auth/hooks/useAuth";
 import Login from "../modules/auth/pages/Login";
 import { requestRoutes } from "../modules/requests/routes";
+import RequestPage from "../request_page/RequestPage";
+import AddRequest from "../request_page/AddRequest";
+import EditRequest from "../request_page/EditRequest";
 
 const AppRoutes = () => {
   return (
@@ -13,6 +16,9 @@ const AppRoutes = () => {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/unauthorized" element={<Error />} />
+          <Route path="/requestpage" element={<RequestPage />} />
+          <Route path="/addrequest" element={<AddRequest />} />
+          <Route path="/editrequest/:id" element={<EditRequest />} />
 
           {/* Import route từ các module */}
           {dashboardRoutes.map((route, index) => (
