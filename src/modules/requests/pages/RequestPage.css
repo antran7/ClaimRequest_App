@@ -70,22 +70,27 @@
 }
 
 .status-draft {
-  color: #6b7280;
+  color: #8c8c8c;
   font-weight: bold;
 }
 
 .status-pending {
-  color: #d97706;
+  color: #faad14;
   font-weight: bold;
 }
 
 .status-approved {
-  color: #16a34a;
+  color: #52c41a;
   font-weight: bold;
 }
 
 .status-rejected {
-  color: #dc2626;
+  color: #f5222d;
+  font-weight: bold;
+}
+
+.status-paid {
+  color: #1890ff;
   font-weight: bold;
 }
 
