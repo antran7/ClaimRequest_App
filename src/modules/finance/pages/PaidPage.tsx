@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Table, Input, Button, Tag, Space, message } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
@@ -18,56 +18,42 @@ interface ClaimRequest {
   approvedDate: string;
 }
 
-const dummyData: ClaimRequest[] = [
-  {
-    id: 1,
-    employeeName: "Thiên An",
-    projectName: "Project A",
-    amount: 1500,
-    status: "APPROVED",
-    submittedDate: "2024-02-10",
-    approvedDate: "2024-02-12",
-  },
-  {
-    id: 2,
-    employeeName: "Jack97",
-    projectName: "Project B",
-    amount: 5000,
-    status: "PAID",
-    submittedDate: "2024-02-08",
-    approvedDate: "2024-02-11",
-  },
-  {
-    id: 3,
-    employeeName: "Mixi",
-    projectName: "Project C",
-    amount: 7000,
-    status: "APPROVED",
-    submittedDate: "2024-02-08",
-    approvedDate: "2024-02-11",
-  },
-  {
-    id: 4,
-    employeeName: "The Rock",
-    projectName: "Project B",
-    amount: 10000,
-    status: "PAID",
-    submittedDate: "2024-02-08",
-    approvedDate: "2024-02-11",
-  },
-  // Add more dummy data as needed
-];
-
 const PaidPage = () => {
   const [searchText, setSearchText] = useState("");
-  const [data, setData] = useState<ClaimRequest[]>(dummyData);
+  const [data, setData] = useState<ClaimRequest[]>([]);
+
+  useEffect(() => {
+    // Lấy dữ liệu từ localStorage và chuyển đổi format
+    const savedRequests = JSON.parse(localStorage.getItem("requests") || "[]");
+    const formattedRequests = savedRequests
+      .filter((req: any) => req.status === "APPROVED" || req.status === "PAID")
+      .map((req: any) => ({
+        id: req.id,
+        employeeName: req.name || `User ${req.id}`, // Sử dụng tên từ request nếu có
+        projectName: `Project ${String.fromCharCode(65 + (req.id % 26))}`,
+        amount: Math.floor(Math.random() * 10000) + 1000,
+        status: req.status,
+        submittedDate: req.submittedDate,
+        approvedDate: new Date().toISOString().split("T")[0],
+      }));
+    setData(formattedRequests);
+  }, []);
 
   const handlePaid = (record: ClaimRequest) => {
+    // Cập nhật trong state
     setData((prevData) =>
       prevData.map((item) =>
         item.id === record.id ? { ...item, status: "PAID" } : item
       )
     );
+
+    // Cập nhật trong localStorage
+    const savedRequests = JSON.parse(localStorage.getItem("requests") || "[]");
+    const updatedRequests = savedRequests.map((req: any) =>
+      req.id === record.id ? { ...req, status: "PAID" } : req
+    );
+    localStorage.setItem("requests", JSON.stringify(updatedRequests));
+
     message.success(`Claim #${record.id} has been marked as paid`);
   };
 
@@ -81,22 +67,25 @@ const PaidPage = () => {
       title: "ID",
       dataIndex: "id",
       key: "id",
+      width: 80,
     },
     {
       title: "Employee Name",
       dataIndex: "employeeName",
       key: "employeeName",
-      filterable: true,
+      width: 150,
     },
     {
       title: "Project",
       dataIndex: "projectName",
       key: "projectName",
+      width: 150,
     },
     {
       title: "Amount ($)",
       dataIndex: "amount",
       key: "amount",
+      width: 120,
       render: (amount: number) => (
         <span className="amount-cell">${amount.toFixed(2)}</span>
       ),
@@ -105,10 +94,11 @@ const PaidPage = () => {
       title: "Status",
       dataIndex: "status",
       key: "status",
+      width: 120,
       render: (status: string) => (
         <Tag
-          className="status-tag"
           color={status === "PAID" ? "green" : "gold"}
+          className="status-tag"
         >
           {status}
         </Tag>
@@ -118,15 +108,19 @@ const PaidPage = () => {
       title: "Submitted Date",
       dataIndex: "submittedDate",
       key: "submittedDate",
+      width: 150,
     },
     {
       title: "Approved Date",
       dataIndex: "approvedDate",
       key: "approvedDate",
+      width: 150,
     },
     {
       title: "Actions",
       key: "actions",
+      fixed: "right",
+      width: 200,
       render: (_, record) => (
         <Space>
           {record.status !== "PAID" && (
@@ -168,6 +162,7 @@ const PaidPage = () => {
           prefix={<SearchOutlined />}
           onChange={(e) => setSearchText(e.target.value)}
           className="search-input"
+          style={{ width: 300 }}
         />
       </div>
       <div className="table-container">
@@ -175,6 +170,7 @@ const PaidPage = () => {
           columns={columns}
           dataSource={filteredData}
           rowKey="id"
+          scroll={{ x: 1300 }}
           pagination={{
             pageSize: 10,
             showSizeChanger: true,

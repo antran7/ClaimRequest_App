@@ -7,6 +7,9 @@ import { adminRoutes } from "../../modules/admin/routes";
 import { financeRoutes } from "../../modules/finance/routes";
 import { approvalRoutes } from "../../modules/approval/routes";
 import ProjectManagementPage from "../../modules/admin/pages/ProjectManagementPage";
+import RequestPage from "../../modules/requests/pages/RequestPage";
+import AddRequestPage from "../../modules/requests/components/AddRequest";
+import EditRequestPage from "../../modules/requests/components/EditRequest";
 
 const AppRoutes = () => {
   return (
@@ -15,13 +18,20 @@ const AppRoutes = () => {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/unauthorized" element={<Error />} />
-          <Route path="/projectmanager" element={<ProjectManagementPage/>}/>
+          <Route path="/projectmanager" element={<ProjectManagementPage />} />
+          <Route path="/requestpage" element={<RequestPage />} />
+          <Route path="/addrequest" element={<AddRequestPage />} />
+          <Route path="/editrequest/:id" element={<EditRequestPage />} />
 
           {/* Import route từ các module */}
           {adminRoutes.map((route, index) => (
             <Route key={index} path={route.path} element={route.element}>
               {route.children?.map((child, childIndex) => (
-                <Route key={childIndex} path={child.path} element={child.element} />
+                <Route
+                  key={childIndex}
+                  path={child.path}
+                  element={child.element}
+                />
               ))}
             </Route>
           ))}
@@ -29,7 +39,11 @@ const AppRoutes = () => {
           {userRoutes.map((route, index) => (
             <Route key={index} path={route.path} element={route.element}>
               {route.children?.map((child, childIndex) => (
-                <Route key={childIndex} path={child.path} element={child.element} />
+                <Route
+                  key={childIndex}
+                  path={child.path}
+                  element={child.element}
+                />
               ))}
             </Route>
           ))}
@@ -37,7 +51,11 @@ const AppRoutes = () => {
           {approvalRoutes.map((route, index) => (
             <Route key={index} path={route.path} element={route.element}>
               {route.children?.map((child, childIndex) => (
-                <Route key={childIndex} path={child.path} element={child.element} />
+                <Route
+                  key={childIndex}
+                  path={child.path}
+                  element={child.element}
+                />
               ))}
             </Route>
           ))}
@@ -45,7 +63,11 @@ const AppRoutes = () => {
           {financeRoutes.map((route, index) => (
             <Route key={index} path={route.path} element={route.element}>
               {route.children?.map((child, childIndex) => (
-                <Route key={childIndex} path={child.path} element={child.element} />
+                <Route
+                  key={childIndex}
+                  path={child.path}
+                  element={child.element}
+                />
               ))}
             </Route>
           ))}
