@@ -6,6 +6,7 @@ import { userRoutes } from "../../modules/users/routes";
 import { adminRoutes } from "../../modules/admin/routes";
 import { financeRoutes } from "../../modules/finance/routes";
 import { approvalRoutes } from "../../modules/approval/routes";
+import ProjectManagementPage from "../../modules/admin/pages/ProjectManagementPage";
 
 const AppRoutes = () => {
   return (
@@ -14,6 +15,7 @@ const AppRoutes = () => {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/unauthorized" element={<Error />} />
+          <Route path="/projectmanager" element={<ProjectManagementPage/>}/>
 
           {/* Import route từ các module */}
           {adminRoutes.map((route, index) => (
