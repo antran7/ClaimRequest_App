@@ -9,6 +9,11 @@ export const financeRoutes: RouteObject[] = [
     element: <PaidPage />, // Bỏ PrivateRoute tạm thời để test
     // Khi cần bảo mật, có thể uncomment đoạn dưới
     // element: <PrivateRoute allowedRoles={[Role.FINANCE]} />,
-    // children: [{ path: "", element: <PaidPage /> }],
+    // children: [
+    //   {
+    //     path: "",
+    //     element: <PaidPage />
+    //   }
+    // ],
   },
 ];

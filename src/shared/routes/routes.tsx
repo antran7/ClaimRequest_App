@@ -6,10 +6,9 @@ import { userRoutes } from "../../modules/users/routes";
 import { adminRoutes } from "../../modules/admin/routes";
 import { financeRoutes } from "../../modules/finance/routes";
 import { approvalRoutes } from "../../modules/approval/routes";
-import ProjectManagementPage from "../../modules/admin/pages/ProjectManagementPage";
-import RequestPage from "../../modules/requests/pages/RequestPage";
-import AddRequestPage from "../../modules/requests/components/AddRequest";
-import EditRequestPage from "../../modules/requests/components/EditRequest";
+import RequestPage from "../../modules/users/pages/RequestPage";
+import AddRequestPage from "../../modules/users/components/AddRequest";
+import EditRequestPage from "../../modules/users/components/EditRequest";
 
 const AppRoutes = () => {
   return (
@@ -18,7 +17,6 @@ const AppRoutes = () => {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/unauthorized" element={<Error />} />
-          <Route path="/projectmanager" element={<ProjectManagementPage />} />
           <Route path="/requestpage" element={<RequestPage />} />
           <Route path="/addrequest" element={<AddRequestPage />} />
           <Route path="/editrequest/:id" element={<EditRequestPage />} />
