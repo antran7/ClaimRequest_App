@@ -1,0 +1,22 @@
+html, body {
+    height: 100%; /* Ensure full height */
+    margin: 0;
+    overflow-y: auto; /* Enable scrolling */
+}
+
+.home {
+    flex-grow: 1; /* Allows the section to expand */
+    min-height: 100vh; /* Ensures it covers the full screen */
+    overflow-y: auto; /* Enables scrolling */
+    padding: 20px;
+    display: flex;
+    flex-direction: column; /* Ensures content stacks properly */
+}
+
+.homeWidgets {
+    display: flex;
+    flex-wrap: wrap; /* Prevents overflow on smaller screens */
+    margin: 20px;
+    gap: 20px; /* Adds spacing between widgets */
+    justify-content: space-between;
+}
