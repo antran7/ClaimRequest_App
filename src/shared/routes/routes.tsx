@@ -9,14 +9,13 @@ import { approvalRoutes } from "../../modules/approval/routes";
 import RequestPage from "../../modules/users/pages/request/RequestPage";
 import AddRequestPage from "../../modules/users/components/request-comp/AddRequest";
 import EditRequestPage from "../../modules/users/components/request-comp/EditRequest";
-import { dashboardRoutes } from "../../modules/dashboard/routes";
 
 const AppRoutes = () => {
   return (
     <AuthProvider>
       <Router>
         <Routes>
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<Login />} />x
           <Route path="/unauthorized" element={<Error />} />
           <Route path="/requestpage" element={<RequestPage />} />
           <Route path="/addrequest" element={<AddRequestPage />} />

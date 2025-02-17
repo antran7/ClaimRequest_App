@@ -4,8 +4,10 @@ import { Tabs } from "antd";
 import Topbar from "../../components/topbar/Topbar";
 import HouseIcon from "@mui/icons-material/House";
 import BadgeIcon from '@mui/icons-material/Badge';
+import RequestPageIcon from '@mui/icons-material/RequestPage';
 import User from "./User";
 import Home from "./Home";
+import RequestPage from "../request/RequestPage";
 
 const UserDashboard: React.FC = () => {
   return (
@@ -33,6 +35,16 @@ const UserDashboard: React.FC = () => {
                 </span>
               ),
             children: <User />,
+          },
+          {
+            key: "3",
+            label: (
+              <span className="tab-item">
+                <RequestPageIcon className="Icon"/>
+                My Request
+              </span>
+            ),
+            children: <RequestPage />,
           },
         ]}
       />
