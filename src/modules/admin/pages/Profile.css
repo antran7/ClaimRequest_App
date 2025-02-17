@@ -1,0 +1,74 @@
+.profile {
+  padding-left: 300px;
+  padding-right: 300px;
+}
+
+.head-profile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.avatar-profile {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+}
+.name-profile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.inputname {
+  width: 400px;
+}
+.gmail-phone {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.input-gmail {
+  width: 550px;
+}
+.input-phone {
+  width: 300px;
+}
+.input-address {
+  width: 100%;
+}
+.input-password {
+  height: 42px;
+}
+.input-password-group {
+  margin-top: 20px;
+}
+.action-btn {
+  margin-top: 20px;
+  display: flex;
+  gap: 20px;
+  button {
+    width: 100px;
+    height: 30px;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+}
+.save-btn {
+  background-color: orange;
+  color: white;
+  border: none;
+}
+.save-btn:hover {
+  background-color: #ff7008;
+}
+.cancel-btn {
+  background-color: white;
+  color: orange;
+  border: none;
+  border: 1px solid orange;
+}
+.cancel-btn:hover{
+    background-color: #ff7008;
+}
