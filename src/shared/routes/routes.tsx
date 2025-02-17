@@ -6,9 +6,10 @@ import { userRoutes } from "../../modules/users/routes";
 import { adminRoutes } from "../../modules/admin/routes";
 import { financeRoutes } from "../../modules/finance/routes";
 import { approvalRoutes } from "../../modules/approval/routes";
-import RequestPage from "../../modules/users/pages/RequestPage";
-import AddRequestPage from "../../modules/users/components/AddRequest";
-import EditRequestPage from "../../modules/users/components/EditRequest";
+import RequestPage from "../../modules/users/pages/request/RequestPage";
+import AddRequestPage from "../../modules/users/components/request-comp/AddRequest";
+import EditRequestPage from "../../modules/users/components/request-comp/EditRequest";
+import { dashboardRoutes } from "../../modules/dashboard/routes";
 
 const AppRoutes = () => {
   return (
