@@ -1,22 +1,30 @@
 body {
-  background-color: lightblue; 
+  background-color: lightblue;
   margin: 0;
   padding: 0;
   font-family: Arial, sans-serif;
+}
+
+.user-management-container {
+  height: 100vh;
+  width: 100%;
   background: url("https://wallpapercat.com/w/full/2/f/d/11917-3840x2160-desktop-4k-the-witcher-tv-series-wallpaper.jpg") no-repeat center center fixed;
   background-size: cover;
 }
+
 
 .user-management {
   padding: 20px;
   font-family: Arial, sans-serif;
   background-color: white;
   max-width: 800px;
-  margin: auto; /* Center horizontally */
+  margin: auto;
+  /* Center horizontally */
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%); /* Center both horizontally & vertically */
+  transform: translate(-50%, -50%);
+  /* Center both horizontally & vertically */
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
@@ -36,7 +44,8 @@ body {
   margin-top: 10px;
 }
 
-.user-table th, .user-table td {
+.user-table th,
+.user-table td {
   border: 1px solid #ddd;
   padding: 8px;
   text-align: left;
@@ -46,7 +55,10 @@ body {
   background-color: #f4f4f4;
 }
 
-.edit-btn, .delete-btn, .lock-btn, .add-user-btn {
+.edit-btn,
+.delete-btn,
+.lock-btn,
+.add-user-btn {
   padding: 6px 12px;
   border: none;
   border-radius: 4px;
@@ -83,9 +95,8 @@ body {
 }
 
 .user-table th {
-  background-color: #007bff; 
-  color: white; 
+  background-color: #007bff;
+  color: white;
   padding: 10px;
-  text-transform: uppercase; 
+  text-transform: uppercase;
 }
-
