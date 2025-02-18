@@ -8,7 +8,7 @@ import RequestPageIcon from '@mui/icons-material/RequestPage';
 import User from "./User";
 import Home from "./Home";
 import RequestPage from "../request/RequestPage";
-import AddRequestPage from "../../components/request-comp/AddRequest";
+
 
 const UserDashboard: React.FC = () => {
   return (
@@ -47,16 +47,7 @@ const UserDashboard: React.FC = () => {
             ),
             children: <RequestPage />,
           },
-          {
-            key: "4",
-            label: (
-              <span className="tab-item">
-                <RequestPageIcon className="Icon"/>
-                Add request
-              </span>
-            ),
-            children: <AddRequestPage />,
-          },
+        
         ]}
       />
     </>
