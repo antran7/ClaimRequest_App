@@ -16,6 +16,7 @@ function Profile() {
   const handleMouseUpPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
   };
+
   return (
     <div className="profile">
       <div className="head-profile">
@@ -31,33 +32,34 @@ function Profile() {
           <TextField
             required
             label="First Name"
-            id="outlined-size-small"
-            defaultValue="Enter your first name"
+            id="first-name"
+            placeholder="Enter your first name"
             size="small"
             className="inputname"
           />
           <TextField
             required
             label="Last Name"
-            id="outlined-size-small"
-            defaultValue="Enter your last name"
+            id="last-name"
+            placeholder="Enter your last name"
             size="small"
             className="inputname"
           />
         </div>
         <div className="gmail-phone">
-          <TextField required label="Gmail" id="outlined-size-small" defaultValue="Enter your gmail" size="small" className="input-gmail"/>
-          <TextField required label="Phone" id="outlined-size-small" defaultValue="Enter your phone" size="small" className="input-phone"/>
+          <TextField required label="Gmail" id="email" placeholder="Enter your gmail" size="small" className="input-gmail"/>
+          <TextField required label="Phone" id="phone" placeholder="Enter your phone" size="small" className="input-phone"/>
         </div>
-        <TextField required label="Address" id="outlined-size-small" defaultValue="Enter your address" size="small" className="input-address"/>
+        <TextField required label="Address" id="address" placeholder="Enter your address" size="small" className="input-address"/>
 
         <div className="input-password-group">
         <FormControl sx={{ width: "100%"}} variant="outlined">
-          <InputLabel htmlFor="outlined-adornment-password" >Password</InputLabel>
+          <InputLabel htmlFor="outlined-adornment-password">Password</InputLabel>
           <OutlinedInput className="input-password"
           required
             id="outlined-adornment-password"
             type={showPassword ? "text" : "password"} 
+            placeholder="Enter your password"
             endAdornment={
               <InputAdornment position="end">
                 <IconButton
@@ -79,7 +81,6 @@ function Profile() {
       <div className="action-btn">
         <button className="cancel-btn">Cancel</button>
         <button className="save-btn">Save</button>
-
       </div>
     </div>
   );

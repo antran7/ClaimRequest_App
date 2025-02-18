@@ -97,7 +97,7 @@ export default function AdminHeaderDashboard({ toggleSidebar }) {
       open={isMenuOpen}
       onClose={handleMenuClose}
     >
-      <MenuItem onClick={handleMenuClose}><Link to="/profile" style={{listStyle:"none",textDecoration:"none"}}>Profile</Link></MenuItem>
+      <MenuItem onClick={handleMenuClose}><Link to="/profilePage" style={{listStyle:"none",textDecoration:"none"}}>Profile</Link></MenuItem>
       <MenuItem onClick={handleMenuClose}>My account</MenuItem>
     </Menu>
   );

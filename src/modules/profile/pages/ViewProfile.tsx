@@ -1,0 +1,31 @@
+import React from 'react'
+import"./ViewProfile.css"
+function ViewProfile() {
+  return (
+    <div>
+      <div className="profile-card">
+        <div className="profile-title">
+            <p>Personal info</p>
+        </div>
+        <div className="profile-info">
+            <div className="profile-img">
+                <img src="data:image/jpeg;base64,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" alt="" />
+            </div>
+            <div className="profile-content">
+                <p><strong>Full Name:</strong></p>
+                <p>Nguyen Thi Thuy Ngan</p>
+                <p><strong>Date of birth:</strong></p>
+                <p>01-11-2004</p>
+                <p><strong>Role:</strong></p>
+                <p>Front End Developer</p>
+                <p><strong>Email:</strong></p>
+                <p>nttngan0111@gmail.com</p>
+
+            </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default ViewProfile
