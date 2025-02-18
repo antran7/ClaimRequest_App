@@ -12,6 +12,7 @@ import EditRequestPage from "../../modules/users/components/request-comp/EditReq
 import HomePage from "../../modules/auth/pages/HomePage";
 import Profile from "../../modules/admin/pages/Profile";
 import AdminDashboard from "../../modules/admin/pages/AdminDashboard";
+import UserManagement from "../../modules/admin/pages/UserManagement";
 
 const AppRoutes = () => {
   return (
@@ -26,6 +27,7 @@ const AppRoutes = () => {
           <Route path="/editrequest/:id" element={<EditRequestPage />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/admindashboard" element={<AdminDashboard />} />
+          <Route path="/usermanagement" element={<UserManagement />} />
 
           {/* Import route từ các module */}
           {adminRoutes.map((route, index) => (
