@@ -36,7 +36,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           email: response.email,
           role: response.role,
         });
-        setRole(response.role);
         localStorage.setItem("userRole", response.role);
         localStorage.setItem("userEmail", response.email);
       }

@@ -45,4 +45,4 @@ const apiService = {
   },
 };
 
-export default api;
+export default apiService;
