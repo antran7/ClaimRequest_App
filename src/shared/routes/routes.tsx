@@ -6,12 +6,8 @@ import { userRoutes } from "../../modules/users/routes";
 import { adminRoutes } from "../../modules/admin/routes";
 import { financeRoutes } from "../../modules/finance/routes";
 import { approvalRoutes } from "../../modules/approval/routes";
-import RequestPage from "../../modules/users/pages/request/RequestPage";
-import AddRequestPage from "../../modules/users/components/request-comp/AddRequest";
 import EditRequestPage from "../../modules/users/components/request-comp/EditRequest";
 import HomePage from "../../modules/auth/pages/HomePage";
-import Profile from "../../modules/admin/pages/Profile";
-import AdminDashboard from "../../modules/admin/pages/AdminDashboard";
 
 const AppRoutes = () => {
   return (
@@ -19,13 +15,9 @@ const AppRoutes = () => {
       <Router>
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<Login />} />x
+          <Route path="/login" element={<Login />} />
           <Route path="/unauthorized" element={<Error />} />
-          <Route path="/requestpage" element={<RequestPage />} />
-          <Route path="/addrequest" element={<AddRequestPage />} />
           <Route path="/editrequest/:id" element={<EditRequestPage />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/admindashboard" element={<AdminDashboard />} />
 
           {/* Import route từ các module */}
           {adminRoutes.map((route, index) => (

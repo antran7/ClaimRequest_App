@@ -1,14 +1,39 @@
 import { useState } from "react";
 import { Button, Checkbox, Col, Flex, Form, Input, Row } from "antd";
 import './Login.css'
+import { Role } from "../../../shared/constants/roles";
+import { useAuth } from "../services/useAuth";
+import { useNavigate } from "react-router";
 
 const Login = () => {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+    const { setRole } = useAuth();
+    const { role } = useAuth();
+    const navigate = useNavigate();
 
     const handleSubmit = (values: { email: string; password: string }) => {
-        console.log("Email:", values.email);
-        console.log("Password:", values.password);
+        const user = {
+            email: values.email,
+            password: values.password,
+            role: Role.USER,
+        };
+        setRole(user.role);
+        console.log(role);
+        switch (user.role) {
+            case Role.ADMIN:
+                navigate("/admin/dashboard");
+                break;
+            case Role.USER:
+                navigate("/user/dashboard");
+                break;
+            case Role.APPROVER:
+                navigate("/approval/dashboard");
+                break;
+            case Role.FINANCE:
+                navigate("/finance/claims");
+                break;
+            default:
+                navigate("/");
+        }
     };
 
     return (

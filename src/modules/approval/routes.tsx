@@ -6,9 +6,12 @@ import ApprovalPage from "./pages/ApprovalPage";
 export const approvalRoutes: RouteObject[] = [
   {
     path: "/approval",
-    element: <ApprovalPage />,
-    // Khi cần bảo mật, có thể thêm
-    // element: <PrivateRoute allowedRoles={[Role.APPROVAL]} />,
-    // children: [{ path: "", element: <ApprovalPage /> }],
+    element: <PrivateRoute allowedRoles={[Role.APPROVER]} />,
+    children: [
+      {
+        path: "dashboard",
+        element: <ApprovalPage />
+      }
+    ],
   },
 ];
