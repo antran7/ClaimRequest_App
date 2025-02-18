@@ -6,7 +6,7 @@ import { userRoutes } from "../../modules/users/routes";
 import { adminRoutes } from "../../modules/admin/routes";
 import { financeRoutes } from "../../modules/finance/routes";
 import { approvalRoutes } from "../../modules/approval/routes";
-import EditRequestPage from "../../modules/users/components/request-comp/EditRequest";
+
 import HomePage from "../../modules/auth/pages/HomePage";
 
 const AppRoutes = () => {
@@ -17,7 +17,7 @@ const AppRoutes = () => {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/unauthorized" element={<Error />} />
-          <Route path="/editrequest/:id" element={<EditRequestPage />} />
+          
 
           {/* Import route từ các module */}
           {adminRoutes.map((route, index) => (
