@@ -12,11 +12,13 @@ import EditRequestPage from "../../modules/users/components/request-comp/EditReq
 import HomePage from "../../modules/auth/pages/HomePage";
 import Profile from "../../modules/admin/pages/Profile";
 import AdminDashboard from "../../modules/admin/pages/AdminDashboard";
+import { Toaster } from "react-hot-toast";
 
 const AppRoutes = () => {
   return (
     <AuthProvider>
       <Router>
+      <Toaster/>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<Login />} />x
