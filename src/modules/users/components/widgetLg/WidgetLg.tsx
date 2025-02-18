@@ -1,12 +1,12 @@
 import "./widgetLg.css";
 
 export default function WidgetLg() {
-  const Button = ({ type }) => {
+  const Button = ({ type }: { type: string }) => {
     return <button className={"widgetLgButton " + type}>{type}</button>;
   };
   return (
     <div className="widgetLg">
-      <h3 className="widgetLgTitle">Latest post  </h3>
+      <h3 className="widgetLgTitle">Latest post </h3>
       <table className="widgetLgTable">
         <tr className="widgetLgTr">
           <th className="widgetLgTh">Customer</th>
@@ -29,8 +29,6 @@ export default function WidgetLg() {
             <Button type="Approved" />
           </td>
         </tr>
-        
-        
       </table>
     </div>
   );

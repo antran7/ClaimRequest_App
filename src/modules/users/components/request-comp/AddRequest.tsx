@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./AddRequestPage.css"; // Import file CSS riêng
+import "./AddRequestPage.css";
 
 const AddRequestPage = () => {
   const [name, setName] = useState("");
