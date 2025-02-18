@@ -24,7 +24,7 @@ export default function AdminSidebarDashboard({ isOpen, toggleSidebar }: AdminSi
       onKeyDown={toggleSidebar}
     >
       <List>
-        {['Inbox', 'Starred', 'Send email', 'Drafts'].map((text, index) => (
+        {['Summary', 'Starred', 'Send email', 'Drafts'].map((text, index) => (
           <ListItem key={text} disablePadding>
             <ListItemButton>
               <ListItemIcon>
