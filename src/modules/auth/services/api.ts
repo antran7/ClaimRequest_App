@@ -63,4 +63,8 @@ const apiService = {
   },
 };
 
+<<<<<<< HEAD
+export default apiService;
+=======
 export default api;
+>>>>>>> 9ffb8369c5753582e6a74a1f4c20c569dd0cb560
