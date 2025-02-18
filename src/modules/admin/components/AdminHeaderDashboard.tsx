@@ -15,7 +15,11 @@ import AccountCircle from "@mui/icons-material/AccountCircle";
 import MailIcon from "@mui/icons-material/Mail";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import MoreIcon from "@mui/icons-material/MoreVert";
-import { Link } from "react-router";
+import { useNavigate } from "react-router-dom";
+import { handleLogout } from "../../../shared/utils/auth";
+import PersonIcon from "@mui/icons-material/Person";
+import SettingsIcon from "@mui/icons-material/Settings";
+import LogoutIcon from "@mui/icons-material/Logout";
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
@@ -63,6 +67,7 @@ interface AdminHeaderDashboardProps {
 export default function AdminHeaderDashboard({
   toggleSidebar,
 }: AdminHeaderDashboardProps) {
+  const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] =
     React.useState<null | HTMLElement>(null);
@@ -87,12 +92,27 @@ export default function AdminHeaderDashboard({
     setMobileMoreAnchorEl(event.currentTarget);
   };
 
+  const handleProfileClick = () => {
+    navigate("/profile");
+    handleMenuClose();
+  };
+
+  const handleMyAccountClick = () => {
+    navigate("/account");
+    handleMenuClose();
+  };
+
+  const handleLogoutClick = () => {
+    handleLogout(navigate);
+    handleMenuClose();
+  };
+
   const menuId = "primary-search-account-menu";
   const renderMenu = (
     <Menu
       anchorEl={anchorEl}
       anchorOrigin={{
-        vertical: "top",
+        vertical: "bottom",
         horizontal: "right",
       }}
       id={menuId}
@@ -103,16 +123,45 @@ export default function AdminHeaderDashboard({
       }}
       open={isMenuOpen}
       onClose={handleMenuClose}
+      PaperProps={{
+        elevation: 0,
+        sx: {
+          overflow: "visible",
+          filter: "drop-shadow(0px 2px 8px rgba(0,0,0,0.32))",
+          mt: 1.5,
+          "& .MuiAvatar-root": {
+            width: 32,
+            height: 32,
+            ml: -0.5,
+            mr: 1,
+          },
+          "&:before": {
+            content: '""',
+            display: "block",
+            position: "absolute",
+            top: 0,
+            right: 14,
+            width: 10,
+            height: 10,
+            bgcolor: "background.paper",
+            transform: "translateY(-50%) rotate(45deg)",
+            zIndex: 0,
+          },
+        },
+      }}
     >
-      <MenuItem onClick={handleMenuClose}>
-        <Link
-          to="/profile"
-          style={{ listStyle: "none", textDecoration: "none" }}
-        >
-          Profile
-        </Link>
+      <MenuItem onClick={handleProfileClick} style={{ padding: "10px 20px" }}>
+        <PersonIcon style={{ marginRight: 10 }} /> Profile
       </MenuItem>
-      <MenuItem onClick={handleMenuClose}>My account</MenuItem>
+      <MenuItem onClick={handleMyAccountClick} style={{ padding: "10px 20px" }}>
+        <SettingsIcon style={{ marginRight: 10 }} /> My Account
+      </MenuItem>
+      <MenuItem
+        onClick={handleLogoutClick}
+        style={{ padding: "10px 20px", color: "#ff4d4f" }}
+      >
+        <LogoutIcon style={{ marginRight: 10 }} /> Logout
+      </MenuItem>
     </Menu>
   );
 
@@ -178,7 +227,7 @@ export default function AdminHeaderDashboard({
             color="inherit"
             aria-label="open drawer"
             sx={{ mr: 2 }}
-            onClick={toggleSidebar} // Button to toggle sidebar
+            onClick={toggleSidebar}
           >
             <MenuIcon />
           </IconButton>

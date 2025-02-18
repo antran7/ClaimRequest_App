@@ -13,7 +13,7 @@ const Login = () => {
     const user = {
       email: values.email,
       password: values.password,
-      role: Role.USER,
+      role: Role.ADMIN,
     };
     setRole(user.role);
     console.log(role);
