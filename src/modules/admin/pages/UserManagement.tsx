@@ -10,11 +10,11 @@ interface User {
 }
 
 const dummyUsers: User[] = [
-  { id: 1, name: "John Doe", email: "john@example.com", role: "Admin", status: "Active" },
-  { id: 2, name: "Jane Smith", email: "jane@example.com", role: "User", status: "Locked" },
-  { id: 3, name: "Alice Johnson", email: "alice@example.com", role: "User", status: "Active" },
-  { id: 4, name: "Bob Brown", email: "bob@example.com", role: "User", status: "Active" },
-  { id: 5, name: "Charlie Davis", email: "charlie@example.com", role: "User", status: "Active" },
+  { id: 1, name: "Robin Kool", email: "robinkool@gmail.com", role: "Admin", status: "Active" },
+  { id: 2, name: "Henry Cavill", email: "henrycavill@gmail.com", role: "User", status: "Locked" },
+  { id: 3, name: "Ryan Gosling", email: "ryangosling@gmail.com", role: "User", status: "Active" },
+  { id: 4, name: "Harry Potter", email: "harrypotter@gmail.com", role: "User", status: "Active" },
+  { id: 5, name: "LeBron James", email: "lebronjames@gmail.com", role: "User", status: "Active" },
 ];
 
 export default function UserManagement() {
@@ -25,10 +25,31 @@ export default function UserManagement() {
     user.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const lockUser = (id: number) => {
+  const toggleLockUser = (id: number) => {
     setUsers(users.map(user => 
-      user.id === id ? { ...user, status: "Locked" } : user
+      user.id === id ? { ...user, status: user.status === "Active" ? "Locked" : "Active" } : user
     ));
+  };
+
+  const editUser = (id: number) => {
+    const userToEdit = users.find(user => user.id === id);
+    if (!userToEdit) return;
+
+    const newName = prompt("Enter new name:", userToEdit.name);
+    const newEmail = prompt("Enter new email:", userToEdit.email);
+    const newRole = prompt("Enter new role:", userToEdit.role);
+
+    if (newName && newEmail && newRole) {
+      setUsers(users.map(user => 
+        user.id === id ? { ...user, name: newName, email: newEmail, role: newRole } : user
+      ));
+    }
+  };
+
+  const deleteUser = (id: number) => {
+    if (window.confirm("Are you sure you want to delete this user?")) {
+      setUsers(users.filter(user => user.id !== id));
+    }
   };
 
   const addUser = () => {
@@ -70,11 +91,11 @@ export default function UserManagement() {
               <td>{user.role}</td>
               <td>{user.status}</td>
               <td>
-                <button className="edit-btn">Edit</button>
-                <button className="delete-btn">Delete</button>
-                {user.role === "User" && user.status === "Active" && (
-                  <button className="lock-btn" onClick={() => lockUser(user.id)}>Lock</button>
-                )}
+                <button className="edit-btn" onClick={() => editUser(user.id)}>Edit</button>
+                <button className="delete-btn" onClick={() => deleteUser(user.id)}>Delete</button>
+                <button className="lock-btn" onClick={() => toggleLockUser(user.id)}>
+                  {user.status === "Active" ? "Lock" : "Unlock"}
+                </button>
               </td>
             </tr>
           ))}
