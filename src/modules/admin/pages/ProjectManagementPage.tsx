@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
+import AdminHeaderDashboard from "../components/AdminHeaderDashboard";
+import AdminSidebarDashboard from "../components/AdminSidebarDashboard";
+import BackButton from "../components/BackButton";
 import { Button, Card, CardContent, CardHeader, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Typography } from "@mui/material";
 import { Add as PlusIcon, Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import PersonIcon from "@mui/icons-material/Person";
@@ -12,6 +15,11 @@ const ProjectManagementPage: React.FC = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [currentProject, setCurrentProject] = useState<Partial<Project>>({});
   const [isEditing, setIsEditing] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
 
   useEffect(() => {
     fetchProjects()
@@ -59,22 +67,37 @@ const ProjectManagementPage: React.FC = () => {
   };
 
   return (
-    <div className="grid grid-cols-12 min-h-screen bg-gray-100">
-      <div className="col-span-2 bg-white shadow-lg p-4 flex flex-col h-full">
-        <Navbar />
-        <div className="mt-auto p-4 border-t border-gray-300">
-          <Button startIcon={<PersonIcon />} className="w-full text-left text-gray-700 hover:bg-gray-100">
-            Profile
-          </Button>
-        </div>
+    <div className="min-h-screen bg-gray-100">
+      <div className="col-span-2 bg-white shadow-lg flex flex-col h-full">
+        <AdminHeaderDashboard toggleSidebar={toggleSidebar} />
+        <AdminSidebarDashboard isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
       </div>
 
       <div className="col-span-10 p-8">
         <div className="flex justify-between items-center mb-6">
+          <BackButton to="/admin/dashboard" />
           <Typography variant="h5" className="font-bold text-gray-800">Project Management</Typography>
-          <Button variant="contained" color="primary" startIcon={<PlusIcon />} onClick={() => handleOpenDialog()}>
-            Add Project
-          </Button>
+          <button
+            title="Add New Project"
+            className="group cursor-pointer outline-none hover:rotate-90 duration-300"
+            onClick={() => handleOpenDialog()}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="50px"
+              height="50px"
+              viewBox="0 0 24 24"
+              className="stroke-blue-400 fill-none group-hover:fill-blue-800 group-active:stroke-blue-200 group-active:fill-blue-600 group-active:duration-0 duration-300"
+            >
+              <path
+                d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z"
+                stroke-width="1.5"
+              ></path>
+              <path d="M8 12H16" stroke-width="1.5"></path>
+              <path d="M12 16V8" stroke-width="1.5"></path>
+            </svg>
+          </button>
+
         </div>
 
         <div className="grid grid-cols-3 gap-6">
