@@ -26,7 +26,7 @@ export default function UserManagement() {
   );
 
   const toggleLockUser = (id: number) => {
-    setUsers(users.map(user => 
+    setUsers(users.map(user =>
       user.id === id ? { ...user, status: user.status === "Active" ? "Locked" : "Active" } : user
     ));
   };
@@ -40,7 +40,7 @@ export default function UserManagement() {
     const newRole = prompt("Enter new role:", userToEdit.role);
 
     if (newName && newEmail && newRole) {
-      setUsers(users.map(user => 
+      setUsers(users.map(user =>
         user.id === id ? { ...user, name: newName, email: newEmail, role: newRole } : user
       ));
     }
@@ -62,45 +62,47 @@ export default function UserManagement() {
   };
 
   return (
-    <div className="user-management">
-      <h1>User Management</h1>
-      <button className="add-user-btn" onClick={addUser}>Add New User</button>
-      <input
-        type="text"
-        placeholder="Search user..."
-        className="search-bar"
-        onChange={(e) => setSearch(e.target.value)}
-      />
-      <table className="user-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredUsers.map((user) => (
-            <tr key={user.id}>
-              <td>{user.id}</td>
-              <td>{user.name}</td>
-              <td>{user.email}</td>
-              <td>{user.role}</td>
-              <td>{user.status}</td>
-              <td>
-                <button className="edit-btn" onClick={() => editUser(user.id)}>Edit</button>
-                <button className="delete-btn" onClick={() => deleteUser(user.id)}>Delete</button>
-                <button className="lock-btn" onClick={() => toggleLockUser(user.id)}>
-                  {user.status === "Active" ? "Lock" : "Unlock"}
-                </button>
-              </td>
+    <div className="user-management-container">
+      <div className="user-management">
+        <h1>User Management</h1>
+        <button className="add-user-btn" onClick={addUser}>Add New User</button>
+        <input
+          type="text"
+          placeholder="Search user..."
+          className="search-bar"
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <table className="user-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filteredUsers.map((user) => (
+              <tr key={user.id}>
+                <td>{user.id}</td>
+                <td>{user.name}</td>
+                <td>{user.email}</td>
+                <td>{user.role}</td>
+                <td>{user.status}</td>
+                <td>
+                  <button className="edit-btn" onClick={() => editUser(user.id)}>Edit</button>
+                  <button className="delete-btn" onClick={() => deleteUser(user.id)}>Delete</button>
+                  <button className="lock-btn" onClick={() => toggleLockUser(user.id)}>
+                    {user.status === "Active" ? "Lock" : "Unlock"}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
