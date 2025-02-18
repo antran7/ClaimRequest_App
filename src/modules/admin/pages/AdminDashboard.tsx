@@ -3,8 +3,8 @@ import { Doughnut } from "react-chartjs-2";
 import "./AdminDashboard.css";
 import { AccountCircleOutlined, Folder } from "@mui/icons-material"; // Removed HomeOutlined
 import { Col, Row } from "antd";
-import AdminHeaderDashboard from "../components/AdminHeaderDashboard";
-import AdminSidebarDashboard from "../components/AdminSidebarDashboard"; // Import the sidebar component
+import AdminHeaderDashboard from "../../../shared/components/AdminHeaderDashboard";
+import AdminSidebarDashboard from "../../../shared/components/AdminSidebarDashboard"; // Import the sidebar component
 import React, { useState } from "react";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
