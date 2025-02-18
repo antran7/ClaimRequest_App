@@ -3,10 +3,10 @@ import { Doughnut } from "react-chartjs-2";
 import "./AdminDashboard.css";
 import { AccountCircleOutlined, Folder } from "@mui/icons-material"; // Removed HomeOutlined
 import { Col, Row } from "antd";
+import { useState } from "react";
 import AdminHeaderDashboard from "../components/AdminHeaderDashboard";
 import AdminSidebarDashboard from "../components/AdminSidebarDashboard"; // Import the sidebar component
 import { useNavigate } from "react-router-dom";
-import React, { useState } from "react";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -36,7 +36,11 @@ function AdminDashboard() {
   return (
     <div>
       <AdminHeaderDashboard toggleSidebar={toggleSidebar} />
-      <AdminSidebarDashboard isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} /> {/* Add the sidebar component */}
+      <AdminSidebarDashboard
+        isOpen={isSidebarOpen}
+        toggleSidebar={toggleSidebar}
+      />{" "}
+      {/* Add the sidebar component */}
       <div className="admin-dashboard-container">
         <div className="header"></div>
         <div className="content-dashboard">
@@ -88,7 +92,6 @@ function AdminDashboard() {
               </div>
             </Col>
           </Row>
-        
 
           <div className="chart-container">
             <Doughnut data={data} />

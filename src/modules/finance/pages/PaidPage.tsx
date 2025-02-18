@@ -5,8 +5,11 @@ import {
   SearchOutlined,
   DownloadOutlined,
   DollarOutlined,
+  LogoutOutlined,
 } from "@ant-design/icons";
 import "./PaidPage.css";
+import { handleLogout } from "../../../shared/utils/auth";
+import { useNavigate } from "react-router-dom";
 
 interface ClaimRequest {
   id: number;
@@ -21,6 +24,7 @@ interface ClaimRequest {
 const PaidPage = () => {
   const [searchText, setSearchText] = useState("");
   const [data, setData] = useState<ClaimRequest[]>([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Lấy dữ liệu từ localStorage và chuyển đổi format
@@ -156,7 +160,17 @@ const PaidPage = () => {
   return (
     <div className="paid-page">
       <div className="page-header">
-        <h1 className="page-title">Finance Claims Management</h1>
+        <div className="header-top">
+          <h1 className="page-title">Finance Claims Management</h1>
+          <Button
+            icon={<LogoutOutlined />}
+            onClick={() => handleLogout(navigate)}
+            danger
+            className="logout-button"
+          >
+            Logout
+          </Button>
+        </div>
         <Input
           placeholder="Search claims..."
           prefix={<SearchOutlined />}

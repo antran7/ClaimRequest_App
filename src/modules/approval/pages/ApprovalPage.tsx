@@ -5,8 +5,11 @@ import {
   SearchOutlined,
   CheckOutlined,
   CloseOutlined,
+  LogoutOutlined,
 } from "@ant-design/icons";
 import "./ApprovalPage.css";
+import { handleLogout } from "../../../shared/utils/auth";
+import { useNavigate } from "react-router-dom";
 
 interface ClaimRequest {
   id: number;
@@ -18,6 +21,7 @@ interface ClaimRequest {
 }
 
 const ApprovalPage = () => {
+  const navigate = useNavigate();
   const [searchText, setSearchText] = useState("");
   const [requests, setRequests] = useState<ClaimRequest[]>([]);
 
@@ -142,7 +146,17 @@ const ApprovalPage = () => {
   return (
     <div className="approval-page">
       <div className="page-header">
-        <h1 className="page-title">Approval Management</h1>
+        <div className="header-top">
+          <h1 className="page-title">Approval Management</h1>
+          <Button
+            icon={<LogoutOutlined />}
+            onClick={() => handleLogout(navigate)}
+            danger
+            className="logout-button"
+          >
+            Logout
+          </Button>
+        </div>
         <Input
           placeholder="Search requests..."
           prefix={<SearchOutlined />}
