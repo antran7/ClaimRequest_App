@@ -24,7 +24,7 @@ export const adminRoutes: RouteObject[] = [
     element: <UserManagement />,
   },
   {
-    path: "/projectmanager",
+    path: "/admindashboard/project",
     element: <ProjectManagementPage />,
   }
   // {

@@ -6,11 +6,13 @@ import { Col, Row } from "antd";
 import AdminHeaderDashboard from "../components/AdminHeaderDashboard";
 import AdminSidebarDashboard from "../components/AdminSidebarDashboard"; // Import the sidebar component
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 function AdminDashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const navigate = useNavigate();
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -52,7 +54,7 @@ function AdminDashboard() {
                 </div>
               </div>
             </Col>
-            <Col span={6}>
+            <Col span={6} onClick={() => navigate("/admindashboard/project")}>
               <div className="project-card">
                 <div className="project-card-left">
                   <p>Project</p>
@@ -86,7 +88,7 @@ function AdminDashboard() {
               </div>
             </Col>
           </Row>
-        
+
 
           <div className="chart-container">
             <Doughnut data={data} />
