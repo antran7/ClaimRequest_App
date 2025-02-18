@@ -8,12 +8,6 @@ import { financeRoutes } from "../../modules/finance/routes";
 import { approvalRoutes } from "../../modules/approval/routes";
 import EditRequestPage from "../../modules/users/components/request-comp/EditRequest";
 import HomePage from "../../modules/auth/pages/HomePage";
-<<<<<<< HEAD
-=======
-import Profile from "../../modules/admin/pages/Profile";
-import AdminDashboard from "../../modules/admin/pages/AdminDashboard";
-import UserManagement from "../../modules/admin/pages/UserManagement";
->>>>>>> 7ae7d4c8017be4732e142bfa9b95027f388fa9ec
 
 const AppRoutes = () => {
   return (
@@ -24,12 +18,6 @@ const AppRoutes = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/unauthorized" element={<Error />} />
           <Route path="/editrequest/:id" element={<EditRequestPage />} />
-<<<<<<< HEAD
-=======
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/admindashboard" element={<AdminDashboard />} />
-          <Route path="/usermanagement" element={<UserManagement />} />
->>>>>>> 7ae7d4c8017be4732e142bfa9b95027f388fa9ec
 
           {/* Import route từ các module */}
           {adminRoutes.map((route, index) => (
