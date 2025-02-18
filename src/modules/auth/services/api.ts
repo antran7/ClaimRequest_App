@@ -1,7 +1,7 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 
 const api = axios.create({
-  baseURL: '',
+  baseURL: 'https://67b416e6392f4aa94fa93e19.mockapi.io/api',
   timeout: 5000,
   headers: {
     'Content-Type': 'application/json',
@@ -45,4 +45,4 @@ const apiService = {
   },
 };
 
-export default apiService;
+export default api;
