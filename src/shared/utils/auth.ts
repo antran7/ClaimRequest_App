@@ -39,8 +39,8 @@ export const getToken = (): string | null => {
 
 // Xử lý đăng xuất
 export const handleLogout = (navigate: NavigateFunction): void => {
-  localStorage.removeItem("user");
-  navigate("/login");
+  localStorage.clear();
+  navigate("/login", { replace: true });
 };
 
 // Kiểm tra role của user
