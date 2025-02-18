@@ -29,12 +29,12 @@ const PaidPage = () => {
       .filter((req: any) => req.status === "APPROVED" || req.status === "PAID")
       .map((req: any) => ({
         id: req.id,
-        employeeName: req.name || `User ${req.id}`, // Sử dụng tên từ request nếu có
+        employeeName: req.name || `User ${req.id}`,
         projectName: `Project ${String.fromCharCode(65 + (req.id % 26))}`,
         amount: Math.floor(Math.random() * 10000) + 1000,
         status: req.status,
         submittedDate: req.submittedDate,
-        approvedDate: new Date().toISOString().split("T")[0],
+        approvedDate: req.approvedDate || req.submittedDate,
       }));
     setData(formattedRequests);
   }, []);
