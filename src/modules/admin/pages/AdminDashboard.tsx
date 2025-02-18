@@ -7,7 +7,6 @@ import { useState } from "react";
 import AdminHeaderDashboard from "../components/AdminHeaderDashboard";
 import AdminSidebarDashboard from "../components/AdminSidebarDashboard"; // Import the sidebar component
 import { useNavigate } from "react-router-dom";
-import React, { useState } from "react";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
