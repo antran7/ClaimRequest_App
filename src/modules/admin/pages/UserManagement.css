@@ -3,7 +3,7 @@ body {
   margin: 0;
   padding: 0;
   font-family: Arial, sans-serif;
-  background: url("https://wallpapercat.com/w/full/2/f/d/11917-3840x2160-desktop-4k-the-witcher-tv-series-wallpaper.jpg") no-repeat center center fixed;
+  background: url("https://career.fpt-software.com/wp-content/uploads/2020/07/fville-hanoi.jpg") no-repeat center center fixed;
   background-size: cover;
 }
 
@@ -12,8 +12,9 @@ body {
   font-family: Arial, sans-serif;
   background-color: white;
   max-width: 800px;
-  margin: auto; /* Center horizontally */
-  position: absolute;
+  margin-top: 350px ; 
+  margin-left: 300px;
+  position: relative;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%); /* Center both horizontally & vertically */
@@ -88,4 +89,3 @@ body {
   padding: 10px;
   text-transform: uppercase; 
 }
-
