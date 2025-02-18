@@ -1,23 +1,24 @@
 import { Button, Checkbox, Col, Flex, Form, Input, Row } from "antd";
 import "./Login.css";
 import { Role } from "../../../shared/constants/roles";
-import { useAuth } from "../services/useAuth";
+import { useAuth } from "../../../shared/hooks/useAuth";
 import { useNavigate } from "react-router";
 
 const Login = () => {
-  const { setRole } = useAuth();
-  const { role } = useAuth();
   const navigate = useNavigate();
+  const { login } = useAuth();
 
-  const handleSubmit = (values: { email: string; password: string }) => {
-    const user = {
-      email: values.email,
-      password: values.password,
-      role: Role.ADMIN,
-    };
-    setRole(user.role);
-    console.log(role);
-    switch (user.role) {
+  const handleSubmit = async (values: { email: string; password: string }) => {
+    try {
+      await login(values.email, values.password);
+      console.log("Thanh cong!");
+    } catch (error) {
+      console.error(error);
+    }
+
+    const role = localStorage.getItem("userRole");
+    console.log("Role la: ", role);
+    switch (role) {
       case Role.ADMIN:
         navigate("/admin/dashboard");
         break;
