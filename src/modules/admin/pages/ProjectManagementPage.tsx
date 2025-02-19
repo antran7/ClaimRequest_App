@@ -10,6 +10,11 @@ import {
   CardContent,
   CardHeader,
   Typography,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  TextField,
 } from "@mui/material";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { fetchProjects, addProject, updateProject, deleteProject } from "../services/projectService";
@@ -119,53 +124,53 @@ const ProjectManagementPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <div className="col-span-2 bg-white shadow-lg flex flex-col h-full">
-        <AdminHeaderDashboard toggleSidebar={toggleSidebar} />
-        <AdminSidebarDashboard isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-      </div>
+      <AdminHeaderDashboard toggleSidebar={toggleSidebar} />
+      <AdminSidebarDashboard isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
-      <div className="col-span-10 p-8">
+      <div className="p-8">
         <div className="flex justify-between items-center mb-6">
           <BackButton to="/admin/dashboard" />
-          <Typography variant="h5" className="font-bold text-gray-800">Project Management</Typography>
+          <Typography variant="h5">Project Management</Typography>
           <Button variant="contained" color="primary" onClick={() => handleOpenDialog()}>Add Project</Button>
         </div>
 
         <div className="grid grid-cols-3 gap-6">
-          {projects.length > 0 ? (
-            projects.map((project) => (
-              <Card key={project.id} className="shadow-md rounded-lg overflow-hidden">
-                <CardHeader title={<Typography variant="h6">{project.name}</Typography>} />
-                <CardContent>
-                  <Typography color="textSecondary">Budget: ${project.budget.toLocaleString()}</Typography>
-                  <Typography color="textSecondary">Start Date: {new Date(project.startDate).toLocaleDateString()}</Typography>
-                  <Typography color="textSecondary">End Date: {new Date(project.endDate).toLocaleDateString()}</Typography>
-                  <Typography color="textSecondary">Users:</Typography>
-                  <div className="flex space-x-2">
-                    {users
-                      .filter(user => user.projectId.includes(project.id))
-                      .map(user => (
-                        <img
-                          key={user.id}
-                          src={user.url}
-                          alt={user.name}
-                          className="w-10 h-10 rounded-full border border-gray-300"
-                        />
-                      ))}
-                  </div>
-
-                  <div className="flex justify-between mt-4">
-                    <Button variant="outlined" color="primary" startIcon={<EditIcon />} onClick={() => handleOpenDialog(project)}>Edit</Button>
-                    <Button variant="outlined" color="secondary" startIcon={<DeleteIcon />} onClick={() => handleDeleteProject(project.id)}>Delete</Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            <Typography variant="h6" className="text-center col-span-3">No projects found</Typography>
-          )}
+          {projects.map((project) => (
+            <Card key={project.id}>
+              <CardHeader title={project.name} />
+              <CardContent>
+                <Typography>Budget: ${project.budget.toLocaleString()}</Typography>
+                <Typography>Start: {new Date(project.startDate).toLocaleDateString()}</Typography>
+                <Typography>End: {new Date(project.endDate).toLocaleDateString()}</Typography>
+                <Typography>Users:</Typography>
+                <div className="flex space-x-2">
+                  {users.filter(user => user.projectId.includes(project.id)).map(user => (
+                    <img key={user.id} src={user.url} alt={user.name} className="w-10 h-10 rounded-full border" />
+                  ))}
+                </div>
+                <div className="flex justify-between mt-4">
+                  <Button variant="outlined" color="primary" startIcon={<EditIcon />} onClick={() => handleOpenDialog(project)}>Edit</Button>
+                  <Button variant="outlined" color="secondary" startIcon={<DeleteIcon />} onClick={() => handleDeleteProject(project.id)}>Delete</Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
+
+      <Dialog open={openDialog} onClose={handleCloseDialog} fullWidth>
+        <DialogTitle>{isEditing ? "Edit Project" : "Add Project"}</DialogTitle>
+        <DialogContent>
+          <TextField fullWidth margin="normal" label="Name" {...formik.getFieldProps("name")} />
+          <TextField fullWidth margin="normal" label="Budget" {...formik.getFieldProps("budget")} type="number" />
+          <TextField fullWidth margin="normal" label="Start Date" {...formik.getFieldProps("startDate")} type="date" InputLabelProps={{ shrink: true }} />
+          <TextField fullWidth margin="normal" label="End Date" {...formik.getFieldProps("endDate")} type="date" InputLabelProps={{ shrink: true }} />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog}>Cancel</Button>
+          <Button onClick={formik.handleSubmit} variant="contained" color="primary">Save</Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
