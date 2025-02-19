@@ -163,7 +163,7 @@ const ProjectManagementPage: React.FC = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button onClick={formik.handleSubmit} variant="contained" color="primary">Save</Button>
+          <Button onClick={() => formik.handleSubmit()} variant="contained" color="primary">Save</Button>
         </DialogActions>
       </Dialog>
     </div>
