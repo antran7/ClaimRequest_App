@@ -7,7 +7,6 @@ import { adminRoutes } from "../../modules/admin/routes";
 import { financeRoutes } from "../../modules/finance/routes";
 import { approvalRoutes } from "../../modules/approval/routes";
 import { Toaster } from "react-hot-toast";
-
 import HomePage from "../../modules/auth/pages/HomePage";
 
 const AppRoutes = () => {
