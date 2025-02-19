@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import Navbar from "../components/Navbar";
 import AdminHeaderDashboard from "../components/AdminHeaderDashboard";
 import AdminSidebarDashboard from "../components/AdminSidebarDashboard";
 import BackButton from "../components/BackButton";
@@ -10,21 +9,23 @@ import {
   Card,
   CardContent,
   CardHeader,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  TextField,
   Typography,
 } from "@mui/material";
-import { Add as PlusIcon, Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
+import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { fetchProjects, addProject, updateProject, deleteProject } from "../services/projectService";
 import { toast } from "react-hot-toast";
 import { Project } from "../types/project";
 
+type User = {
+  id: string;
+  url: string;
+  name: string;
+  projectId: string[];
+};
+
 const ProjectManagementPage: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
@@ -62,12 +63,17 @@ const ProjectManagementPage: React.FC = () => {
     validationSchema,
     onSubmit: async (values) => {
       try {
+        const projectData = {
+          ...values,
+          budget: Number(values.budget),
+        };
+
         if (isEditing && editingProjectId) {
-          const updatedProject = await updateProject({ id: editingProjectId, ...values });
+          const updatedProject = await updateProject({ id: editingProjectId, ...projectData });
           setProjects((prev) => prev.map((p) => (p.id === updatedProject.id ? updatedProject : p)));
           toast.success("Project updated successfully!");
         } else {
-          const newProject = await addProject(values);
+          const newProject = await addProject(projectData);
           setProjects((prev) => [...prev, newProject]);
           toast.success("Project added successfully!");
         }
@@ -84,7 +90,7 @@ const ProjectManagementPage: React.FC = () => {
       setEditingProjectId(project.id);
       formik.setValues({
         name: project.name,
-        budget: project.budget,
+        budget: project.budget.toString(),
         startDate: project.startDate,
         endDate: project.endDate,
       });
@@ -137,7 +143,7 @@ const ProjectManagementPage: React.FC = () => {
                   <Typography color="textSecondary">Users:</Typography>
                   <div className="flex space-x-2">
                     {users
-                      .filter(user => user.projectId.includes(project.id)) // Kiểm tra nếu project.id có trong danh sách user.projectId
+                      .filter(user => user.projectId.includes(project.id))
                       .map(user => (
                         <img
                           key={user.id}
@@ -147,7 +153,6 @@ const ProjectManagementPage: React.FC = () => {
                         />
                       ))}
                   </div>
-
 
                   <div className="flex justify-between mt-4">
                     <Button variant="outlined" color="primary" startIcon={<EditIcon />} onClick={() => handleOpenDialog(project)}>Edit</Button>
