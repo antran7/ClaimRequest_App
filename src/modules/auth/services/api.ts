@@ -61,6 +61,16 @@ const apiService = {
   ): Promise<AxiosResponse<T>> => {
     return api.delete<T>(url, config);
   },
+  getRequests: async (userId: number) => {
+    const response = await api.get(`/requests`, {
+      params: { userId }
+    });
+    return response.data;
+  },
+  addRequest: async (request: { name: string; userId: number }) => {
+    const response = await api.post(`/requests`, request);
+    return response.data;
+  },
 };
 
 export default apiService;
