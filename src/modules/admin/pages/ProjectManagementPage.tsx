@@ -11,7 +11,7 @@ import {
   CardHeader,
   Typography,
 } from "@mui/material";
-import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
+import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { fetchProjects, addProject, updateProject, deleteProject } from "../services/projectService";
 import { toast } from "react-hot-toast";
 import { Project } from "../types/project";
