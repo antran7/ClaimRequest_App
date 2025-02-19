@@ -1,84 +1,122 @@
 import { useState, useEffect } from "react";
-import { Modal, Button, Input, Form } from "antd";
-import "./RequestPage.css"; // Import file CSS riêng
+import { Modal, Button, Input, Form, DatePicker } from "antd";
+import axios from "axios";
+import "./RequestPage.css";
+import moment from "moment";
+
+
+const API_REQUESTS = "https://67b5a06d07ba6e59083db637.mockapi.io/api/requests";
+const API_USERS = "https://67b5a06d07ba6e59083db637.mockapi.io/api/user";
+
+interface Request {
+  id: number;
+  name: string;
+  status: string;
+  submittedDate: string;
+  userId: number;
+}
 
 const RequestPage = () => {
-  const [requests, setRequests] = useState<
-    {
-      id: number;
-      name: string;
-      status: string;
-      submittedDate: string;
-    }[]
-  >([]);
+  const [requests, setRequests] = useState<Request[]>([]);
   const [search, setSearch] = useState("");
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-  const [currentRequest, setCurrentRequest] = useState<
-    { id: number; name: string; status: string; submittedDate: string } | null
-  >(null);
-
-  const [form] = Form.useForm(); // Create a form instance
+  const [currentRequest, setCurrentRequest] = useState<Request | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [form] = Form.useForm();
+  const [userId, setUserId] = useState<number | null>(null);
 
   useEffect(() => {
-    const savedRequests = JSON.parse(localStorage.getItem("requests") || "[]");
-    setRequests(savedRequests);
+    const fetchUser = async () => {
+      try {
+        const response = await axios.get(API_USERS);
+        const currentUser = response.data[0]; 
+        setUserId(currentUser.id);
+      } catch (error) {
+        console.error("Lỗi khi lấy thông tin user:", error);
+      }
+    };
+
+    fetchUser();
   }, []);
 
-  const handleDelete = (id: number) => {
-    const updatedRequests = requests.filter((req) => req.id !== id);
-    setRequests(updatedRequests);
-    localStorage.setItem("requests", JSON.stringify(updatedRequests));
-  };
+  useEffect(() => {
+    if (!userId) return;
 
-  const handleRequestApproval = (id: number) => {
-    const updatedRequests = requests.map((req) =>
-      req.id === id ? { ...req, status: "PENDING" } : req
-    );
-    setRequests(updatedRequests);
-    localStorage.setItem("requests", JSON.stringify(updatedRequests));
-  };
-
-  const handleAddRequest = () => {
-    setIsAddModalVisible(true);
-  };
-
-  const handleEditRequest = (request: { id: number; name: string; status: string; submittedDate: string }) => {
-    setCurrentRequest({ ...request });
-    setIsEditModalVisible(true);
-  };
-
-  const handleAddModalOk = (values: { name: string }) => {
-    const newRequest = {
-      id: requests.length + 1,
-      name: values.name,
-      status: "DRAFT",
-      submittedDate: new Date().toISOString().split("T")[0],
+    const fetchRequests = async () => {
+      try {
+        const response = await axios.get(API_REQUESTS);
+        const userRequests = response.data.filter((req: Request) => req.userId === userId);
+        setRequests(userRequests);
+      } catch (error) {
+        console.error("Lỗi khi lấy requests:", error);
+      } finally {
+        setLoading(false);
+      }
     };
-    const updatedRequests = [...requests, newRequest];
-    setRequests(updatedRequests);
-    localStorage.setItem("requests", JSON.stringify(updatedRequests));
-    setIsAddModalVisible(false);
-    form.resetFields(); // Reset form fields after adding a request
+
+    fetchRequests();
+  }, [userId]);
+
+  const handleAddModalOk = async (values: { name: string; submittedDate: moment.Moment }) => {
+
+    if (!userId) return;
+
+    try {
+      const newRequest = {
+        name: values.name,
+        status: "DRAFT",
+        submittedDate: values.submittedDate.format("YYYY-MM-DD"),
+        userId,
+      };
+
+      const response = await axios.post(API_REQUESTS, newRequest);
+      setRequests([...requests, response.data]);
+      setIsAddModalVisible(false);
+      form.resetFields();
+    } catch (error) {
+      console.error("Lỗi khi thêm request:", error);
+    }
   };
 
-  const handleEditModalOk = (values: { name: string }) => {
-    if (currentRequest) {
-      const updatedRequests = requests.map((req) =>
-        req.id === currentRequest.id ? { ...req, name: values.name } : req
-      );
-      setRequests(updatedRequests);
-      localStorage.setItem("requests", JSON.stringify(updatedRequests));
+  const handleEditModalOk = async (values: { name: string }) => {
+    if (!currentRequest) return;
+
+    try {
+      const updatedRequest = { ...currentRequest, name: values.name };
+      await axios.put(`${API_REQUESTS}/${currentRequest.id}`, updatedRequest);
+      setRequests(requests.map((req) => (req.id === currentRequest.id ? updatedRequest : req)));
       setIsEditModalVisible(false);
-      setCurrentRequest(null); // Reset state sau khi sửa xong
+      setCurrentRequest(null);
+    } catch (error) {
+      console.error("Lỗi khi chỉnh sửa request:", error);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      await axios.delete(`${API_REQUESTS}/${id}`);
+      setRequests(requests.filter((req) => req.id !== id));
+    } catch (error) {
+      console.error("Lỗi khi xóa request:", error);
+    }
+  };
+
+  const handleRequestApproval = async (id: number) => {
+    try {
+      const updatedRequests = requests.map((req) => (req.id === id ? { ...req, status: "PENDING" } : req));
+      setRequests(updatedRequests);
+      await axios.put(`${API_REQUESTS}/${id}`, { status: "PENDING" });
+    } catch (error) {
+      console.error("Lỗi khi gửi yêu cầu duyệt:", error);
     }
   };
 
   const handleModalCancel = () => {
     setIsAddModalVisible(false);
     setIsEditModalVisible(false);
-    setCurrentRequest(null); // Reset lại request hiện tại
-    form.resetFields(); // Reset form fields when modal is closed
+    setCurrentRequest(null);
+    form.resetFields();
   };
 
   return (
@@ -94,105 +132,63 @@ const RequestPage = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <Button onClick={handleAddRequest} className="add-button">
+          <Button onClick={() => setIsAddModalVisible(true)} className="add-button">
             + Add Request
           </Button>
         </div>
 
-        <table className="request-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Request Name</th>
-              <th>Status</th>
-              <th>Submitted Date</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {requests
-              .filter((req) =>
-                req.name.toLowerCase().includes(search.toLowerCase())
-              )
-              .map((req) => (
+        {loading ? (
+          <p>Loading...</p>
+        ) : (
+          <table className="request-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Request Name</th>
+                <th>Status</th>
+                <th>Submitted Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {requests.filter((req) => req.name.toLowerCase().includes(search.toLowerCase())).map((req) => (
                 <tr key={req.id}>
                   <td>{req.id}</td>
                   <td>{req.name}</td>
-                  <td className={`status-${req.status.toLowerCase()}`}>
-                    {req.status}
-                  </td>
+                  <td className={`status-${req.status.toLowerCase()}`}>{req.status}</td>
                   <td>{req.submittedDate}</td>
                   <td>
-                    <Button
-                      onClick={() => handleEditRequest(req)}
-                      className="edit-button"
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      onClick={() => handleDelete(req.id)}
-                      className="delete-button"
-                    >
-                      Delete
-                    </Button>
+                    <Button onClick={() => { setCurrentRequest(req); setIsEditModalVisible(true); }} className="edit-button">Edit</Button>
+                    <Button onClick={() => handleDelete(req.id)} className="delete-button">Delete</Button>
                     {req.status === "DRAFT" && (
-                      <Button
-                        onClick={() => handleRequestApproval(req.id)}
-                        className="approve-button"
-                      >
-                        Request Approval
-                      </Button>
+                      <Button onClick={() => handleRequestApproval(req.id)} className="approve-button">Request Approval</Button>
                     )}
                   </td>
                 </tr>
               ))}
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        )}
       </div>
 
-      <Modal
-        title="Add Request"
-        visible={isAddModalVisible}
-        onCancel={handleModalCancel}
-        footer={null}
-        className="custom-modal"
-      >
-        <Form form={form} onFinish={handleAddModalOk} initialValues={{ name: "" }}>
-          <Form.Item
-            label="Request Name"
-            name="name"
-            rules={[{ required: true, message: "Please input the request name!" }]}
-          >
+      <Modal title="Add Request" open={isAddModalVisible} onCancel={handleModalCancel} footer={null} className="custom-modal">
+        <Form form={form} onFinish={handleAddModalOk} initialValues={{ name: "", submittedDate: null }}>
+          <Form.Item label="Request Name" name="name" rules={[{ required: true, message: "Please input the request name!" }]}>
             <Input />
           </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit">
-              Add
-            </Button>
+          <Form.Item label="Submitted Date" name="submittedDate" rules={[{ required: true, message: "Please select the submitted date!" }]}>
+            <DatePicker />
           </Form.Item>
+          <Form.Item><Button type="primary" htmlType="submit">Add</Button></Form.Item>
         </Form>
       </Modal>
 
-      <Modal
-        title="Edit Request"
-        visible={isEditModalVisible}
-        onCancel={handleModalCancel}
-        footer={null}
-        className="custom-modal"
-      >
+      <Modal title="Edit Request" open={isEditModalVisible} onCancel={handleModalCancel} footer={null} className="custom-modal">
         <Form key={currentRequest?.id} initialValues={currentRequest ?? {}} onFinish={handleEditModalOk}>
-          <Form.Item
-            label="Request Name"
-            name="name"
-            rules={[{ required: true, message: "Please input the request name!" }]}
-          >
+          <Form.Item label="Request Name" name="name" rules={[{ required: true, message: "Please input the request name!" }]}>
             <Input />
           </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit">
-              Save
-            </Button>
-          </Form.Item>
+          <Form.Item><Button type="primary" htmlType="submit">Save</Button></Form.Item>
         </Form>
       </Modal>
     </div>

@@ -2,6 +2,7 @@
   display: flex;
   justify-content: center;
   height: 100vh;
+  padding: 20px;
 }
 
 .request-box {
@@ -9,8 +10,8 @@
   max-width: 2000px;
   background: white;
   padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .request-title {
@@ -24,28 +25,28 @@
 .search-container {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
 }
 
 .search-input {
-  width: 80%;
-  padding: 10px;
+  width: 70%;
+  padding: 8px;
   border: 1px solid #ccc;
-  border-radius: 5px;
+  border-radius: 4px;
 }
 
 .add-button {
-  background-color: #1d4ed8;
+  background-color: #1890ff;
   color: white;
-  padding: 10px 15px;
+  padding: 8px 16px;
   border: none;
-  border-radius: 5px;
+  border-radius: 4px;
   cursor: pointer;
   transition: 0.3s;
 }
 
 .add-button:hover {
-  background-color: #2563eb;
+  background-color: #40a9ff;
 }
 
 .request-table {
@@ -56,23 +57,23 @@
 
 .request-table th,
 .request-table td {
-  padding: 10px;
-  border-bottom: 1px solid #ddd;
-  text-align: center;
+  padding: 12px;
+  border: 1px solid #ddd;
+  text-align: left;
 }
 
 .request-table th {
-  background-color: #e0e7ff;
+  background-color: #f5f5f5;
   color: #1e3a8a;
 }
 
 .status-draft {
-  color: #8c8c8c;
+  color: #ff9800;
   font-weight: bold;
 }
 
 .status-pending {
-  color: #faad14;
+  color: #2196f3;
   font-weight: bold;
 }
 
@@ -100,6 +101,7 @@
   cursor: pointer;
   border-radius: 5px;
   font-size: 14px;
+  margin-right: 8px;
 }
 
 .edit-button {
@@ -129,18 +131,27 @@
   background-color: #15803d;
 }
 .custom-modal .ant-modal-content {
-  height: 20vh;
+  height: 25vh;
   width: 100vw;
   margin: 0;
   padding: 0;
   max-width: 100%;
   max-height: 100%;
-  border-radius: 10px;
+  border-radius: 8px;
   margin-top: 10vh;
 }
 
 .custom-modal .ant-modal-header, .custom-modal .ant-modal-footer {
   padding: 10px 24px;
+}
+
+.custom-modal .ant-modal-header {
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+}
+
+.custom-modal .ant-modal-footer {
+  border-top: none;
 }
 
 .custom-modal .ant-modal-body {
@@ -155,8 +166,13 @@
 }
 .custom-modal .ant-form-item {
   width: 100%;
+  margin-bottom: 16px;
 }
 
 .custom-modal .ant-form-item button {
+  width: 100%;
+}
+
+.custom-modal .ant-picker {
   width: 100%;
 }
