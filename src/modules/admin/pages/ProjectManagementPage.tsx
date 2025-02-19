@@ -18,15 +18,11 @@ import {
 } from "@mui/material";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { fetchProjects, addProject, updateProject, deleteProject } from "../services/projectService";
+import { fetchUsers } from "../services/userService";
 import { toast } from "react-hot-toast";
 import { Project } from "../types/project";
+import { User } from "../types/user";
 
-type User = {
-  id: string;
-  url: string;
-  name: string;
-  projectId: string[];
-};
 
 const ProjectManagementPage: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -41,8 +37,7 @@ const ProjectManagementPage: React.FC = () => {
       .then(setProjects)
       .catch(() => toast.error("Failed to fetch projects"));
 
-    fetch("https://67aaae7465ab088ea7e73b54.mockapi.io/user")
-      .then((res) => res.json())
+    fetchUsers()
       .then(setUsers)
       .catch(() => toast.error("Failed to fetch users"));
   }, []);
