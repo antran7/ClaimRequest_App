@@ -1,23 +1,25 @@
-// import React from 'react'
-// import Header from './Header'
-// import SideBar from './SideBar'
-// import Footer from './Footer';
+import React from 'react'
+import Header from '../components/Header'
+import Footer from '../components/Footer';
 
-// type AdminLayoutProps = {
-//     children: React.ReactNode;
-// };
+type LayoutProps = {
+    children: React.ReactNode;
+};
 
-// const Layout: React.FC<AdminLayoutProps> = ({children}) => {
-//     return (
-//         <>
-//         <div>
-//             <SideBar />
-//             <Header />
-//             <main>{children}</main>
-//             <Footer />
-//         </div>
-//         </>
-//     )
-// }
+const Layout: React.FC<LayoutProps> = ({ children }) => {
+    return (
+        <div className="flex min-h-screen">
+            {/* Sidebar
+            <Sidebar /> */}
 
-// export default Layout
+            <div className="flex-1 flex flex-col">
+                <Header />
+
+                <main className="flex-1 p-4 bg-white">{children}</main>
+                <Footer />
+            </div>
+        </div>
+    )
+}
+
+export default Layout
