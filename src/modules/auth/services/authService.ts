@@ -9,8 +9,9 @@ interface User {
 export const authService = {
   async login(email: string, password: string): Promise<User | null> {
     try {
-      const response = await apiService.get('/user');
+      const response = await apiService.get<User[]>('/user');
       const users: User[] = response.data;
+
       const user = users.find(
         (u) => u.email === email && u.password === password
       );

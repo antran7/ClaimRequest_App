@@ -110,7 +110,7 @@ export const hasAnyRole = (requiredRoles: string[]): boolean => {
 
 // Kiểm tra permissions (nếu có)
 export const hasPermission = (permission: string): boolean => {
-  const user = getUserFromStorage();
   // Implement logic kiểm tra permission tùy theo yêu cầu của ứng dụng
-  return true;
+  console.warn("Permission logic is not yet implemented:", permission);
+  return false; // Default return value if logic is not implemented
 };
