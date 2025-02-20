@@ -1,5 +1,5 @@
 import { createContext, ReactNode, useState, useEffect, useContext } from "react";
-import { Role } from "../constants/roles"; // Assuming Role is an enum
+import { Role } from "../constants/roles";
 import { authService } from "../../modules/auth/services/authService";
 
 interface User {
@@ -19,7 +19,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   role: null,
   login: async () => Promise.resolve(),
-  logout: () => {},
+  logout: () => { },
   loading: true,
 });
 
@@ -55,8 +55,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const savedRole = localStorage.getItem("userRole") as Role | null;
-    if (savedRole) {
-      setRole(savedRole as Role);
+    const savedEmail = localStorage.getItem("userEmail");
+
+    if (savedRole && savedEmail) {
+      setUser({ email: savedEmail, role: savedRole });
+      setRole(savedRole);
     }
     setLoading(false);
   }, []);

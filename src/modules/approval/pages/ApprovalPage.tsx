@@ -10,6 +10,7 @@ import {
 import "./ApprovalPage.css";
 import { handleLogout } from "../../../shared/utils/auth";
 import { useNavigate } from "react-router-dom";
+import Layout from "../../../shared/layouts/Layout";
 
 interface ClaimRequest {
   id: number;
@@ -144,39 +145,41 @@ const ApprovalPage = () => {
   );
 
   return (
-    <div className="approval-page">
-      <div className="page-header">
-        <div className="header-top">
-          <h1 className="page-title">Approval Management</h1>
-          <Button
-            icon={<LogoutOutlined />}
-            onClick={() => handleLogout(navigate)}
-            danger
-            className="logout-button"
-          >
-            Logout
-          </Button>
+    <Layout>
+      <div className="approval-page">
+        <div className="page-header">
+          <div className="header-top">
+            <h1 className="page-title">Approval Management</h1>
+            <Button
+              icon={<LogoutOutlined />}
+              onClick={() => handleLogout(navigate)}
+              danger
+              className="logout-button"
+            >
+              Logout
+            </Button>
+          </div>
+          <Input
+            placeholder="Search requests..."
+            prefix={<SearchOutlined />}
+            onChange={(e) => setSearchText(e.target.value)}
+            className="search-input"
+          />
         </div>
-        <Input
-          placeholder="Search requests..."
-          prefix={<SearchOutlined />}
-          onChange={(e) => setSearchText(e.target.value)}
-          className="search-input"
-        />
+        <div className="table-container">
+          <Table
+            columns={columns}
+            dataSource={filteredData}
+            rowKey="id"
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: true,
+              showTotal: (total) => `Total ${total} items`,
+            }}
+          />
+        </div>
       </div>
-      <div className="table-container">
-        <Table
-          columns={columns}
-          dataSource={filteredData}
-          rowKey="id"
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showTotal: (total) => `Total ${total} items`,
-          }}
-        />
-      </div>
-    </div>
+    </Layout>
   );
 };
 
