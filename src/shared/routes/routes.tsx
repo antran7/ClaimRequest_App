@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "../../modules/auth/services/useAuth";
+import { AuthProvider } from "../hooks/useAuth";
 import Login from "../../modules/auth/pages/Login";
 import Error from "../../modules/auth/pages/Error";
 import { userRoutes } from "../../modules/users/routes";
@@ -7,7 +7,7 @@ import { adminRoutes } from "../../modules/admin/routes";
 import { financeRoutes } from "../../modules/finance/routes";
 import { approvalRoutes } from "../../modules/approval/routes";
 import { Toaster } from "react-hot-toast";
-import HomePage from "../../modules/auth/pages/HomePage";
+import Home from "../../modules/auth/pages/Home";
 
 const AppRoutes = () => {
   return (
@@ -15,7 +15,7 @@ const AppRoutes = () => {
       <Router>
         <Toaster position="bottom-right" reverseOrder={false} />
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/unauthorized" element={<Error />} />
 

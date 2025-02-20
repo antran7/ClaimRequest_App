@@ -5,7 +5,6 @@ import "./RequestPage.css";
 import moment from "moment";
 
 const API_REQUESTS = "https://67b5a06d07ba6e59083db637.mockapi.io/api/requests";
-const API_USERS = "https://67b5a06d07ba6e59083db637.mockapi.io/api/user";
 
 interface Request {
   id: number;
@@ -29,13 +28,12 @@ const RequestPage = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        // Lấy email từ localStorage thay vì lấy user đầu tiên từ API
         const currentUserEmail = localStorage.getItem("userEmail");
         if (currentUserEmail) {
           setUserEmail(currentUserEmail);
         }
       } catch (error) {
-        console.error("Lỗi khi lấy thông tin user:", error);
+        console.error("Error fetching user information:", error);
       }
     };
 
@@ -53,7 +51,7 @@ const RequestPage = () => {
         );
         setRequests(userRequests);
       } catch (error) {
-        console.error("Lỗi khi lấy requests:", error);
+        console.error("Error fetching requests:", error);
       } finally {
         setLoading(false);
       }
@@ -73,8 +71,8 @@ const RequestPage = () => {
         name: values.name,
         status: "DRAFT",
         submittedDate: values.submittedDate.format("YYYY-MM-DD"),
-        userEmail: userEmail, // Thêm email vào request mới
-        userId: 1, // Giữ nguyên userId nếu cần
+        userEmail: userEmail, // Add email to the new request
+        userId: 1, // Keep userId if needed
       };
 
       const response = await axios.post(API_REQUESTS, newRequest);
@@ -82,7 +80,7 @@ const RequestPage = () => {
       setIsAddModalVisible(false);
       form.resetFields();
     } catch (error) {
-      console.error("Lỗi khi thêm request:", error);
+      console.error("Error adding request:", error);
     }
   };
 
@@ -100,7 +98,7 @@ const RequestPage = () => {
       setIsEditModalVisible(false);
       setCurrentRequest(null);
     } catch (error) {
-      console.error("Lỗi khi chỉnh sửa request:", error);
+      console.error("Error editing request:", error);
     }
   };
 
@@ -109,7 +107,7 @@ const RequestPage = () => {
       await axios.delete(`${API_REQUESTS}/${id}`);
       setRequests(requests.filter((req) => req.id !== id));
     } catch (error) {
-      console.error("Lỗi khi xóa request:", error);
+      console.error("Error deleting request:", error);
     }
   };
 
@@ -121,7 +119,7 @@ const RequestPage = () => {
       setRequests(updatedRequests);
       await axios.put(`${API_REQUESTS}/${id}`, { status: "PENDING" });
     } catch (error) {
-      console.error("Lỗi khi gửi yêu cầu duyệt:", error);
+      console.error("Error sending approval request:", error);
     }
   };
 

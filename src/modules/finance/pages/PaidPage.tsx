@@ -10,6 +10,7 @@ import {
 import "./PaidPage.css";
 import { handleLogout } from "../../../shared/utils/auth";
 import { useNavigate } from "react-router-dom";
+import Layout from "../../../shared/layouts/Layout";
 import axios from "axios";
 
 interface ClaimRequest {
@@ -175,41 +176,43 @@ const PaidPage = () => {
   );
 
   return (
-    <div className="paid-page">
-      <div className="page-header">
-        <div className="header-top">
-          <h1 className="page-title">Finance Claims Management</h1>
-          <Button
-            icon={<LogoutOutlined />}
-            onClick={() => handleLogout(navigate)}
-            danger
-            className="logout-button"
-          >
-            Logout
-          </Button>
+    <Layout>
+      <div className="paid-page">
+        <div className="page-header">
+          <div className="header-top">
+            <h1 className="page-title">Finance Claims Management</h1>
+            {/* <Button
+              icon={<LogoutOutlined />}
+              onClick={() => handleLogout(navigate)}
+              danger
+              className="logout-button"
+            >
+              Logout
+            </Button> */}
+          </div>
+          <Input
+            placeholder="Search claims..."
+            prefix={<SearchOutlined />}
+            onChange={(e) => setSearchText(e.target.value)}
+            className="search-input"
+            style={{ width: 300 }}
+          />
         </div>
-        <Input
-          placeholder="Search claims..."
-          prefix={<SearchOutlined />}
-          onChange={(e) => setSearchText(e.target.value)}
-          className="search-input"
-          style={{ width: 300 }}
-        />
+        <div className="table-container">
+          <Table
+            columns={columns}
+            dataSource={filteredData}
+            rowKey="id"
+            scroll={{ x: 1300 }}
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: true,
+              showTotal: (total) => `Total ${total} items`,
+            }}
+          />
+        </div>
       </div>
-      <div className="table-container">
-        <Table
-          columns={columns}
-          dataSource={filteredData}
-          rowKey="id"
-          scroll={{ x: 1300 }}
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showTotal: (total) => `Total ${total} items`,
-          }}
-        />
-      </div>
-    </div>
+    </Layout>
   );
 };
 

@@ -1,5 +1,4 @@
-import apiService from "../../services/api";
-
+import apiService from "./api";
 
 interface User {
   email: string;
