@@ -89,20 +89,11 @@ const RequestPage = () => {
     }
   };
 
-  const handleEditModalOk = async (values: {
-    name: string;
-    createDate: moment.Moment;
-    submittedDate: moment.Moment;
-  }) => {
+  const handleEditModalOk = async (values: { name: string }) => {
     if (!currentRequest) return;
 
     try {
-      const updatedRequest = {
-        ...currentRequest,
-        name: values.name,
-        createDate: values.createDate.format("YYYY-MM-DD"),
-        submittedDate: values.submittedDate.format("YYYY-MM-DD"),
-      };
+      const updatedRequest = { ...currentRequest, name: values.name };
       await axios.put(`${API_REQUESTS}/${currentRequest.id}`, updatedRequest);
       setRequests(
         requests.map((req) =>
@@ -211,11 +202,6 @@ const RequestPage = () => {
                         onClick={() => {
                           setCurrentRequest(req);
                           setIsEditModalVisible(true);
-                          form.setFieldsValue({
-                            name: req.name,
-                            createDate: moment(req.createDate),
-                            submittedDate: moment(req.submittedDate),
-                          });
                         }}
                         className="edit-button"
                         disabled={req.status === "PENDING"}
@@ -334,7 +320,6 @@ const RequestPage = () => {
         className="custom-modal"
       >
         <Form
-          form={form}
           key={currentRequest?.id}
           initialValues={currentRequest ?? {}}
           onFinish={handleEditModalOk}
@@ -347,34 +332,6 @@ const RequestPage = () => {
             ]}
           >
             <Input />
-          </Form.Item>
-          <Form.Item
-            label="Create Date"
-            name="createDate"
-            rules={[
-              { required: true, message: "Please select the create date!" },
-            ]}
-          >
-            <DatePicker />
-          </Form.Item>
-          <Form.Item
-            label="Submitted Date"
-            name="submittedDate"
-            rules={[
-              { required: true, message: "Please select the submitted date!" },
-              ({ getFieldValue }) => ({
-                validator(_, value) {
-                  if (!value || getFieldValue("createDate") <= value) {
-                    return Promise.resolve();
-                  }
-                  return Promise.reject(
-                    new Error("Submitted date cannot be before create date!")
-                  );
-                },
-              }),
-            ]}
-          >
-            <DatePicker />
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit">
@@ -389,7 +346,6 @@ const RequestPage = () => {
         open={isConfirmModalVisible}
         onCancel={() => setIsConfirmModalVisible(false)}
         onOk={handleConfirmApproval}
-        className="confirm-modal"
       >
         <p>Are you sure you want to approve this request?</p>
       </Modal>
