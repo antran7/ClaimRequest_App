@@ -8,8 +8,14 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-export default function Chart({ title, data, dataKey, grid }) {
+interface ChartProps {
+  title: string;
+  data: any[];
+  dataKey: string;
+  grid?: boolean;
+}
 
+export default function Chart({ title, data, dataKey, grid }: ChartProps) {
   return (
     <div className="chart">
       <h3 className="chartTitle">{title}</h3>

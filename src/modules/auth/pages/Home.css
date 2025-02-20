@@ -1,0 +1,103 @@
+.homepage-title {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 50px;
+    h2 {
+        font-size: 50px;
+    }
+    .homepage-title-button {
+        border: 1px solid #000;
+        border-radius: 20px;
+        font-size: 16px;
+        padding: 20px 40px;
+        margin-top: 30px;
+        transition: all 0.4s ease;
+    }
+    .homepage-title-button:hover {
+        background-color: #000;
+        color: #fff;
+    }
+}
+
+.homepage-services {
+    background-color: #D1D7F1;
+    margin: 50px 0;
+    padding: 40px 20px;
+    h1{
+        font-size: 35px;
+        text-align: center;
+        margin-top: 100px;
+    }
+    h2{
+        font-size: 25px;
+    }
+}
+
+.services-articles-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 50px;
+}
+
+.services-articles {
+    flex: 1 1 calc(50% - 16px);
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+    .services-article-img {
+        flex-basis: 40%;
+    }
+    .services-article-content {
+        flex-basis: 40%;
+        align-self: center;
+        padding-left: 20px;
+    }
+}
+
+.homepage-statistics {
+    display: flex;
+    justify-content: space-between;
+    padding: 50px;
+    .statistics-field {
+        text-align: center;
+    }
+    .statistics-data-1 {
+        font-size: 55px;
+        color: #3EA9C1;
+    }
+    .statistics-data-2 {
+        font-size: 55px;
+        color: #50B848;
+    }
+    .statistics-data-3 {
+        font-size: 55px;
+        color: #034EA2;
+    }
+    .statistics-data-4 {
+        font-size: 55px;
+        color: #F37021;
+    }
+    .statistics-info {
+        font-size: 20px;
+        font-weight: bold;
+        color: #51515B;
+    }
+}
+
+.homepage-intro {
+    margin: 70px 0;
+    .intro-aboutus {
+        h2{
+            text-align: center;
+            font-size: 28px;
+        }
+        p{
+            font-size: 17px;
+            text-align: center;
+            width: 50%;
+            margin: auto;
+        }
+    }
+}

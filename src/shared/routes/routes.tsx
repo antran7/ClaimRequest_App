@@ -1,11 +1,12 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "../../modules/auth/services/useAuth";
+import { AuthProvider } from "../hooks/useAuth";
 import Login from "../../modules/auth/pages/Login";
 import Error from "../../modules/auth/pages/Error";
 import { userRoutes } from "../../modules/users/routes";
 import { adminRoutes } from "../../modules/admin/routes";
 import { financeRoutes } from "../../modules/finance/routes";
 import { approvalRoutes } from "../../modules/approval/routes";
+
 import RequestPage from "../../modules/users/pages/request/RequestPage";
 import AddRequestPage from "../../modules/users/components/request-comp/AddRequest";
 import EditRequestPage from "../../modules/users/components/request-comp/EditRequest";
@@ -28,6 +29,10 @@ const LoadingScreen = () => (
   </div>
 );
 
+import { Toaster } from "react-hot-toast";
+import Home from "../../modules/auth/pages/Home";
+
+
 const AppRoutes = () => {
   const [isLoading, setIsLoading] = useState(true);
 
@@ -43,6 +48,7 @@ const AppRoutes = () => {
   return (
     <AuthProvider>
       <Router>
+
         <Suspense fallback={<LoadingScreen />}>
           {isLoading ? (
             <LoadingScreen />
@@ -56,6 +62,13 @@ const AppRoutes = () => {
               <Route path="/editrequest/:id" element={<EditRequestPage />} />
               <Route path="/profile" element={<Profile    />} />
               <Route path="/admindashboard" element={<AdminDashboard />} />
+
+        <Toaster position="bottom-right" reverseOrder={false} />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/unauthorized" element={<Error />} />
+
 
               {/* Import route từ các module */}
               {adminRoutes.map((route, index) => (

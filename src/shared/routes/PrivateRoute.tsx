@@ -1,19 +1,19 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { Role } from "../constants/roles";
-import { useAuth } from "../../modules/auth/services/useAuth";
+import { useAuth } from "../hooks/useAuth";
 
 interface PrivateRouteProps {
   allowedRoles: Role[];
 }
 
 const PrivateRoute = ({ allowedRoles }: PrivateRouteProps) => {
-  const { role, loading } = useAuth();
+  const { user, loading } = useAuth();
 
   if (loading) {
     return <div>Loading...</div>;
   }
 
-  return role && allowedRoles.includes(role) ? (
+  return user && allowedRoles.includes(user.role as Role) ? (
     <Outlet />
   ) : (
     <Navigate to="/unauthorized" />
