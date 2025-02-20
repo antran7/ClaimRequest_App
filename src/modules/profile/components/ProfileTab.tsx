@@ -19,11 +19,7 @@ const items: TabsProps['items'] = [
     label: 'Edit Profile',
     children: <Profile/>,
   },
-  {
-    key: '3',
-    label: 'Tab 3',
-    children: 'Content of Tab Pane 3',
-  },
+  
 ];
 
 const ProfileTab: React.FC = () => <Tabs defaultActiveKey="1" items={items} onChange={onChange} />;

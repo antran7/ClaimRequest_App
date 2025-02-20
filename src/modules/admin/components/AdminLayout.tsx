@@ -7,7 +7,8 @@ interface AdminLayoutProps {
 }
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
-  const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
+
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);

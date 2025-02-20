@@ -56,21 +56,21 @@
   }
 }
 .save-btn {
-  background-color: orange;
+  background-color: rgb(0, 107, 214);
   color: white;
   border: none;
 }
 .save-btn:hover {
-  background-color: #ff7008;
+  background-color: rgb(0, 107, 214);
 }
 .cancel-btn {
   background-color: white;
-  color: orange;
+  color: rgb(0, 107, 214);
   border: none;
-  border: 1px solid orange;
+  border: 1px solid rgb(0, 107, 214);
 }
 .cancel-btn:hover{
-    background-color: #ff7008;
+    background-color: rgb(0, 107, 214);
 }
 label {
   display: block;
