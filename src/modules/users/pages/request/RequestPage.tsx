@@ -11,6 +11,7 @@ interface Request {
   name: string;
   status: string;
   submittedDate: string;
+  createDate: string;
   userId: number;
   userEmail: string;
 }
@@ -63,6 +64,7 @@ const RequestPage = () => {
 
   const handleAddModalOk = async (values: {
     name: string;
+    createDate: moment.Moment;
     submittedDate: moment.Moment;
   }) => {
     if (!userEmail) return;
@@ -71,6 +73,7 @@ const RequestPage = () => {
       const newRequest = {
         name: values.name,
         status: "DRAFT",
+        createDate: values.createDate.format("YYYY-MM-DD"),
         submittedDate: values.submittedDate.format("YYYY-MM-DD"),
         userEmail: userEmail, // Add email to the new request
         userId: 1, // Keep userId if needed
@@ -165,6 +168,7 @@ const RequestPage = () => {
                 <th>ID</th>
                 <th>Request Name</th>
                 <th>Status</th>
+                <th>Create Date</th>
                 <th>Submitted Date</th>
                 <th>Actions</th>
               </tr>
@@ -181,6 +185,7 @@ const RequestPage = () => {
                     <td className={`status-${req.status.toLowerCase()}`}>
                       {req.status}
                     </td>
+                    <td>{req.createDate}</td>
                     <td>{req.submittedDate}</td>
                     <td>
                       <Button
@@ -224,7 +229,7 @@ const RequestPage = () => {
         <Form
           form={form}
           onFinish={handleAddModalOk}
-          initialValues={{ name: "", submittedDate: null }}
+          initialValues={{ name: "", createDate: null, submittedDate: null }}
         >
           <Form.Item
             label="Request Name"
@@ -236,10 +241,29 @@ const RequestPage = () => {
             <Input />
           </Form.Item>
           <Form.Item
+            label="Create Date"
+            name="createDate"
+            rules={[
+              { required: true, message: "Please select the create date!" },
+            ]}
+          >
+            <DatePicker />
+          </Form.Item>
+          <Form.Item
             label="Submitted Date"
             name="submittedDate"
             rules={[
               { required: true, message: "Please select the submitted date!" },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue("createDate") <= value) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(
+                    new Error("Submitted date cannot be before create date!")
+                  );
+                },
+              }),
             ]}
           >
             <DatePicker />
