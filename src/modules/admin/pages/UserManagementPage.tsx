@@ -5,7 +5,7 @@ export default function UserManagementPage() {
   return (
     <AdminLayout>
       <div className='usermanagement-container'>
-        <h3>User Management</h3>
+        <h3>Staff Information</h3>
         <UserTable/>
       </div>
     </AdminLayout>

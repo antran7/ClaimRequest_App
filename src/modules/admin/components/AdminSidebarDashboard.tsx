@@ -22,11 +22,11 @@ export default function AdminSidebarDashboard({ isOpen, toggleSidebar }: AdminSi
   const list = () => (
     <Box sx={{ width: 250 }} role="presentation" onClick={toggleSidebar} onKeyDown={toggleSidebar}>
       <List>
-        {["Summary", "User Management", "Project Management", "Drafts"].map((text, index) => (
+        {["Summary", "Staff Management", "Project Management", "Drafts"].map((text, index) => (
                <ListItem key={text} disablePadding>
                <ListItemButton
                  onClick={() => {
-                   if (text === 'User Management') {
+                   if (text === 'Staff Management') {
                      navigate('/user-management');
                    }if (text === 'Summary') {
                     navigate('/admin-dashboard');
