@@ -13,15 +13,11 @@ const AppRoutes = () => {
   return (
     <AuthProvider>
       <Router>
-        <Toaster
-          position="bottom-right"
-          reverseOrder={false}
-        />
+        <Toaster position="bottom-right" reverseOrder={false} />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/unauthorized" element={<Error />} />
-
 
           {/* Import route từ các module */}
           {adminRoutes.map((route, index) => (
