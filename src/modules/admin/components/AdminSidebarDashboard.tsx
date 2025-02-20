@@ -22,7 +22,7 @@ export default function AdminSidebarDashboard({ isOpen, toggleSidebar }: AdminSi
   const list = () => (
     <Box sx={{ width: 250 }} role="presentation" onClick={toggleSidebar} onKeyDown={toggleSidebar}>
       <List>
-        {["Summary", "Staff Management", "Project Management", "Drafts"].map((text, index) => (
+        {["Summary", "Staff Management", "Project Management"].map((text, index) => (
                <ListItem key={text} disablePadding>
                <ListItemButton
                  onClick={() => {
@@ -46,16 +46,6 @@ export default function AdminSidebarDashboard({ isOpen, toggleSidebar }: AdminSi
         ))}
       </List>
       <Divider />
-      <List>
-        {["All mail", "Trash", "Spam"].map((text, index) => (
-          <ListItem key={text} disablePadding>
-            <ListItemButton>
-              <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
-              <ListItemText primary={text} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
     </Box>
   );
 

@@ -58,7 +58,7 @@ function AdminDashboard() {
               </div>
             </Col>
             <Col span={6}>
-              <div className="project-card">
+              <div className="request-processing-card">
                 <div className="project-card-left">
                   <p>Request procescing</p>
                   <p>20</p>
@@ -69,7 +69,7 @@ function AdminDashboard() {
               </div>
             </Col>
             <Col span={6}>
-              <div className="project-card">
+              <div className="request-processed-card">
                 <div className="project-card-left">
                   <p>Request processed</p>
                   <p>20</p>

@@ -1,4 +1,5 @@
 import Table from '@mui/joy/Table';
+import ModalAddUser from './ModalAddUser';
 
 function createData(
   projectName: string,
@@ -40,16 +41,7 @@ export default function ProjectTable() {
             <td>{row.endDate.toLocaleDateString()}</td>  
             <td>{row.budget}</td>
           
-            <td><button
-                className="btn-adduser"
-                style={{
-                  backgroundColor: "green",
-                  padding: "6px 18px",
-                  border: "none",
-                  borderRadius: "5px",
-                }}
-              > + Add
-              </button></td>
+            <td><ModalAddUser/></td>
               <td><button
                 className="btn-edit"
                 style={{
