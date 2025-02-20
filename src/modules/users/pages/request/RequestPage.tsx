@@ -5,7 +5,6 @@ import "./RequestPage.css";
 import moment from "moment";
 
 const API_REQUESTS = "https://67b5a06d07ba6e59083db637.mockapi.io/api/requests";
-const API_USERS = "https://67b5a06d07ba6e59083db637.mockapi.io/api/user";
 
 interface Request {
   id: number;
