@@ -146,7 +146,7 @@ export default function AdminHeaderDashboard({ toggleSidebar }: AdminHeaderDashb
       }}
     >
       <MenuItem onClick={handleMenuClose}><Link to="/profilePage" style={{listStyle:"none",textDecoration:"none"}}>Profile</Link></MenuItem>
-      <MenuItem onClick={handleMenuClose}>My account</MenuItem>
+      <MenuItem onClick={handleMenuClose}><Link to="/" style={{listStyle:"none",textDecoration:"none"}}>Return home</Link></MenuItem>
     </Menu>
   );
 
@@ -211,7 +211,7 @@ export default function AdminHeaderDashboard({ toggleSidebar }: AdminHeaderDashb
             size="large"
             edge="start"
             color="inherit"
-            aria-label="open drawer"
+            aria-label="open drawer"  
             sx={{ mr: 0 }}
             onClick={toggleSidebar} // Button to toggle sidebar
           >

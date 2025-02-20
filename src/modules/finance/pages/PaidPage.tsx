@@ -5,11 +5,8 @@ import {
   SearchOutlined,
   DownloadOutlined,
   DollarOutlined,
-  LogoutOutlined,
 } from "@ant-design/icons";
 import "./PaidPage.css";
-import { handleLogout } from "../../../shared/utils/auth";
-import { useNavigate } from "react-router-dom";
 import Layout from "../../../shared/layouts/Layout";
 import axios from "axios";
 
@@ -26,7 +23,6 @@ interface ClaimRequest {
 const PaidPage = () => {
   const [searchText, setSearchText] = useState("");
   const [data, setData] = useState<ClaimRequest[]>([]);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchRequests = async () => {
