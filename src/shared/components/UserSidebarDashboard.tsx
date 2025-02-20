@@ -19,10 +19,10 @@ interface UserSidebarDashboardProps {
   toggleSidebar: () => void;
 }
 
-export default function UserSidebarDashboard({
+const UserSidebarDashboard = ({
   isOpen,
   toggleSidebar,
-}: UserSidebarDashboardProps) {
+}: UserSidebarDashboardProps) => {
   const [selectedTab, setSelectedTab] = useState("Home");
 
   const menuItems = [
@@ -58,4 +58,6 @@ export default function UserSidebarDashboard({
       </Box>
     </>
   );
-}
+};
+
+export default UserSidebarDashboard;
