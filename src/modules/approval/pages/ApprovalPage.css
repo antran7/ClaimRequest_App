@@ -16,7 +16,7 @@
   color: #1a1a1a;
   font-size: 24px;
   font-weight: 600;
-  margin-bottom: 16px;
+  margin: 0;
 }
 
 .search-input {
@@ -55,4 +55,15 @@
   padding: 4px 12px;
   border-radius: 4px;
   font-weight: 500;
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.logout-button {
+  min-width: 100px;
 }

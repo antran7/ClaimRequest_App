@@ -5,8 +5,12 @@ import {
   SearchOutlined,
   CheckOutlined,
   CloseOutlined,
+  LogoutOutlined,
 } from "@ant-design/icons";
 import "./ApprovalPage.css";
+import { handleLogout } from "../../../shared/utils/auth";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 interface ClaimRequest {
   id: number;
@@ -18,52 +22,68 @@ interface ClaimRequest {
 }
 
 const ApprovalPage = () => {
+  const navigate = useNavigate();
   const [searchText, setSearchText] = useState("");
   const [requests, setRequests] = useState<ClaimRequest[]>([]);
 
   useEffect(() => {
-    const savedRequests = JSON.parse(localStorage.getItem("requests") || "[]");
-    // Chỉ lấy những request có status PENDING
-    const pendingRequests = savedRequests
-      .filter((req: any) => req.status === "PENDING")
-      .map((req: any) => ({
-        ...req,
-        requesterName: "User " + req.id,
-        amount: Math.floor(Math.random() * 10000) + 1000,
-      }));
-    setRequests(pendingRequests);
+    const fetchRequests = async () => {
+      try {
+        const response = await axios.get(
+          "https://67b5a06d07ba6e59083db637.mockapi.io/api/requests"
+        );
+        const pendingRequests = response.data
+          .filter((req: any) => req.status === "PENDING")
+          .map((req: any) => ({
+            ...req,
+            requesterName: "User " + req.userId,
+            amount: Math.floor(Math.random() * 10000) + 1000,
+          }));
+        setRequests(pendingRequests);
+      } catch (error) {
+        console.error("Error fetching requests:", error);
+      }
+    };
+
+    fetchRequests();
   }, []);
 
-  const handleApprove = (record: ClaimRequest) => {
-    // Cập nhật trong state
-    setRequests((prevRequests) =>
-      prevRequests.filter((req) => req.id !== record.id)
-    );
-
-    // Cập nhật trong localStorage
-    const savedRequests = JSON.parse(localStorage.getItem("requests") || "[]");
-    const updatedRequests = savedRequests.map((req: any) =>
-      req.id === record.id ? { ...req, status: "APPROVED" } : req
-    );
-    localStorage.setItem("requests", JSON.stringify(updatedRequests));
-
-    message.success(`Request #${record.id} has been approved`);
+  const handleApprove = async (record: ClaimRequest) => {
+    try {
+      await axios.put(
+        `https://67b5a06d07ba6e59083db637.mockapi.io/api/requests/${record.id}`,
+        {
+          ...record,
+          status: "APPROVED",
+        }
+      );
+      setRequests((prevRequests) =>
+        prevRequests.filter((req) => req.id !== record.id)
+      );
+      message.success(`Request #${record.id} has been approved`);
+    } catch (error) {
+      console.error("Error approving request:", error);
+      message.error("Failed to approve request");
+    }
   };
 
-  const handleReject = (record: ClaimRequest) => {
-    // Cập nhật trong state
-    setRequests((prevRequests) =>
-      prevRequests.filter((req) => req.id !== record.id)
-    );
-
-    // Cập nhật trong localStorage
-    const savedRequests = JSON.parse(localStorage.getItem("requests") || "[]");
-    const updatedRequests = savedRequests.map((req: any) =>
-      req.id === record.id ? { ...req, status: "REJECTED" } : req
-    );
-    localStorage.setItem("requests", JSON.stringify(updatedRequests));
-
-    message.error(`Request #${record.id} has been rejected`);
+  const handleReject = async (record: ClaimRequest) => {
+    try {
+      await axios.put(
+        `https://67b5a06d07ba6e59083db637.mockapi.io/api/requests/${record.id}`,
+        {
+          ...record,
+          status: "REJECTED",
+        }
+      );
+      setRequests((prevRequests) =>
+        prevRequests.filter((req) => req.id !== record.id)
+      );
+      message.error(`Request #${record.id} has been rejected`);
+    } catch (error) {
+      console.error("Error rejecting request:", error);
+      message.error("Failed to reject request");
+    }
   };
 
   const columns: ColumnsType<ClaimRequest> = [
@@ -142,7 +162,17 @@ const ApprovalPage = () => {
   return (
     <div className="approval-page">
       <div className="page-header">
-        <h1 className="page-title">Approval Management</h1>
+        <div className="header-top">
+          <h1 className="page-title">Approval Management</h1>
+          <Button
+            icon={<LogoutOutlined />}
+            onClick={() => handleLogout(navigate)}
+            danger
+            className="logout-button"
+          >
+            Logout
+          </Button>
+        </div>
         <Input
           placeholder="Search requests..."
           prefix={<SearchOutlined />}

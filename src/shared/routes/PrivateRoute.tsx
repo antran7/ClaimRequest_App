@@ -7,13 +7,13 @@ interface PrivateRouteProps {
 }
 
 const PrivateRoute = ({ allowedRoles }: PrivateRouteProps) => {
-  const { role, loading } = useAuth();
+  const { user, loading } = useAuth();
 
   if (loading) {
     return <div>Loading...</div>;
   }
 
-  return role && allowedRoles.includes(role) ? (
+  return user && allowedRoles.includes(user.role as Role) ? (
     <Outlet />
   ) : (
     <Navigate to="/unauthorized" />
