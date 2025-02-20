@@ -11,6 +11,7 @@ interface Request {
   name: string;
   status: string;
   submittedDate: string;
+  createDate: string;
   userId: number;
   userEmail: string;
 }
@@ -28,13 +29,13 @@ const RequestPage = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        // Lấy email từ localStorage thay vì lấy user đầu tiên từ API
+        // Get email from localStorage instead of getting the first user from the API
         const currentUserEmail = localStorage.getItem("userEmail");
         if (currentUserEmail) {
           setUserEmail(currentUserEmail);
         }
       } catch (error) {
-        console.error("Lỗi khi lấy thông tin user:", error);
+        console.error("Error fetching user information:", error);
       }
     };
 
@@ -52,7 +53,7 @@ const RequestPage = () => {
         );
         setRequests(userRequests);
       } catch (error) {
-        console.error("Lỗi khi lấy requests:", error);
+        console.error("Error fetching requests:", error);
       } finally {
         setLoading(false);
       }
@@ -63,6 +64,7 @@ const RequestPage = () => {
 
   const handleAddModalOk = async (values: {
     name: string;
+    createDate: moment.Moment;
     submittedDate: moment.Moment;
   }) => {
     if (!userEmail) return;
@@ -71,9 +73,10 @@ const RequestPage = () => {
       const newRequest = {
         name: values.name,
         status: "DRAFT",
+        createDate: values.createDate.format("YYYY-MM-DD"),
         submittedDate: values.submittedDate.format("YYYY-MM-DD"),
-        userEmail: userEmail, // Thêm email vào request mới
-        userId: 1, // Giữ nguyên userId nếu cần
+        userEmail: userEmail, // Add email to the new request
+        userId: 1, // Keep userId if needed
       };
 
       const response = await axios.post(API_REQUESTS, newRequest);
@@ -81,7 +84,7 @@ const RequestPage = () => {
       setIsAddModalVisible(false);
       form.resetFields();
     } catch (error) {
-      console.error("Lỗi khi thêm request:", error);
+      console.error("Error adding request:", error);
     }
   };
 
@@ -99,7 +102,7 @@ const RequestPage = () => {
       setIsEditModalVisible(false);
       setCurrentRequest(null);
     } catch (error) {
-      console.error("Lỗi khi chỉnh sửa request:", error);
+      console.error("Error editing request:", error);
     }
   };
 
@@ -108,7 +111,7 @@ const RequestPage = () => {
       await axios.delete(`${API_REQUESTS}/${id}`);
       setRequests(requests.filter((req) => req.id !== id));
     } catch (error) {
-      console.error("Lỗi khi xóa request:", error);
+      console.error("Error deleting request:", error);
     }
   };
 
@@ -120,7 +123,7 @@ const RequestPage = () => {
       setRequests(updatedRequests);
       await axios.put(`${API_REQUESTS}/${id}`, { status: "PENDING" });
     } catch (error) {
-      console.error("Lỗi khi gửi yêu cầu duyệt:", error);
+      console.error("Error sending approval request:", error);
     }
   };
 
@@ -165,6 +168,7 @@ const RequestPage = () => {
                 <th>ID</th>
                 <th>Request Name</th>
                 <th>Status</th>
+                <th>Create Date</th>
                 <th>Submitted Date</th>
                 <th>Actions</th>
               </tr>
@@ -181,6 +185,7 @@ const RequestPage = () => {
                     <td className={`status-${req.status.toLowerCase()}`}>
                       {req.status}
                     </td>
+                    <td>{req.createDate}</td>
                     <td>{req.submittedDate}</td>
                     <td>
                       <Button
@@ -224,7 +229,7 @@ const RequestPage = () => {
         <Form
           form={form}
           onFinish={handleAddModalOk}
-          initialValues={{ name: "", submittedDate: null }}
+          initialValues={{ name: "", createDate: null, submittedDate: null }}
         >
           <Form.Item
             label="Request Name"
@@ -236,10 +241,29 @@ const RequestPage = () => {
             <Input />
           </Form.Item>
           <Form.Item
+            label="Create Date"
+            name="createDate"
+            rules={[
+              { required: true, message: "Please select the create date!" },
+            ]}
+          >
+            <DatePicker />
+          </Form.Item>
+          <Form.Item
             label="Submitted Date"
             name="submittedDate"
             rules={[
               { required: true, message: "Please select the submitted date!" },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue("createDate") <= value) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(
+                    new Error("Submitted date cannot be before create date!")
+                  );
+                },
+              }),
             ]}
           >
             <DatePicker />
