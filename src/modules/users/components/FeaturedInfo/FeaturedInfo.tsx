@@ -1,7 +1,7 @@
-import "./featuredInfo.css";
+import "./FeaturedInfo.css";
 
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 
 export default function FeaturedInfo() {
   return (
@@ -9,9 +9,9 @@ export default function FeaturedInfo() {
       <div className="featuredItem">
         <span className="featuredTitle">All Post</span>
         <div className="featuredMoneyContainer">
-    <span className="featuredMoney">415</span>
+          <span className="featuredMoney">415</span>
           <span className="featuredMoneyRate">
-            -11 <ArrowDownwardIcon  className="featuredIcon negative"/>
+            -11 <ArrowDownwardIcon className="featuredIcon negative" />
           </span>
         </div>
         <span className="featuredSub">Compared to last month</span>
@@ -21,7 +21,7 @@ export default function FeaturedInfo() {
         <div className="featuredMoneyContainer">
           <span className="featuredMoney">10</span>
           <span className="featuredMoneyRate">
-            -1 <ArrowDownwardIcon className="featuredIcon negative"/>
+            -1 <ArrowDownwardIcon className="featuredIcon negative" />
           </span>
         </div>
         <span className="featuredSub">Compared to last month</span>
@@ -31,7 +31,7 @@ export default function FeaturedInfo() {
         <div className="featuredMoneyContainer">
           <span className="featuredMoney">100</span>
           <span className="featuredMoneyRate">
-            +2 <ArrowUpwardIcon className="featuredIcon"/>
+            +2 <ArrowUpwardIcon className="featuredIcon" />
           </span>
         </div>
         <span className="featuredSub">Compared to last month</span>
