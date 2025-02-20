@@ -1,6 +1,6 @@
 import { Project } from "../types/project";
 
-const API_URL = "https://67aaae7465ab088ea7e73b54.mockapi.io/proj`ect";
+const API_URL = "https://67aaae7465ab088ea7e73b54.mockapi.io/project";
 
 export const fetchProjects = async (): Promise<Project[]> => {
   const response = await fetch(API_URL);
