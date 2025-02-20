@@ -3,18 +3,18 @@ import "./UserManagement.css";
 
 interface User {
   id: number;
-  name: string;
+  staffName: string;
   email: string;
   role: string;
   status: "Active" | "Locked";
 }
 
 const dummyUsers: User[] = [
-  { id: 1, name: "Robin Kool", email: "robinkool@gmail.com", role: "Admin", status: "Active" },
-  { id: 2, name: "Henry Cavill", email: "henrycavill@gmail.com", role: "User", status: "Locked" },
-  { id: 3, name: "Ryan Gosling", email: "ryangosling@gmail.com", role: "User", status: "Active" },
-  { id: 4, name: "Harry Potter", email: "harrypotter@gmail.com", role: "User", status: "Active" },
-  { id: 5, name: "LeBron James", email: "lebronjames@gmail.com", role: "User", status: "Active" },
+  { id: 1, staffName: "Robin Kool", email: "email1@example.com", role: "Admin", status: "Active" },
+  { id: 2, staffName: "Henry Cavill", email: "email2@example.com", role: "User", status: "Locked" },
+  { id: 3, staffName: "Ryan Gosling", email: "email3@example.com", role: "User", status: "Active" },
+  { id: 4, staffName: "Harry Potter", email: "email4@example.com", role: "User", status: "Active" },
+  { id: 5, staffName: "LeBron James", email: "email5@example.com", role: "User", status: "Active" },
 ];
 
 export default function UserManagement() {
@@ -22,7 +22,7 @@ export default function UserManagement() {
   const [search, setSearch] = useState("");
 
   const filteredUsers = users.filter((user) =>
-    user.name.toLowerCase().includes(search.toLowerCase())
+    user.staffName.toLowerCase().includes(search.toLowerCase())
   );
 
   const toggleLockUser = (id: number) => {
@@ -35,7 +35,7 @@ export default function UserManagement() {
     const userToEdit = users.find(user => user.id === id);
     if (!userToEdit) return;
 
-    const newName = prompt("Enter new name:", userToEdit.name);
+    const newName = prompt("Enter new name:", userToEdit.staffName);
     const newEmail = prompt("Enter new email:", userToEdit.email);
     const newRole = prompt("Enter new role:", userToEdit.role);
 
@@ -53,11 +53,11 @@ export default function UserManagement() {
   };
 
   const addUser = () => {
-    const name = prompt("Enter name:");
+    const staffName = prompt("Enter name:");
     const email = prompt("Enter email:");
     const role = prompt("Enter role:");
-    if (name && email && role) {
-      setUsers([...users, { id: users.length + 1, name, email, role, status: "Active" }]);
+    if (staffName && email && role) {
+      setUsers([...users, { id: users.length + 1, staffName , email, role, status: "Active" }]);
     }
   };
 
@@ -87,7 +87,7 @@ export default function UserManagement() {
             {filteredUsers.map((user) => (
               <tr key={user.id}>
                 <td>{user.id}</td>
-                <td>{user.name}</td>
+                <td>{user.staffName}</td>
                 <td>{user.email}</td>
                 <td>{user.role}</td>
                 <td>{user.status}</td>
