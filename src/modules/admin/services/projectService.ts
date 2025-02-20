@@ -1,13 +1,15 @@
 import { Project } from "../types/project";
 
-const API_URL = "https://67aaae7465ab088ea7e73b54.mockapi.io/project";
+const API_URL = "https://67aaae7465ab088ea7e73b54.mockapi.io/proj`ect";
 
 export const fetchProjects = async (): Promise<Project[]> => {
   const response = await fetch(API_URL);
   return response.json();
 };
 
-export const addProject = async (project: Partial<Project>): Promise<Project> => {
+export const addProject = async (
+  project: Partial<Project>
+): Promise<Project> => {
   const response = await fetch(API_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

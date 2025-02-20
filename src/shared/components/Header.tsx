@@ -1,7 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
-import './Header.css'
+import "./Header.css";
 import { useEffect, useState } from "react";
-import { useAuth } from "../hooks/useAuth";
 import { Role } from "../constants/roles";
 
 const Header = () => {
@@ -26,24 +25,30 @@ const Header = () => {
   }, [user]);
 
   return (
-    <div className='layout-header'>
-      <div className='layout-header-left'>
-        Claim Request
-      </div>
-      <div className='layout-header-right'>
-        <Link to="/#" className='header-right-item'>Services</Link>
-        <Link to="/#" className='header-right-item'>About</Link>
-        <Link to="/#" className='header-right-item'>Contact</Link>
+    <div className="layout-header">
+      <div className="layout-header-left">Claim Request</div>
+      <div className="layout-header-right">
+        <Link to="/#" className="header-right-item">
+          Services
+        </Link>
+        <Link to="/#" className="header-right-item">
+          About
+        </Link>
+        <Link to="/#" className="header-right-item">
+          Contact
+        </Link>
         {!isLoggedIn ? (
-          <Link to="/login" className='header-right-item'>Log In</Link>
+          <Link to="/login" className="header-right-item">
+            Log In
+          </Link>
         ) : (
-          <button onClick={handleLogOut} className='header-right-item'>
+          <button onClick={handleLogOut} className="header-right-item">
             Log Out
           </button>
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Header
+export default Header;
