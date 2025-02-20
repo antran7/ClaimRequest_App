@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./UserManagement.css";
 
 interface User {
@@ -9,29 +9,59 @@ interface User {
   status: "Active" | "Locked";
 }
 
-const dummyUsers: User[] = [
-  { id: 1, name: "Robin Kool", email: "robinkool@gmail.com", role: "Admin", status: "Active" },
-  { id: 2, name: "Henry Cavill", email: "henrycavill@gmail.com", role: "User", status: "Locked" },
-  { id: 3, name: "Ryan Gosling", email: "ryangosling@gmail.com", role: "User", status: "Active" },
-  { id: 4, name: "Harry Potter", email: "harrypotter@gmail.com", role: "User", status: "Active" },
-  { id: 5, name: "LeBron James", email: "lebronjames@gmail.com", role: "User", status: "Active" },
-];
+const API_URL = "https://67b416e6392f4aa94fa93e19.mockapi.io/api/Request";
 
 export default function UserManagement() {
-  const [users, setUsers] = useState<User[]>(dummyUsers);
+  const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const filteredUsers = users.filter((user) =>
-    user.name.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const toggleLockUser = (id: number) => {
-    setUsers(users.map(user =>
-      user.id === id ? { ...user, status: user.status === "Active" ? "Locked" : "Active" } : user
-    ));
+  // Fetch users from API
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(API_URL);
+      if (!response.ok) throw new Error("Failed to fetch users");
+      const data = await response.json();
+      setUsers(data);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "An unknown error occurred.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const editUser = (id: number) => {
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const filteredUsers = users.filter((user) =>
+    user.name?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  // Add new user to API
+  const addUser = async () => {
+    const name = prompt("Enter name:");
+    const email = prompt("Enter email:");
+    const role = prompt("Enter role:");
+    if (name && email && role) {
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, role, status: "Active" }),
+        });
+        if (!response.ok) throw new Error("Failed to add user");
+        await fetchUsers(); // Refresh list
+      } catch (err: unknown) {
+        alert(err instanceof Error ? err.message : "Error adding user.");
+      }
+    }
+  };
+
+  // Edit user in API
+  const editUser = async (id: number) => {
     const userToEdit = users.find(user => user.id === id);
     if (!userToEdit) return;
 
@@ -40,26 +70,56 @@ export default function UserManagement() {
     const newRole = prompt("Enter new role:", userToEdit.role);
 
     if (newName && newEmail && newRole) {
-      setUsers(users.map(user =>
-        user.id === id ? { ...user, name: newName, email: newEmail, role: newRole } : user
-      ));
+      try {
+        const response = await fetch(`${API_URL}/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...userToEdit, name: newName, email: newEmail, role: newRole }),
+        });
+        if (!response.ok) throw new Error("Failed to edit user");
+        await fetchUsers(); // Refresh list
+      } catch (err: unknown) {
+        alert(err instanceof Error ? err.message : "Error editing user.");
+      }
     }
   };
 
-  const deleteUser = (id: number) => {
+  // Delete user from API
+  const deleteUser = async (id: number) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
-      setUsers(users.filter(user => user.id !== id));
+      try {
+        const response = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+        if (!response.ok) throw new Error("Failed to delete user");
+        await fetchUsers(); // Refresh list
+      } catch (err: unknown) {
+        alert(err instanceof Error ? err.message : "Error deleting user.");
+      }
     }
   };
 
-  const addUser = () => {
-    const name = prompt("Enter name:");
-    const email = prompt("Enter email:");
-    const role = prompt("Enter role:");
-    if (name && email && role) {
-      setUsers([...users, { id: users.length + 1, name, email, role, status: "Active" }]);
+  // Lock/Unlock user in API
+  const toggleLockUser = async (id: number) => {
+    const userToUpdate = users.find(user => user.id === id);
+    if (!userToUpdate) return;
+
+    try {
+      const response = await fetch(`${API_URL}/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...userToUpdate,
+          status: userToUpdate.status === "Active" ? "Locked" : "Active",
+        }),
+      });
+      if (!response.ok) throw new Error("Failed to update user status");
+      await fetchUsers(); // Refresh list
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Error updating status.");
     }
   };
+
+  if (loading) return <p>Loading users...</p>;
+  if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
 
   return (
     <div className="user-management-container">
@@ -70,6 +130,7 @@ export default function UserManagement() {
           type="text"
           placeholder="Search user..."
           className="search-bar"
+          value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
         <table className="user-table">
