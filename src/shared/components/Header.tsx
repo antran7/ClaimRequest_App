@@ -2,8 +2,14 @@ import { Link, useNavigate } from "react-router-dom";
 import "./Header.css";
 import { useEffect, useState } from "react";
 import { Role } from "../constants/roles";
+import { IconButton } from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
 
-const Header = () => {
+interface HeaderProps {
+  toggleSideBar: () => void;
+}
+
+const Header = ({ toggleSideBar }: HeaderProps) => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const user = localStorage.getItem("userRole") as Role | null;
@@ -25,8 +31,30 @@ const Header = () => {
   }, [user]);
 
   return (
-    <div className="layout-header">
-      <div className="layout-header-left">Claim Request</div>
+    <div
+      className="layout-header"
+      style={{
+        padding: isLoggedIn ? "20px 40px 20px 25px" : "20px 50px",
+      }}
+    >
+      <div className="layout-header-left">
+        {isLoggedIn && (
+          <IconButton
+            size="large"
+            edge="start"
+            color="inherit"
+            aria-label="open drawer"
+            sx={{ mr: 2 }}
+            style={{
+              padding: '0',
+            }}
+            onClick={toggleSideBar}
+          >
+            <MenuIcon />
+          </IconButton>
+        )}
+        <p>Claim Request</p>
+      </div>
       <div className="layout-header-right">
         <Link to="/#" className="header-right-item">
           Services
