@@ -1,0 +1,23 @@
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    text-align: center;
+}
+
+.loading-img {
+    width: 100px; /* Điều chỉnh kích thước ảnh nếu cần */
+}
+
+.loading-text {
+    font-size: 18px;
+    color: #666;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.fade-in {
+    opacity: 1;
+}

@@ -1,9 +1,12 @@
 import "./App.css";
 import AppRoutes from "./shared/routes/routes";
 
+
 function App() {
+  
   return (
     <>
+   
       <AppRoutes />
     </>
   );

@@ -8,8 +8,22 @@ import { financeRoutes } from "../../modules/finance/routes";
 import { approvalRoutes } from "../../modules/approval/routes";
 import { Toaster } from "react-hot-toast";
 import Home from "../../modules/auth/pages/Home";
+import LoadingScreen from "../components/LoadingScreen";
+import { useState,useEffect } from "react";
+
 
 const AppRoutes = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  useEffect(() => {
+    // Hiển thị LoadingScreen trong 2 giây
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) return <LoadingScreen />; // Hiện trang loading trước
+
   return (
     <AuthProvider>
       <Router>
