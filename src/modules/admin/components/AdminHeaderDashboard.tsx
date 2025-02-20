@@ -15,11 +15,8 @@ import AccountCircle from "@mui/icons-material/AccountCircle";
 import MailIcon from "@mui/icons-material/Mail";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import MoreIcon from "@mui/icons-material/MoreVert";
-import { useNavigate } from "react-router-dom";
 import { handleLogout } from "../../../shared/utils/auth";
-import PersonIcon from "@mui/icons-material/Person";
-import SettingsIcon from "@mui/icons-material/Settings";
-import LogoutIcon from "@mui/icons-material/Logout";
+import { Link } from "react-router";
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
@@ -64,10 +61,8 @@ interface AdminHeaderDashboardProps {
   toggleSidebar: () => void;
 }
 
-export default function AdminHeaderDashboard({
-  toggleSidebar,
-}: AdminHeaderDashboardProps) {
-  const navigate = useNavigate();
+export default function AdminHeaderDashboard({ toggleSidebar }: AdminHeaderDashboardProps) {
+
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] =
     React.useState<null | HTMLElement>(null);
@@ -150,18 +145,8 @@ export default function AdminHeaderDashboard({
         },
       }}
     >
-      <MenuItem onClick={handleProfileClick} style={{ padding: "10px 20px" }}>
-        <PersonIcon style={{ marginRight: 10 }} /> Profile
-      </MenuItem>
-      <MenuItem onClick={handleMyAccountClick} style={{ padding: "10px 20px" }}>
-        <SettingsIcon style={{ marginRight: 10 }} /> My Account
-      </MenuItem>
-      <MenuItem
-        onClick={handleLogoutClick}
-        style={{ padding: "10px 20px", color: "#ff4d4f" }}
-      >
-        <LogoutIcon style={{ marginRight: 10 }} /> Logout
-      </MenuItem>
+      <MenuItem onClick={handleMenuClose}><Link to="/profilePage" style={{listStyle:"none",textDecoration:"none"}}>Profile</Link></MenuItem>
+      <MenuItem onClick={handleMenuClose}>My account</MenuItem>
     </Menu>
   );
 
@@ -219,16 +204,18 @@ export default function AdminHeaderDashboard({
 
   return (
     <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static">
+      <AppBar position="fixed" sx={{ boxShadow: 'none' }}>
+
         <Toolbar>
           <IconButton
             size="large"
             edge="start"
             color="inherit"
             aria-label="open drawer"
-            sx={{ mr: 2 }}
-            onClick={toggleSidebar}
+            sx={{ mr: 0 }}
+            onClick={toggleSidebar} // Button to toggle sidebar
           >
+
             <MenuIcon />
           </IconButton>
           <Typography

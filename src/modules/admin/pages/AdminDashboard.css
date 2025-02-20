@@ -5,15 +5,19 @@
 }
 .admin-dashboard-container {
     display: flex;
+    height: calc(100vh - 64px); /* Account for header height */
 }
 .content-dashboard {
-    padding: 20px;
+    padding: 16px;
+    flex: 1;
+    overflow-y: auto;
 }
 .sidebar-dashboard {
     width: 300px;
-    height: 100vh;
     background-color: rgb(243, 242, 242);
+    height: calc(100vh - 64px); /* Account for header height */
 }
+
 .items-sidebar {
     font-size: 18px;
     display: flex;
