@@ -34,7 +34,7 @@ export default function User() {
     let isValid = true;
 
     if (formData.username.trim().length < 3) {
-      newErrors.username = "Username must be at least 3 characters.";
+      newErrors.username = "Username must be at least 10 characters.";
       isValid = false;
     }
     if (!formData.fullName.trim()) {
