@@ -17,7 +17,7 @@ export default function Home() {
       />
       <div className="homeWidgets">
         <WidgetSm />
-        <WidgetLg />
+        <WidgetLg />    
       </div>
     </div>
   );
