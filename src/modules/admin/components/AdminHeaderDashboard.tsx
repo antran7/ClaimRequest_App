@@ -56,7 +56,12 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   },
 }));
 
-export default function AdminHeaderDashboard({ toggleSidebar }) {
+interface AdminHeaderDashboardProps {
+  toggleSidebar: () => void;
+}
+
+export default function AdminHeaderDashboard({ toggleSidebar }: AdminHeaderDashboardProps) {
+
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = React.useState<null | HTMLElement>(null);
 
@@ -152,16 +157,18 @@ export default function AdminHeaderDashboard({ toggleSidebar }) {
 
   return (
     <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static">
+      <AppBar position="fixed" sx={{ boxShadow: 'none' }}>
+
         <Toolbar>
           <IconButton
             size="large"
             edge="start"
             color="inherit"
             aria-label="open drawer"
-            sx={{ mr: 2 }}
+            sx={{ mr: 0 }}
             onClick={toggleSidebar} // Button to toggle sidebar
           >
+
             <MenuIcon />
           </IconButton>
           <Typography

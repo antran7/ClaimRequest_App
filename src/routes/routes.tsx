@@ -5,6 +5,7 @@ import { dashboardRoutes } from "../modules/dashboard/routes";
 import { AuthProvider } from "../modules/auth/hooks/useAuth";
 import Login from "../modules/auth/pages/Login";
 import { profileRoutes } from "../modules/profile/routes";
+import { adminRoutes } from "../modules/admin/routes";
 
 const AppRoutes = () => {
   return (
@@ -31,6 +32,13 @@ const AppRoutes = () => {
             </Route>
           ))}
             {profileRoutes.map((route, index) => (
+            <Route key={index} path={route.path} element={route.element}>
+              {route.children?.map((child, childIndex) => (
+                <Route key={childIndex} path={child.path} element={child.element} />
+              ))}
+            </Route>
+          ))}
+            {adminRoutes.map((route, index) => (
             <Route key={index} path={route.path} element={route.element}>
               {route.children?.map((child, childIndex) => (
                 <Route key={childIndex} path={child.path} element={child.element} />

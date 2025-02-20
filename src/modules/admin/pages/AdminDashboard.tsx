@@ -3,9 +3,9 @@ import { Doughnut } from "react-chartjs-2";
 import "./AdminDashboard.css";
 import { AccountCircleOutlined, Folder } from "@mui/icons-material"; // Removed HomeOutlined
 import { Col, Row } from "antd";
-import AdminHeaderDashboard from "../components/AdminHeaderDashboard";
-import AdminSidebarDashboard from "../pages/AdminSidebarDashboard"; // Import the sidebar component
+
 import React, { useState } from "react";
+import AdminLayout from "../components/AdminLayout";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -22,21 +22,15 @@ function AdminDashboard() {
       {
         label: "# of Votes",
         data: [12, 19, 3],
-        backgroundColor: [
-          "rgba(255, 99, 132, 0.2)",
-          "rgba(54, 162, 235, 0.2)",
-          "rgba(255, 206, 86, 0.2)",
-        ],
+        backgroundColor: ["rgba(255, 99, 132, 0.2)", "rgba(54, 162, 235, 0.2)", "rgba(255, 206, 86, 0.2)"],
       },
     ],
   };
 
   return (
     <div>
-      <AdminHeaderDashboard toggleSidebar={toggleSidebar} />
-      <AdminSidebarDashboard isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} /> {/* Add the sidebar component */}
-      <div className="admin-dashboard-container">
-        <div className="header"></div>
+    <AdminLayout>
+    <div className="admin-dashboard-container">
         <div className="content-dashboard">
           <h2>Welcome!</h2>
           <p>This is the admin dashboard.</p>
@@ -86,13 +80,13 @@ function AdminDashboard() {
               </div>
             </Col>
           </Row>
-        
 
           <div className="chart-container">
             <Doughnut data={data} />
           </div>
         </div>
       </div>
+    </AdminLayout>
     </div>
   );
 }
