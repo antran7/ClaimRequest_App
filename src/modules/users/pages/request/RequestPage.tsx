@@ -25,11 +25,12 @@ const RequestPage = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [form] = Form.useForm();
   const [userEmail, setUserEmail] = useState<string>("");
+  const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false);
+  const [requestToApprove, setRequestToApprove] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        // Get email from localStorage instead of getting the first user from the API
         const currentUserEmail = localStorage.getItem("userEmail");
         if (currentUserEmail) {
           setUserEmail(currentUserEmail);
@@ -75,8 +76,8 @@ const RequestPage = () => {
         status: "DRAFT",
         createDate: values.createDate.format("YYYY-MM-DD"),
         submittedDate: values.submittedDate.format("YYYY-MM-DD"),
-        userEmail: userEmail, // Add email to the new request
-        userId: 1, // Keep userId if needed
+        userEmail: userEmail,
+        userId: 1,
       };
 
       const response = await axios.post(API_REQUESTS, newRequest);
@@ -88,11 +89,20 @@ const RequestPage = () => {
     }
   };
 
-  const handleEditModalOk = async (values: { name: string }) => {
+  const handleEditModalOk = async (values: {
+    name: string;
+    createDate: moment.Moment;
+    submittedDate: moment.Moment;
+  }) => {
     if (!currentRequest) return;
 
     try {
-      const updatedRequest = { ...currentRequest, name: values.name };
+      const updatedRequest = {
+        ...currentRequest,
+        name: values.name,
+        createDate: values.createDate.format("YYYY-MM-DD"),
+        submittedDate: values.submittedDate.format("YYYY-MM-DD"),
+      };
       await axios.put(`${API_REQUESTS}/${currentRequest.id}`, updatedRequest);
       setRequests(
         requests.map((req) =>
@@ -116,12 +126,21 @@ const RequestPage = () => {
   };
 
   const handleRequestApproval = async (id: number) => {
+    setRequestToApprove(id);
+    setIsConfirmModalVisible(true);
+  };
+
+  const handleConfirmApproval = async () => {
+    if (requestToApprove === null) return;
+
     try {
       const updatedRequests = requests.map((req) =>
-        req.id === id ? { ...req, status: "PENDING" } : req
+        req.id === requestToApprove ? { ...req, status: "PENDING" } : req
       );
       setRequests(updatedRequests);
-      await axios.put(`${API_REQUESTS}/${id}`, { status: "PENDING" });
+      await axios.put(`${API_REQUESTS}/${requestToApprove}`, { status: "PENDING" });
+      setIsConfirmModalVisible(false);
+      setRequestToApprove(null);
     } catch (error) {
       console.error("Error sending approval request:", error);
     }
@@ -192,14 +211,21 @@ const RequestPage = () => {
                         onClick={() => {
                           setCurrentRequest(req);
                           setIsEditModalVisible(true);
+                          form.setFieldsValue({
+                            name: req.name,
+                            createDate: moment(req.createDate),
+                            submittedDate: moment(req.submittedDate),
+                          });
                         }}
                         className="edit-button"
+                        disabled={req.status === "PENDING"}
                       >
                         Edit
                       </Button>
                       <Button
                         onClick={() => handleDelete(req.id)}
                         className="delete-button"
+                        disabled={req.status === "PENDING"}
                       >
                         Delete
                       </Button>
@@ -207,6 +233,30 @@ const RequestPage = () => {
                         <Button
                           onClick={() => handleRequestApproval(req.id)}
                           className="approve-button"
+                          style={{
+                            backgroundColor: "#16A34A",
+                            color: "#FFFFFF",
+                            fontWeight: "600",
+                            fontSize: "14px",
+                            padding: "10px 14px",
+                            borderRadius: "8px",
+                            transition: "background-color 0.3s ease-in-out, transform 0.1s",
+                            border: "none",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = "#22C55E";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = "#16A34A";
+                          }}
+                          onMouseDown={(e) => {
+                            e.currentTarget.style.backgroundColor = "#15803D";
+                            e.currentTarget.style.transform = "scale(0.96)";
+                          }}
+                          onMouseUp={(e) => {
+                            e.currentTarget.style.backgroundColor = "#22C55E";
+                            e.currentTarget.style.transform = "scale(1)";
+                          }}
                         >
                           Request Approval
                         </Button>
@@ -284,6 +334,7 @@ const RequestPage = () => {
         className="custom-modal"
       >
         <Form
+          form={form}
           key={currentRequest?.id}
           initialValues={currentRequest ?? {}}
           onFinish={handleEditModalOk}
@@ -297,12 +348,50 @@ const RequestPage = () => {
           >
             <Input />
           </Form.Item>
+          <Form.Item
+            label="Create Date"
+            name="createDate"
+            rules={[
+              { required: true, message: "Please select the create date!" },
+            ]}
+          >
+            <DatePicker />
+          </Form.Item>
+          <Form.Item
+            label="Submitted Date"
+            name="submittedDate"
+            rules={[
+              { required: true, message: "Please select the submitted date!" },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue("createDate") <= value) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(
+                    new Error("Submitted date cannot be before create date!")
+                  );
+                },
+              }),
+            ]}
+          >
+            <DatePicker />
+          </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit">
               Save
             </Button>
           </Form.Item>
         </Form>
+      </Modal>
+
+      <Modal
+        title="Confirm Approval"
+        open={isConfirmModalVisible}
+        onCancel={() => setIsConfirmModalVisible(false)}
+        onOk={handleConfirmApproval}
+        className="confirm-modal"
+      >
+        <p>Are you sure you want to approve this request?</p>
       </Modal>
     </div>
   );
