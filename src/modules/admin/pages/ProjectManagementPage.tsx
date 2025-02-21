@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import AdminHeaderDashboard from "../components/AdminHeaderDashboard";
-import AdminSidebarDashboard from "../components/AdminSidebarDashboard";
+import Header from "../../../shared/components/Header";
 import BackButton from "../components/BackButton";
 import {
   Button,
@@ -134,11 +133,7 @@ const ProjectManagementPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <AdminHeaderDashboard toggleSidebar={toggleSidebar} />
-      <AdminSidebarDashboard
-        isOpen={isSidebarOpen}
-        toggleSidebar={toggleSidebar}
-      />
+      <Header toggleSideBar={toggleSidebar}/>
 
       <div className="p-8">
         <div className="flex justify-between items-center mb-6">
