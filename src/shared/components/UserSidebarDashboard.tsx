@@ -10,9 +10,9 @@ import ListItemText from "@mui/material/ListItemText";
 import HouseIcon from "@mui/icons-material/House";
 import BadgeIcon from "@mui/icons-material/Badge";
 import RequestPageIcon from "@mui/icons-material/RequestPage";
-import Home from "../../modules/users/pages/user-dashboard/Home";
 import User from "../../modules/users/pages/user-dashboard/User";
 import RequestPage from "../../modules/users/pages/request/RequestPage";
+import Home from "../../modules/users/pages/user-dashboard/Home";
 
 interface UserSidebarDashboardProps {
   isOpen: boolean;
