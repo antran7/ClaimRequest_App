@@ -23,7 +23,6 @@ const ApprovalDashboard: React.FC = () => {
     home: <ApprovalPage />,
     profile: <Approver />,
     request: <RequestPage />,
-    history: <div>History Content</div>,
   };
 
   const renderContent = () => {

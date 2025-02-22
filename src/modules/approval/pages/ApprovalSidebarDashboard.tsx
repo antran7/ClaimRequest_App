@@ -12,7 +12,6 @@ import {
   Home,
   Person as Profile,
   Description as Request,
-  History,
 } from "@mui/icons-material";
 
 interface ApprovalSidebarDashboardProps {
@@ -38,11 +37,6 @@ const menuItems = [
     text: "My Request",
     icon: <Request />,
     id: "request",
-  },
-  {
-    text: "History",
-    icon: <History />,
-    id: "history",
   },
 ];
 
