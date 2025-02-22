@@ -34,7 +34,7 @@ const ApprovalPage: React.FC = () => {
         const users = userResponse.data;
 
         const requestsWithRequester = response.data
-          .filter((request: any) => request.status === "PENDING")
+          .filter((request: any) => request.status === "Pending")
           .map((request: any) => {
             const user = users.find((u: any) => u.email === request.userEmail);
             return {

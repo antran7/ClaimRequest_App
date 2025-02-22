@@ -66,7 +66,9 @@ const RequestPage = () => {
             req.userEmail === userEmail &&
             (req.status === "Rejected" ||
               req.status === "Returned" ||
-              req.status === "Approved")
+              req.status === "Approved" ||
+              req.status === "DRAFT" ||
+              req.status === "Pending")
         );
         setRequests(userRequests);
         setLoading(false);
@@ -156,7 +158,7 @@ const RequestPage = () => {
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = (id: number) => {
     setRequestToDelete(id);
     setIsDeleteModalVisible(true);
   };
@@ -174,7 +176,7 @@ const RequestPage = () => {
     }
   };
 
-  const handleRequestApproval = async (id: number) => {
+  const handleRequestApproval = (id: number) => {
     setRequestToApprove(id);
     setIsConfirmModalVisible(true);
   };
@@ -183,13 +185,14 @@ const RequestPage = () => {
     if (requestToApprove === null) return;
 
     try {
-      const updatedRequests = requests.map((req) =>
-        req.id === requestToApprove ? { ...req, status: "PENDING" } : req
-      );
-      setRequests(updatedRequests);
       await axios.put(`${API_REQUESTS}/${requestToApprove}`, {
-        status: "PENDING",
+        status: "Pending",
       });
+      setRequests(
+        requests.map((req) =>
+          req.id === requestToApprove ? { ...req, status: "Pending" } : req
+        )
+      );
       setIsConfirmModalVisible(false);
       setRequestToApprove(null);
     } catch (error) {
@@ -278,18 +281,21 @@ const RequestPage = () => {
                           });
                         }}
                         className="edit-button"
-                        disabled={req.status !== "Returned"}
+                        disabled={
+                          req.status !== "DRAFT" && req.status !== "Returned"
+                        }
                       >
                         Edit
                       </Button>
                       <Button
                         onClick={() => handleDelete(req.id)}
                         className="delete-button"
-                        disabled={req.status !== "Draft"}
+                        disabled={req.status !== "DRAFT"}
                       >
                         Delete
                       </Button>
-                      {req.status === "Returned" && (
+                      {(req.status === "DRAFT" ||
+                        req.status === "Returned") && (
                         <Button
                           onClick={() => handleRequestApproval(req.id)}
                           className="approve-button"
