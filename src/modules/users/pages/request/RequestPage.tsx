@@ -58,18 +58,20 @@ const RequestPage = () => {
   }, []);
 
   useEffect(() => {
-    if (!userEmail) return;
-
     const fetchRequests = async () => {
       try {
         const response = await axios.get(API_REQUESTS);
         const userRequests = response.data.filter(
-          (req: Request) => req.userEmail === userEmail
+          (req: Request) =>
+            req.userEmail === userEmail &&
+            (req.status === "Rejected" ||
+              req.status === "Returned" ||
+              req.status === "Approved")
         );
         setRequests(userRequests);
+        setLoading(false);
       } catch (error) {
         console.error("Error fetching requests:", error);
-      } finally {
         setLoading(false);
       }
     };
@@ -185,7 +187,9 @@ const RequestPage = () => {
         req.id === requestToApprove ? { ...req, status: "PENDING" } : req
       );
       setRequests(updatedRequests);
-      await axios.put(`${API_REQUESTS}/${requestToApprove}`, { status: "PENDING" });
+      await axios.put(`${API_REQUESTS}/${requestToApprove}`, {
+        status: "PENDING",
+      });
       setIsConfirmModalVisible(false);
       setRequestToApprove(null);
     } catch (error) {
@@ -274,18 +278,18 @@ const RequestPage = () => {
                           });
                         }}
                         className="edit-button"
-                        disabled={req.status !== "DRAFT" && req.status !== "RETURNED"}
+                        disabled={req.status !== "Returned"}
                       >
                         Edit
                       </Button>
                       <Button
                         onClick={() => handleDelete(req.id)}
                         className="delete-button"
-                        disabled={req.status !== "DRAFT"}
+                        disabled={req.status !== "Draft"}
                       >
                         Delete
                       </Button>
-                      {(req.status === "DRAFT" || req.status === "RETURNED") && (
+                      {req.status === "Returned" && (
                         <Button
                           onClick={() => handleRequestApproval(req.id)}
                           className="approve-button"
@@ -311,7 +315,13 @@ const RequestPage = () => {
         <Form
           form={form}
           onFinish={handleAddModalOk}
-          initialValues={{ name: "", projectName: "", startDate: null, endDate: null, totalTimes: 0 }}
+          initialValues={{
+            name: "",
+            projectName: "",
+            startDate: null,
+            endDate: null,
+            totalTimes: 0,
+          }}
         >
           <Form.Item
             label="Request Name"

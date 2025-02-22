@@ -1,220 +1,222 @@
-import React, { useState } from "react";
-import {
-  Paper,
-  Typography,
-  TextField,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TablePagination,
-  Box,
-  InputAdornment,
-  Button,
-  Chip,
-} from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import CancelIcon from "@mui/icons-material/Cancel";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import "./ApprovalPage.css";
+
+const API_REQUESTS = "https://67b5a06d07ba6e59083db637.mockapi.io/api/requests";
+const API_USERS = "https://67b416e6392f4aa94fa93e19.mockapi.io/api/user";
 
 interface RequestData {
   id: string;
-  requestName: string;
-  requester: string;
-  amount: number;
-  submittedDate: string;
-  status: "Pending" | "Approved" | "Rejected";
+  name: string;
+  projectName: string;
+  requesterName: string;
+  startDate: string;
+  endDate: string;
+  totalTimes: number;
 }
 
-const mockData: RequestData[] = [
-  {
-    id: "001",
-    requestName: "Equipment Purchase",
-    requester: "John Doe",
-    amount: 1500,
-    submittedDate: "2024-03-15",
-    status: "Pending",
-  },
-  {
-    id: "002",
-    requestName: "Software License",
-    requester: "Jane Smith",
-    amount: 2000,
-    submittedDate: "2024-03-16",
-    status: "Pending",
-  },
-  // Add more mock data as needed
-];
-
 const ApprovalPage: React.FC = () => {
+  const [requests, setRequests] = useState<RequestData[]>([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [requests] = useState<RequestData[]>(mockData);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalReason, setModalReason] = useState("");
+  const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
+  const [currentAction, setCurrentAction] = useState<
+    "Rejected" | "Returned" | null
+  >(null);
 
-  const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
+  useEffect(() => {
+    const fetchRequests = async () => {
+      try {
+        const response = await axios.get(API_REQUESTS);
+        const userResponse = await axios.get(API_USERS);
+        const users = userResponse.data;
+
+        const requestsWithRequester = response.data
+          .filter((request: any) => request.status === "PENDING")
+          .map((request: any) => {
+            const user = users.find((u: any) => u.email === request.userEmail);
+            return {
+              ...request,
+              requesterName: user ? user.staffName : "Unknown",
+            };
+          });
+
+        setRequests(requestsWithRequester);
+      } catch (error) {
+        console.error("Error fetching requests:", error);
+      }
+    };
+
+    fetchRequests();
+  }, []);
+
+  const handleApprove = async (id: string) => {
+    try {
+      await axios.put(`${API_REQUESTS}/${id}`, { status: "Approved" });
+      setRequests((prev) => prev.filter((req) => req.id !== id));
+    } catch (error) {
+      console.error("Error approving request:", error);
+    }
   };
 
-  const handleChangeRowsPerPage = (
-    event: React.ChangeEvent<HTMLInputElement>
+  const handleRejectOrReturn = (
+    id: string,
+    action: "Rejected" | "Returned"
   ) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+    setCurrentRequestId(id);
+    setCurrentAction(action);
+    setIsModalOpen(true);
   };
 
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(event.target.value);
-    setPage(0);
-  };
+  const handleModalSubmit = async (action: "Rejected" | "Returned") => {
+    if (!currentRequestId) return;
 
-  const filteredRequests = requests.filter((request) =>
-    Object.values(request).some((value) =>
-      value.toString().toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  );
-
-  const getStatusChipColor = (status: string) => {
-    switch (status) {
-      case "Approved":
-        return "success";
-      case "Rejected":
-        return "error";
-      default:
-        return "warning";
+    try {
+      await axios.put(`${API_REQUESTS}/${currentRequestId}`, {
+        status: action,
+        reason: modalReason,
+      });
+      setRequests((prev) => prev.filter((req) => req.id !== currentRequestId));
+      setIsModalOpen(false);
+      setModalReason("");
+      setCurrentRequestId(null);
+    } catch (error) {
+      console.error(`Error ${action.toLowerCase()} request:`, error);
     }
   };
 
   return (
-    <Paper
-      sx={{
-        p: 2,
-        width: "100%",
-        borderRadius: 0,
-        boxShadow: "none",
-        margin: 0,
-        backgroundColor: "transparent",
-      }}
-    >
-      <Typography
-        variant="h5"
-        sx={{
-          mb: 3,
-          fontWeight: 500,
-          pl: 0,
-        }}
+    <div className="approval-container">
+      <div
+        className={`approval-content ${isModalOpen ? "blur-background" : ""}`}
       >
-        Pending Requests
-      </Typography>
+        <div className="approval-box">
+          <h1 className="approval-title">Pending Requests</h1>
 
-      <TextField
-        fullWidth
-        variant="outlined"
-        placeholder="Search requests..."
-        value={searchQuery}
-        onChange={handleSearchChange}
-        size="small"
-        sx={{
-          mb: 3,
-          "& .MuiOutlinedInput-root": {
-            borderRadius: 1,
-          },
-        }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon />
-            </InputAdornment>
-          ),
-        }}
-      />
+          <div className="approval-table-container">
+            <table className="approval-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Request Name</th>
+                  <th>Project Name</th>
+                  <th>Requester</th>
+                  <th>Start Date</th>
+                  <th>End Date</th>
+                  <th>Total Times (Hours)</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {requests
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((row) => (
+                    <tr key={row.id}>
+                      <td>{row.id}</td>
+                      <td>{row.name}</td>
+                      <td>{row.projectName}</td>
+                      <td>{row.requesterName}</td>
+                      <td>{row.startDate}</td>
+                      <td>{row.endDate}</td>
+                      <td>{row.totalTimes}</td>
+                      <td align="center">
+                        <div className="action-buttons">
+                          <button
+                            className="approve-button"
+                            onClick={() => handleApprove(row.id)}
+                          >
+                            Approve
+                          </button>
+                          <button
+                            className="reject-button"
+                            onClick={() =>
+                              handleRejectOrReturn(row.id, "Rejected")
+                            }
+                          >
+                            Reject
+                          </button>
+                          <button
+                            className="return-button"
+                            onClick={() =>
+                              handleRejectOrReturn(row.id, "Returned")
+                            }
+                          >
+                            Return
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
 
-      <TableContainer sx={{ pl: 0 }}>
-        <Table sx={{ minWidth: 650 }}>
-          <TableHead>
-            <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell>Request Name</TableCell>
-              <TableCell>Requester</TableCell>
-              <TableCell>Start Date</TableCell>
-              <TableCell>End Date</TableCell>
-              <TableCell>Total Times (Hours)</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell align="center">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredRequests.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} align="center">
-                  No requests found
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredRequests
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((row) => (
-                  <TableRow key={row.id}>
-                    <TableCell>{row.id}</TableCell>
-                    <TableCell>{row.requestName}</TableCell>
-                    <TableCell>{row.requester}</TableCell>
-                    <TableCell align="right">
-                      {row.amount.toLocaleString()}
-                    </TableCell>
-                    <TableCell>{row.submittedDate}</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={row.status}
-                        color={getStatusChipColor(row.status)}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell align="center">
-                      <Box
-                        sx={{
-                          display: "flex",
-                          gap: 1,
-                          justifyContent: "center",
-                        }}
-                      >
-                        <Button
-                          size="small"
-                          variant="contained"
-                          color="success"
-                          startIcon={<CheckCircleIcon />}
-                        >
-                          Approve
-                        </Button>
-                        <Button
-                          size="small"
-                          variant="contained"
-                          color="error"
-                          startIcon={<CancelIcon />}
-                        >
-                          Reject
-                        </Button>
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+          <div className="pagination">
+            <span>
+              Rows per page:
+              <select
+                value={rowsPerPage}
+                onChange={(event) =>
+                  setRowsPerPage(parseInt(event.target.value, 10))
+                }
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+              </select>
+            </span>
+            <span>
+              {page * rowsPerPage + 1}-
+              {Math.min((page + 1) * rowsPerPage, requests.length)} of{" "}
+              {requests.length}
+            </span>
+            <button onClick={() => setPage(page - 1)} disabled={page === 0}>
+              {"<"}
+            </button>
+            <button
+              onClick={() => setPage(page + 1)}
+              disabled={(page + 1) * rowsPerPage >= requests.length}
+            >
+              {">"}
+            </button>
+          </div>
+        </div>
+      </div>
 
-      <TablePagination
-        sx={{ pl: 0 }} // Thêm padding-left 0
-        rowsPerPageOptions={[5, 10, 25]}
-        component="div"
-        count={filteredRequests.length}
-        rowsPerPage={rowsPerPage}
-        page={page}
-        onPageChange={handleChangePage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-      />
-    </Paper>
+      {isModalOpen && (
+        <div className="modal">
+          <button
+            className="close-button"
+            onClick={() => setIsModalOpen(false)}
+          >
+            X
+          </button>
+          <h6>Provide a reason for this action</h6>
+          <textarea
+            rows={4}
+            value={modalReason}
+            onChange={(e) => setModalReason(e.target.value)}
+            className="modal-textfield"
+          />
+          <div className="modal-actions">
+            <button
+              onClick={() => handleModalSubmit(currentAction!)}
+              className="submit-button"
+            >
+              Submit
+            </button>
+            <button
+              onClick={() => setIsModalOpen(false)}
+              className="cancel-button"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
