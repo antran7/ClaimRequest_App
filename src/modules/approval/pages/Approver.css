@@ -1,0 +1,171 @@
+.approver {
+  flex: 4;
+  padding: 10px;
+  margin-right: 120px;
+  margin-left: 150px;
+}
+
+.approverTitle {
+  font-size: 1.5rem;
+  margin-bottom: 24px;
+}
+
+.approverTitleContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.approverAddButton {
+  width: 80px;
+  border: none;
+  padding: 5px;
+  background-color: teal;
+  border-radius: 5px;
+  cursor: pointer;
+  color: white;
+  font-size: 16px;
+}
+
+.approverContainer {
+  display: flex;
+  margin-top: 20px;
+}
+
+.approverShow {
+  flex: 1;
+  padding: 20px;
+  -webkit-box-shadow: 0px 0px 15px -10px rgba(0, 0, 0, 0.75);
+  box-shadow: 0px 0px 15px -10px rgba(0, 0, 0, 0.75);
+}
+
+.approverUpdate {
+  flex: 2;
+  padding: 20px;
+  -webkit-box-shadow: 0px 0px 15px -10px rgba(0, 0, 0, 0.75);
+  box-shadow: 0px 0px 15px -10px rgba(0, 0, 0, 0.75);
+  margin-left: 20px;
+}
+
+.approverShowTop {
+  display: flex;
+  align-items: center;
+}
+
+.approverShowImg {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.approverShowTopTitle {
+  display: flex;
+  flex-direction: column;
+  margin-left: 20px;
+}
+
+.approverShowUsername {
+  font-weight: 600;
+}
+
+.approverShowUserTitle {
+  font-weight: 300;
+}
+
+.approverShowBottom {
+  margin-top: 20px;
+}
+
+.approverShowTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgb(175, 170, 170);
+}
+
+.approverShowInfo {
+  display: flex;
+  align-items: center;
+  margin: 20px 0px;
+  color: #444;
+}
+
+.approverShowIcon {
+  font-size: 16px !important;
+}
+
+.approverShowInfoTitle {
+  margin-left: 10px;
+}
+
+.approverUpdateTitle {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.approverUpdateForm {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.approverUpdateItem {
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+}
+
+.approverUpdateItem > label {
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+
+.approverUpdateInput {
+  border: none;
+  width: 250px;
+  height: 30px;
+  border-bottom: 1px solid gray;
+}
+
+.approverUpdateRight {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.approverUpdateUpload {
+  display: flex;
+  align-items: center;
+}
+
+.approverUpdateImg {
+  width: 200px;
+  height: 200px;
+  border-radius: 10px;
+  object-fit: cover;
+  margin-right: 20px;
+}
+
+.approverUpdateIcon {
+  cursor: pointer;
+}
+
+.approverUpdateButton {
+  border-radius: 5px;
+  border: none;
+  padding: 5px;
+  cursor: pointer;
+  background-color: darkblue;
+  color: white;
+  font-weight: 600;
+}
+
+.error {
+  color: red;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.approverUpdateInput.error {
+  border-bottom: 2px solid red;
+}

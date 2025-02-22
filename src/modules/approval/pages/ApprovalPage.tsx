@@ -1,201 +1,220 @@
-import { useState, useEffect } from "react";
-import { Table, Input, Button, Tag, Space, message } from "antd";
-import type { ColumnsType } from "antd/es/table";
+import React, { useState } from "react";
 import {
-  SearchOutlined,
-  CheckOutlined,
-  CloseOutlined,
-  LogoutOutlined,
-} from "@ant-design/icons";
-import "./ApprovalPage.css";
-import { handleLogout } from "../../../shared/utils/auth";
-import { useNavigate } from "react-router-dom";
-import Layout from "../../../shared/layouts/Layout";
-import axios from "axios";
+  Paper,
+  Typography,
+  TextField,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TablePagination,
+  Box,
+  InputAdornment,
+  Button,
+  Chip,
+} from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelIcon from "@mui/icons-material/Cancel";
 
-interface ClaimRequest {
-  id: number;
-  name: string;
-  submittedDate: string;
-  status: string;
-  requesterName: string;
+interface RequestData {
+  id: string;
+  requestName: string;
+  requester: string;
   amount: number;
+  submittedDate: string;
+  status: "Pending" | "Approved" | "Rejected";
 }
 
-const ApprovalPage = () => {
-  const navigate = useNavigate();
-  const [searchText, setSearchText] = useState("");
-  const [requests, setRequests] = useState<ClaimRequest[]>([]);
+const mockData: RequestData[] = [
+  {
+    id: "001",
+    requestName: "Equipment Purchase",
+    requester: "John Doe",
+    amount: 1500,
+    submittedDate: "2024-03-15",
+    status: "Pending",
+  },
+  {
+    id: "002",
+    requestName: "Software License",
+    requester: "Jane Smith",
+    amount: 2000,
+    submittedDate: "2024-03-16",
+    status: "Pending",
+  },
+  // Add more mock data as needed
+];
 
-  useEffect(() => {
-    const fetchRequests = async () => {
-      try {
-        const response = await axios.get(
-          "https://67b5a06d07ba6e59083db637.mockapi.io/api/requests"
-        );
-        const pendingRequests = response.data
-          .filter((req: any) => req.status === "PENDING")
-          .map((req: any) => ({
-            ...req,
-            requesterName: "User " + req.userId,
-            amount: Math.floor(Math.random() * 10000) + 1000,
-          }));
-        setRequests(pendingRequests);
-      } catch (error) {
-        console.error("Error fetching requests:", error);
-      }
-    };
+const ApprovalPage: React.FC = () => {
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [requests] = useState<RequestData[]>(mockData);
 
-    fetchRequests();
-  }, []);
-
-  const handleApprove = async (record: ClaimRequest) => {
-    try {
-      await axios.put(
-        `https://67b5a06d07ba6e59083db637.mockapi.io/api/requests/${record.id}`,
-        {
-          ...record,
-          status: "APPROVED",
-        }
-      );
-      setRequests((prevRequests) =>
-        prevRequests.filter((req) => req.id !== record.id)
-      );
-      message.success(`Request #${record.id} has been approved`);
-    } catch (error) {
-      console.error("Error approving request:", error);
-      message.error("Failed to approve request");
-    }
+  const handleChangePage = (event: unknown, newPage: number) => {
+    setPage(newPage);
   };
 
-  const handleReject = async (record: ClaimRequest) => {
-    try {
-      await axios.put(
-        `https://67b5a06d07ba6e59083db637.mockapi.io/api/requests/${record.id}`,
-        {
-          ...record,
-          status: "REJECTED",
-        }
-      );
-      setRequests((prevRequests) =>
-        prevRequests.filter((req) => req.id !== record.id)
-      );
-      message.error(`Request #${record.id} has been rejected`);
-    } catch (error) {
-      console.error("Error rejecting request:", error);
-      message.error("Failed to reject request");
-    }
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
   };
 
-  const columns: ColumnsType<ClaimRequest> = [
-    {
-      title: "ID",
-      dataIndex: "id",
-      key: "id",
-    },
-    {
-      title: "Request Name",
-      dataIndex: "name",
-      key: "name",
-    },
-    {
-      title: "Requester",
-      dataIndex: "requesterName",
-      key: "requesterName",
-    },
-    {
-      title: "Amount ($)",
-      dataIndex: "amount",
-      key: "amount",
-      render: (amount: number) => (
-        <span className="amount-cell">${amount.toFixed(2)}</span>
-      ),
-    },
-    {
-      title: "Submitted Date",
-      dataIndex: "submittedDate",
-      key: "submittedDate",
-    },
-    {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      render: (status: string) => (
-        <Tag color="gold" className="status-tag">
-          {status}
-        </Tag>
-      ),
-    },
-    {
-      title: "Actions",
-      key: "actions",
-      render: (_, record) => (
-        <Space>
-          <Button
-            type="primary"
-            icon={<CheckOutlined />}
-            onClick={() => handleApprove(record)}
-            className="approve-button"
-          >
-            Approve
-          </Button>
-          <Button
-            danger
-            icon={<CloseOutlined />}
-            onClick={() => handleReject(record)}
-            className="reject-button"
-          >
-            Reject
-          </Button>
-        </Space>
-      ),
-    },
-  ];
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(event.target.value);
+    setPage(0);
+  };
 
-  const filteredData = requests.filter((item) =>
-    Object.values(item).some(
-      (value) =>
-        value &&
-        value.toString().toLowerCase().includes(searchText.toLowerCase())
+  const filteredRequests = requests.filter((request) =>
+    Object.values(request).some((value) =>
+      value.toString().toLowerCase().includes(searchQuery.toLowerCase())
     )
   );
 
+  const getStatusChipColor = (status: string) => {
+    switch (status) {
+      case "Approved":
+        return "success";
+      case "Rejected":
+        return "error";
+      default:
+        return "warning";
+    }
+  };
+
   return (
-    <Layout>
-      <div className="approval-page">
-        <div className="page-header">
-          <div className="header-top">
-            <h1 className="page-title">Approval Management</h1>
-            <Button
-              icon={<LogoutOutlined />}
-              onClick={() => handleLogout(navigate)}
-              danger
-              className="logout-button"
-            >
-              Logout
-            </Button>
-          </div>
-          <Input
-            placeholder="Search requests..."
-            prefix={<SearchOutlined />}
-            onChange={(e) => setSearchText(e.target.value)}
-            className="search-input"
-          />
-        </div>
-        <div className="table-container">
-          <Table
-            columns={columns}
-            dataSource={filteredData}
-            rowKey="id"
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: true,
-              showTotal: (total) => `Total ${total} items`,
-            }}
-          />
-        </div>
-      </div>
-    </Layout>
+    <Paper
+      sx={{
+        p: 2,
+        width: "100%",
+        borderRadius: 0,
+        boxShadow: "none",
+        margin: 0,
+        backgroundColor: "transparent",
+      }}
+    >
+      <Typography
+        variant="h5"
+        sx={{
+          mb: 3,
+          fontWeight: 500,
+          pl: 0,
+        }}
+      >
+        Pending Requests
+      </Typography>
+
+      <TextField
+        fullWidth
+        variant="outlined"
+        placeholder="Search requests..."
+        value={searchQuery}
+        onChange={handleSearchChange}
+        size="small"
+        sx={{
+          mb: 3,
+          "& .MuiOutlinedInput-root": {
+            borderRadius: 1,
+          },
+        }}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon />
+            </InputAdornment>
+          ),
+        }}
+      />
+
+      <TableContainer sx={{ pl: 0 }}>
+        <Table sx={{ minWidth: 650 }}>
+          <TableHead>
+            <TableRow>
+              <TableCell>ID</TableCell>
+              <TableCell>Request Name</TableCell>
+              <TableCell>Requester</TableCell>
+              <TableCell>Start Date</TableCell>
+              <TableCell>End Date</TableCell>
+              <TableCell>Total Times (Hours)</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell align="center">Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filteredRequests.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} align="center">
+                  No requests found
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredRequests
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((row) => (
+                  <TableRow key={row.id}>
+                    <TableCell>{row.id}</TableCell>
+                    <TableCell>{row.requestName}</TableCell>
+                    <TableCell>{row.requester}</TableCell>
+                    <TableCell align="right">
+                      {row.amount.toLocaleString()}
+                    </TableCell>
+                    <TableCell>{row.submittedDate}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={row.status}
+                        color={getStatusChipColor(row.status)}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell align="center">
+                      <Box
+                        sx={{
+                          display: "flex",
+                          gap: 1,
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Button
+                          size="small"
+                          variant="contained"
+                          color="success"
+                          startIcon={<CheckCircleIcon />}
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          size="small"
+                          variant="contained"
+                          color="error"
+                          startIcon={<CancelIcon />}
+                        >
+                          Reject
+                        </Button>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      <TablePagination
+        sx={{ pl: 0 }} // Thêm padding-left 0
+        rowsPerPageOptions={[5, 10, 25]}
+        component="div"
+        count={filteredRequests.length}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+      />
+    </Paper>
   );
 };
 

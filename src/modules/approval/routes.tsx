@@ -1,7 +1,7 @@
 import { RouteObject } from "react-router-dom";
 import { Role } from "../../shared/constants/roles";
 import PrivateRoute from "../../shared/routes/PrivateRoute";
-import ApprovalPage from "./pages/ApprovalPage";
+import ApprovalDashboard from "./pages/ApprovalDashboard";
 
 export const approvalRoutes: RouteObject[] = [
   {
@@ -10,8 +10,8 @@ export const approvalRoutes: RouteObject[] = [
     children: [
       {
         path: "dashboard",
-        element: <ApprovalPage />
-      }
+        element: <ApprovalDashboard />,
+      },
     ],
   },
 ];
