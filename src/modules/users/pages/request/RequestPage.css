@@ -128,7 +128,7 @@
 }
 
 .custom-modal .ant-modal-content {
-  height: 38vh;
+  height: 50vh;
   width: 100vw;
   margin: 0;
   padding: 0;
@@ -174,7 +174,6 @@
 .custom-modal .ant-picker {
   width: 100%;
 }
-
 
 .confirm-modal .ant-modal-content {
   border-radius: 8px;
@@ -225,4 +224,21 @@
 .confirm-modal .ant-btn-default:hover {
   color: #374151;
   border-color: #9ca3af;
+}
+
+.approve-button {
+  background-color: #16a34a;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  transition: background-color 0.3s ease-in-out, transform 0.1s;
+  border: none;
+}
+
+.approve-button:hover {
+  background-color: #eab308;
+  transform: scale(1.05);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
