@@ -58,22 +58,18 @@ const RequestPage = () => {
   }, []);
 
   useEffect(() => {
+    if (!userEmail) return;
+
     const fetchRequests = async () => {
       try {
         const response = await axios.get(API_REQUESTS);
         const userRequests = response.data.filter(
-          (req: Request) =>
-            req.userEmail === userEmail &&
-            (req.status === "Rejected" ||
-              req.status === "Returned" ||
-              req.status === "Approved" ||
-              req.status === "DRAFT" ||
-              req.status === "Pending")
+          (req: Request) => req.userEmail === userEmail
         );
         setRequests(userRequests);
-        setLoading(false);
       } catch (error) {
         console.error("Error fetching requests:", error);
+      } finally {
         setLoading(false);
       }
     };
@@ -107,7 +103,7 @@ const RequestPage = () => {
       const newRequest = {
         name: values.name,
         projectName: values.projectName,
-        status: "DRAFT",
+        status: "Draft",
         startDate: values.startDate.format("YYYY-MM-DD"),
         endDate: values.endDate.format("YYYY-MM-DD"),
         totalTimes: values.totalTimes,
@@ -115,7 +111,7 @@ const RequestPage = () => {
         submittedDate: moment().format("YYYY-MM-DD"),
         userEmail: userEmail,
         userId: 1,
-        reason: "DRAFT",
+        reason: "Draft",
       };
 
       const response = await axios.post(API_REQUESTS, newRequest);
@@ -158,7 +154,7 @@ const RequestPage = () => {
     }
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     setRequestToDelete(id);
     setIsDeleteModalVisible(true);
   };
@@ -176,7 +172,7 @@ const RequestPage = () => {
     }
   };
 
-  const handleRequestApproval = (id: number) => {
+  const handleRequestApproval = async (id: number) => {
     setRequestToApprove(id);
     setIsConfirmModalVisible(true);
   };
@@ -187,10 +183,11 @@ const RequestPage = () => {
     try {
       await axios.put(`${API_REQUESTS}/${requestToApprove}`, {
         status: "Pending",
+        reason: "Draft",
       });
       setRequests(
         requests.map((req) =>
-          req.id === requestToApprove ? { ...req, status: "Pending" } : req
+          req.id === requestToApprove ? { ...req, status: "Pending", reason: "Draft" } : req
         )
       );
       setIsConfirmModalVisible(false);
@@ -245,7 +242,7 @@ const RequestPage = () => {
                 <th>Status</th>
                 <th>Start Date</th>
                 <th>End Date</th>
-                <th>Total Times</th>
+                <th>Total Times (Hours)</th>
                 <th>Reason</th>
                 <th>Actions</th>
               </tr>
@@ -281,21 +278,18 @@ const RequestPage = () => {
                           });
                         }}
                         className="edit-button"
-                        disabled={
-                          req.status !== "DRAFT" && req.status !== "Returned"
-                        }
+                        disabled={req.status !== "Draft" && req.status !== "Returned"}
                       >
                         Edit
                       </Button>
                       <Button
                         onClick={() => handleDelete(req.id)}
                         className="delete-button"
-                        disabled={req.status !== "DRAFT"}
+                        disabled={req.status !== "Draft"}
                       >
                         Delete
                       </Button>
-                      {(req.status === "DRAFT" ||
-                        req.status === "Returned") && (
+                      {(req.status === "Draft" || req.status === "Returned") && (
                         <Button
                           onClick={() => handleRequestApproval(req.id)}
                           className="approve-button"
@@ -321,13 +315,7 @@ const RequestPage = () => {
         <Form
           form={form}
           onFinish={handleAddModalOk}
-          initialValues={{
-            name: "",
-            projectName: "",
-            startDate: null,
-            endDate: null,
-            totalTimes: 0,
-          }}
+          initialValues={{ name: "", projectName: "", startDate: null, endDate: null, totalTimes: 0 }}
         >
           <Form.Item
             label="Request Name"
@@ -386,6 +374,16 @@ const RequestPage = () => {
             name="totalTimes"
             rules={[
               { required: true, message: "Please input the total times!" },
+              {
+                validator(_, value) {
+                  if (value > 0) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(
+                    new Error("Total times must be greater than 0!")
+                  );
+                },
+              },
             ]}
           >
             <Input type="number" />
@@ -474,6 +472,16 @@ const RequestPage = () => {
             name="totalTimes"
             rules={[
               { required: true, message: "Please input the total times!" },
+              {
+                validator(_, value) {
+                  if (value > 0) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(
+                    new Error("Total times must be greater than 0!")
+                  );
+                },
+              },
             ]}
           >
             <Input type="number" />
