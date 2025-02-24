@@ -5,15 +5,19 @@ import Header from "../../../shared/components/Header";
 import BackButton from "../components/BackButton";
 import {
   Button,
-  Card,
-  CardContent,
-  CardHeader,
   Typography,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   TextField,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
 } from "@mui/material";
 import Pagination from "@mui/material/Pagination";
 import Stack from "@mui/material/Stack";
@@ -133,7 +137,7 @@ const ProjectManagementPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <Header toggleSideBar={toggleSidebar}/>
+      <Header toggleSideBar={toggleSidebar} />
 
       <div className="p-8">
         <div className="flex justify-between items-center mb-6">
@@ -148,55 +152,67 @@ const ProjectManagementPage: React.FC = () => {
           </Button>
         </div>
 
-        <div className="grid grid-cols-3 gap-6">
-          {projects.map((project) => (
-            <Card key={project.id}>
-              <CardHeader title={project.name} />
-              <CardContent>
-                <Typography>
-                  Budget: ${project.budget.toLocaleString()}
-                </Typography>
-                <Typography>
-                  Start: {new Date(project.startDate).toLocaleDateString()}
-                </Typography>
-                <Typography>
-                  End: {new Date(project.endDate).toLocaleDateString()}
-                </Typography>
-                <Typography>Users:</Typography>
-                <div className="flex space-x-2">
-                  {users
-                    .filter((user) => user.projectId.includes(project.id))
-                    .map((user) => (
-                      <img
-                        key={user.id}
-                        src={user.url}
-                        alt={user.name}
-                        className="w-10 h-10 rounded-full border"
-                      />
-                    ))}
-                </div>
-                <div className="flex justify-between mt-4">
-                  <Button
-                    variant="outlined"
-                    color="primary"
-                    startIcon={<EditIcon />}
-                    onClick={() => handleOpenDialog(project)}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    color="secondary"
-                    startIcon={<DeleteIcon />}
-                    onClick={() => handleDeleteProject(project.id)}
-                  >
-                    Delete
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Name</TableCell>
+                <TableCell>Budget</TableCell>
+                <TableCell>Start Date</TableCell>
+                <TableCell>End Date</TableCell>
+                <TableCell>Users</TableCell>
+                <TableCell>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {projects.map((project) => (
+                <TableRow key={project.id}>
+                  <TableCell>{project.name}</TableCell>
+                  <TableCell>${project.budget.toLocaleString()}</TableCell>
+                  <TableCell>
+                    {new Date(project.startDate).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    {new Date(project.endDate).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex">
+                      {users
+                        .filter((user) => user.projectId.includes(project.id))
+                        .map((user) => (
+                          <img
+                            key={user.id}
+                            src={user.url}
+                            alt={user.name}
+                            className="w-10 h-10 rounded-full border mr-2"
+                          />
+                        ))}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      startIcon={<EditIcon />}
+                      onClick={() => handleOpenDialog(project)}
+                      sx={{ mr: 1 }}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      color="secondary"
+                      startIcon={<DeleteIcon />}
+                      onClick={() => handleDeleteProject(project.id)}
+                    >
+                      Delete
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
         <div className="w-1/3 ml-auto p-4">
           <Stack spacing={2}>
             <Pagination count={10} variant="outlined" shape="rounded" />
