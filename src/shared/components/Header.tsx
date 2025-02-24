@@ -18,8 +18,9 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
 
   const handleLogOut = () => {
     logout();
-    setIsLoggedIn(false);
-    navigate("/login");
+    setTimeout(() => {
+      navigate("/login");
+    }, 100);
   };
 
   useEffect(() => {

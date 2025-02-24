@@ -1,9 +1,10 @@
 import { createContext, ReactNode, useState, useEffect, useContext } from "react";
 import { Role } from "../constants/roles";
-import { authService } from "../../modules/auth/services/authService";
+import apiService from "../../modules/auth/services/api";
 
 interface User {
   email: string;
+  password: string;
   role: string;
 }
 
@@ -32,15 +33,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await authService.login(email, password);
-      if (response) {
-        setUser({
-          email: response.email,
-          role: response.role,
-        });
-        setRole(response.role as Role);
-        localStorage.setItem("userRole", response.role);
-        localStorage.setItem("userEmail", response.email);
+      const response = await apiService.get<User[]>('/user');
+      const users: User[] = response.data;
+
+      const user = users.find(
+        (o) => o.email === email && o.password === password
+      );
+
+      if (user) {
+        setUser(user);
+        setRole(user.role as Role);
+        localStorage.setItem("userRole", user.role);
+        localStorage.setItem("userEmail", user.email);
+      }else {
+        throw new Error('Thông tin đăng nhập không chính xác');
       }
     } catch (error) {
       console.error('Error:',error);
@@ -60,7 +66,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const savedEmail = localStorage.getItem("userEmail");
 
     if (savedRole && savedEmail) {
-      setUser({ email: savedEmail, role: savedRole });
+      setUser(user);
       setRole(savedRole);
     }
     setLoading(false);
