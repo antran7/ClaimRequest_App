@@ -68,6 +68,10 @@
 }
 
 .status-draft {
+  color: #a59c9ce0;
+  font-weight: bold;
+}
+.status-returned{
   color: #ff9800;
   font-weight: bold;
 }

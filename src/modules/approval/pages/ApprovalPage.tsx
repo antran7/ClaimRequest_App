@@ -25,6 +25,7 @@ const ApprovalPage: React.FC = () => {
   const [currentAction, setCurrentAction] = useState<
     "Rejected" | "Returned" | null
   >(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchRequests = async () => {
@@ -71,6 +72,11 @@ const ApprovalPage: React.FC = () => {
   };
 
   const handleModalSubmit = async (action: "Rejected" | "Returned") => {
+    if (!modalReason.trim()) {
+      setError("Reason is required.");
+      return;
+    }
+
     if (!currentRequestId) return;
 
     try {
@@ -82,9 +88,16 @@ const ApprovalPage: React.FC = () => {
       setIsModalOpen(false);
       setModalReason("");
       setCurrentRequestId(null);
+      setError(null);
     } catch (error) {
       console.error(`Error ${action.toLowerCase()} request:`, error);
     }
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setModalReason("");
+    setError(null);
   };
 
   return (
@@ -187,10 +200,7 @@ const ApprovalPage: React.FC = () => {
 
       {isModalOpen && (
         <div className="modal">
-          <button
-            className="close-button"
-            onClick={() => setIsModalOpen(false)}
-          >
+          <button className="close-button" onClick={handleCloseModal}>
             X
           </button>
           <h6>Provide a reason for this action</h6>
@@ -200,6 +210,7 @@ const ApprovalPage: React.FC = () => {
             onChange={(e) => setModalReason(e.target.value)}
             className="modal-textfield"
           />
+          {error && <p className="error-message">{error}</p>}
           <div className="modal-actions">
             <button
               onClick={() => handleModalSubmit(currentAction!)}
@@ -207,10 +218,7 @@ const ApprovalPage: React.FC = () => {
             >
               Submit
             </button>
-            <button
-              onClick={() => setIsModalOpen(false)}
-              className="cancel-button"
-            >
+            <button onClick={handleCloseModal} className="cancel-button">
               Cancel
             </button>
           </div>
