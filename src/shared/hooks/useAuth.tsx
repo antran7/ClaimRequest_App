@@ -43,7 +43,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         localStorage.setItem("userEmail", response.email);
       }
     } catch (error) {
-      console.error(error);
+      console.error('Error:',error);
+      throw error;
     }
   };
 
@@ -51,6 +52,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     setRole(null);
     localStorage.removeItem("userRole");
+    localStorage.removeItem("userEmail");
   };
 
   useEffect(() => {

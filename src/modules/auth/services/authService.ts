@@ -22,7 +22,7 @@ export const authService = {
 
       return user;
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Error:', error);
       throw error;
     }
   }
