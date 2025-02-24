@@ -10,7 +10,6 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  role: Role | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
@@ -18,7 +17,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  role: null,
   login: async () => Promise.resolve(),
   logout: () => { },
   loading: true,
@@ -28,7 +26,6 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [role, setRole] = useState<Role | null>(null);
   const [loading, setLoading] = useState(true);
 
   const login = async (email: string, password: string) => {
@@ -42,7 +39,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (user) {
         setUser(user);
-        setRole(user.role as Role);
         localStorage.setItem("userRole", user.role);
         localStorage.setItem("userEmail", user.email);
       }else {
@@ -56,7 +52,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = () => {
     setUser(null);
-    setRole(null);
     localStorage.removeItem("userRole");
     localStorage.removeItem("userEmail");
   };
@@ -64,16 +59,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const savedRole = localStorage.getItem("userRole") as Role | null;
     const savedEmail = localStorage.getItem("userEmail");
-
     if (savedRole && savedEmail) {
       setUser(user);
-      setRole(savedRole);
     }
     setLoading(false);
-  }, []);
+  }, [user]);
 
   return (
-    <AuthContext.Provider value={{ user, role, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

@@ -21,7 +21,6 @@ const Login = () => {
       console.log("Thành công!");
   
       const role = localStorage.getItem("userRole");
-      console.log("Role là: ", role);
       switch (role) {
         case Role.ADMIN:
           navigate("/admin/dashboard");
