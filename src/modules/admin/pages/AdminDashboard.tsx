@@ -1,22 +1,17 @@
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { Doughnut } from "react-chartjs-2";
 import "./AdminDashboard.css";
-import { AccountCircleOutlined, Folder } from "@mui/icons-material"; // Removed HomeOutlined
-import { Col, Row } from "antd";
-import { useState } from "react";
-import AdminHeaderDashboard from "../components/AdminHeaderDashboard";
-import AdminSidebarDashboard from "../components/AdminSidebarDashboard"; // Import the sidebar component
+import { AccountCircleOutlined, Folder } from "@mui/icons-material"; 
+
 import { useNavigate } from "react-router-dom";
+import Layout from "../../../shared/layouts/Layout";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 function AdminDashboard() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
+
 
   const data = {
     labels: ["Red", "Blue", "Yellow"],
@@ -35,19 +30,14 @@ function AdminDashboard() {
 
   return (
     <div>
-      <AdminHeaderDashboard toggleSidebar={toggleSidebar} />
-      <AdminSidebarDashboard
-        isOpen={isSidebarOpen}
-        toggleSidebar={toggleSidebar}
-      />{" "}
-      {/* Add the sidebar component */}
+      <Layout>
+      <div className="include-all">
+        
       <div className="admin-dashboard-container">
-        <div className="header"></div>
         <div className="content-dashboard">
           <h2>Welcome!</h2>
-          <p>This is the admin dashboard.</p>
-          <Row className="items-card">
-            <Col span={6} onClick={() => navigate("/admin/manageuser")}>
+          <div className="items-card">
+            <div  onClick={() => navigate("/admin/manageuser")}>
               <div className="user-card">
                 <div className="user-card-left">
                   <p>Users</p>
@@ -57,8 +47,8 @@ function AdminDashboard() {
                   <AccountCircleOutlined style={{ fontSize: "50px" }} />
                 </div>
               </div>
-            </Col>
-            <Col span={6} onClick={() => navigate("/admin/manageproject")}>
+            </div>
+            <div  onClick={() => navigate("/admin/manageproject")}>
               <div className="project-card">
                 <div className="project-card-left">
                   <p>Project</p>
@@ -68,10 +58,10 @@ function AdminDashboard() {
                   <Folder style={{ fontSize: "50px" }} />
                 </div>
               </div>
-            </Col>
-            <Col span={6}>
-              <div className="project-card">
-                <div className="project-card-left">
+            </div>
+            <div >
+              <div className="processcing-card">
+                <div className="processcing-card-left">
                   <p>Request procescing</p>
                   <p>20</p>
                 </div>
@@ -79,10 +69,10 @@ function AdminDashboard() {
                   <Folder style={{ fontSize: "50px" }} />
                 </div>
               </div>
-            </Col>
-            <Col span={6}>
-              <div className="project-card">
-                <div className="project-card-left">
+            </div>
+            <div >
+              <div className="processced-card">
+                <div className="processced-card-left">
                   <p>Request processed</p>
                   <p>20</p>
                 </div>
@@ -90,14 +80,17 @@ function AdminDashboard() {
                   <Folder style={{ fontSize: "50px" }} />
                 </div>
               </div>
-            </Col>
-          </Row>
+            </div>
+          </div>
 
           <div className="chart-container">
             <Doughnut data={data} />
           </div>
         </div>
       </div>
+      </div>
+        </Layout>    
+      
     </div>
   );
 }
