@@ -1,86 +1,29 @@
-import { FormControl, IconButton, InputAdornment, InputLabel, OutlinedInput } from "@mui/material";
+import { Link } from "react-router";
+import Footer from "../../../shared/components/Footer";
+import Header from "../../../shared/components/Header";
 import "./Profile.css";
-import TextField from "@mui/material/TextField";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
-import React from "react";
 
 function Profile() {
-  const [showPassword, setShowPassword] = React.useState(false);
 
-  const handleClickShowPassword = () => setShowPassword((show) => !show);
-
-  const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault();
-  };
-
-  const handleMouseUpPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault();
-  };
   return (
-    <div className="profile">
-      <div className="head-profile">
-        <h2>Your profile</h2>
-        <img
-          src="https://i.pinimg.com/564x/dd/2d/0a/dd2d0a59ad7e79453110b2968af72d89.jpg"
-          alt="Avatar"
-          className="avatar-profile"
-        />
-      </div>
-      <div className="input-inf-profile">
-        <div className="name-profile">
-          <TextField
-            required
-            label="First Name"
-            id="outlined-size-small"
-            defaultValue="Enter your first name"
-            size="small"
-            className="inputname"
-          />
-          <TextField
-            required
-            label="Last Name"
-            id="outlined-size-small"
-            defaultValue="Enter your last name"
-            size="small"
-            className="inputname"
-          />
+    <div>
+      <Header />
+      <div className="profile">
+        <div className="profile-left">
+          <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQvdt3vH3FBrtBEyM7nPk-ZRYRGXthCIr0SvQ&s" alt="" />
+          <h3><strong>Nguyen Thi Thuy Ngan</strong></h3>
+          <p style={{color:'#70757a'}}>Front End Developer</p>
         </div>
-        <div className="gmail-phone">
-          <TextField required label="Gmail" id="outlined-size-small" defaultValue="Enter your gmail" size="small" className="input-gmail"/>
-          <TextField required label="Phone" id="outlined-size-small" defaultValue="Enter your phone" size="small" className="input-phone"/>
-        </div>
-        <TextField required label="Address" id="outlined-size-small" defaultValue="Enter your address" size="small" className="input-address"/>
-
-        <div className="input-password-group">
-        <FormControl sx={{ width: "100%"}} variant="outlined">
-          <InputLabel htmlFor="outlined-adornment-password" >Password</InputLabel>
-          <OutlinedInput className="input-password"
-          required
-            id="outlined-adornment-password"
-            type={showPassword ? "text" : "password"} 
-            endAdornment={
-              <InputAdornment position="end">
-                <IconButton
-                  aria-label={showPassword ? "hide the password" : "display the password"}
-                  onClick={handleClickShowPassword}
-                  onMouseDown={handleMouseDownPassword}
-                  onMouseUp={handleMouseUpPassword}
-                  edge="end"
-                >
-                  {showPassword ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              </InputAdornment>
-            }
-            label="Password"
-          />
-        </FormControl>
+        <div className="profile-right">
+          <h2 style={{fontSize:'30px'}}>About me</h2>
+          <p style={{color:'#70757a', lineHeight:'30px'}}>Lorem ipsum dolor sit amet consectetur, adipisicing elit. Adipisci consequatur similique id et, quo nam consectetur, esse nemo vel maxime, eligendi cupiditate dolores necessitatibus? Temporibus delectus odio itaque sed voluptas!</p>
+          <p><strong>Staff ID: </strong>SE11180328</p>
+          <p><strong>Department: </strong>Information Technology</p>
+          <p><strong>Email: </strong>admin@gmail.com</p>
+          <button className="btn-change"><Link to="/admin/edit-profile">Edit Profile</Link></button>
         </div>
       </div>
-      <div className="action-btn">
-        <button className="cancel-btn">Cancel</button>
-        <button className="save-btn">Save</button>
-
-      </div>
+      <Footer />
     </div>
   );
 }

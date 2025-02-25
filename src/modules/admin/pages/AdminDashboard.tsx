@@ -39,8 +39,7 @@ function AdminDashboard() {
       <AdminSidebarDashboard
         isOpen={isSidebarOpen}
         toggleSidebar={toggleSidebar}
-      />{" "}
-      {/* Add the sidebar component */}
+      />
       <div className="admin-dashboard-container">
         <div className="header"></div>
         <div className="content-dashboard">

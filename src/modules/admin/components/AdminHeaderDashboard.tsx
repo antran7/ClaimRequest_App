@@ -93,7 +93,7 @@ export default function AdminHeaderDashboard({
   };
 
   const handleProfileClick = () => {
-    navigate("/profile");
+    navigate("/admin/profile");
     handleMenuClose();
   };
 

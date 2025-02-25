@@ -19,7 +19,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   role: null,
   login: async () => Promise.resolve(),
-  logout: () => { },
+  logout: () => {},
   loading: true,
 });
 
@@ -64,9 +64,5 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(false);
   }, []);
 
-  return (
-    <AuthContext.Provider value={{ user, role, login, logout, loading }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={{ user, role, login, logout, loading }}>{children}</AuthContext.Provider>;
 };

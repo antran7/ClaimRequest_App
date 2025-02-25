@@ -1,0 +1,8 @@
+.profile-edit {
+    display: flex;
+    width: 900px;
+    height: 600px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.4);
+    margin: 20px;
+    padding: 20px;
+  }
