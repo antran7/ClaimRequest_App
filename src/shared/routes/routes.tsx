@@ -6,18 +6,40 @@ import { userRoutes } from "../../modules/users/routes";
 import { adminRoutes } from "../../modules/admin/routes";
 import { financeRoutes } from "../../modules/finance/routes";
 import { approvalRoutes } from "../../modules/approval/routes";
-import EditRequestPage from "../../modules/users/components/request-comp/EditRequest";
-import HomePage from "../../modules/auth/pages/HomePage";
+import { Toaster } from "react-hot-toast";
+import Home from "../../modules/auth/pages/Home";
+import ApprovalDashboard from "../../modules/approval/pages/ApprovalDashboard";
+import ApprovalPage from "../../modules/approval/pages/ApprovalPage";
+import LoadingScreen from "../components/LoadingScreen";
+import { useState,useEffect } from "react";
+
 
 const AppRoutes = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  useEffect(() => {
+    // Hiển thị LoadingScreen trong 2 giây
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) return <LoadingScreen />; // Hiện trang loading trước
+
   return (
     <AuthProvider>
       <Router>
+        <Toaster position="bottom-right" reverseOrder={false} />
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/unauthorized" element={<Error />} />
-          <Route path="/editrequest/:id" element={<EditRequestPage />} />
+          <Route path="/approval/dashboard" element={<ApprovalDashboard />}>
+            <Route path="home" element={<ApprovalPage />} />
+            <Route path="profile" element={<div>Profile Content</div>} />
+            <Route path="request" element={<div>Request Content</div>} />
+            <Route path="history" element={<div>History Content</div>} />
+          </Route>
 
           {/* Import route từ các module */}
           {adminRoutes.map((route, index) => (

@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode, useState, useEffect } from "react";
+import { createContext, ReactNode, useState, useEffect, useContext } from "react";
 import { Role } from "../constants/roles";
 import { authService } from "../../modules/auth/services/authService";
 
@@ -9,6 +9,7 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
+  role: Role | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
@@ -16,8 +17,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
+  role: null,
   login: async () => Promise.resolve(),
-  logout: () => {},
+  logout: () => { },
   loading: true,
 });
 
@@ -36,23 +38,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           email: response.email,
           role: response.role,
         });
-        setRole(response.role);
+        setRole(response.role as Role);
         localStorage.setItem("userRole", response.role);
         localStorage.setItem("userEmail", response.email);
       }
-    }catch (error) {
+    } catch (error) {
       console.error(error);
     }
-  }
+  };
 
   const logout = () => {
     setUser(null);
+    setRole(null);
     localStorage.removeItem("userRole");
-  }
+  };
 
   useEffect(() => {
     const savedRole = localStorage.getItem("userRole") as Role | null;
-    if (savedRole) {
+    const savedEmail = localStorage.getItem("userEmail");
+
+    if (savedRole && savedEmail) {
+      setUser({ email: savedEmail, role: savedRole });
       setRole(savedRole);
     }
     setLoading(false);

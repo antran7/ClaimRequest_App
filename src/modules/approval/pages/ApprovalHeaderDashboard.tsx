@@ -1,26 +1,31 @@
-import * as React from "react";
+import React, { useState } from "react";
 import { styled, alpha } from "@mui/material/styles";
-import AppBar from "@mui/material/AppBar";
-import Box from "@mui/material/Box";
-import Toolbar from "@mui/material/Toolbar";
-import IconButton from "@mui/material/IconButton";
-import Typography from "@mui/material/Typography";
-import InputBase from "@mui/material/InputBase";
-import Badge from "@mui/material/Badge";
-import MenuItem from "@mui/material/MenuItem";
-import Menu from "@mui/material/Menu";
-import MenuIcon from "@mui/icons-material/Menu";
-import SearchIcon from "@mui/icons-material/Search";
-import AccountCircle from "@mui/icons-material/AccountCircle";
-import MailIcon from "@mui/icons-material/Mail";
-import NotificationsIcon from "@mui/icons-material/Notifications";
-import MoreIcon from "@mui/icons-material/MoreVert";
+import {
+  AppBar,
+  Toolbar,
+  IconButton,
+  Typography,
+  InputBase,
+  Badge,
+  MenuItem,
+  Menu,
+  Box,
+} from "@mui/material";
+import {
+  Menu as MenuIcon,
+  Search as SearchIcon,
+  AccountCircle,
+  Mail as MailIcon,
+  Notifications as NotificationsIcon,
+  MoreVert as MoreIcon,
+  Person as PersonIcon,
+  Settings as SettingsIcon,
+  Logout as LogoutIcon,
+} from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { handleLogout } from "../../../shared/utils/auth";
-import PersonIcon from "@mui/icons-material/Person";
-import SettingsIcon from "@mui/icons-material/Settings";
-import LogoutIcon from "@mui/icons-material/Logout";
 
+// Styled components for search
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
   borderRadius: theme.shape.borderRadius,
@@ -60,17 +65,17 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   },
 }));
 
-interface AdminHeaderDashboardProps {
+interface ApprovalHeaderDashboardProps {
   toggleSidebar: () => void;
 }
 
-export default function AdminHeaderDashboard({
+const ApprovalHeaderDashboard: React.FC<ApprovalHeaderDashboardProps> = ({
   toggleSidebar,
-}: AdminHeaderDashboardProps) {
+}) => {
   const navigate = useNavigate();
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] =
-    React.useState<null | HTMLElement>(null);
+    useState<null | HTMLElement>(null);
 
   const isMenuOpen = Boolean(anchorEl);
   const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
@@ -219,15 +224,23 @@ export default function AdminHeaderDashboard({
 
   return (
     <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static">
+      <AppBar
+        position="fixed"
+        sx={{
+          zIndex: (theme) => theme.zIndex.drawer + 1, // Add this to ensure header is above sidebar
+        }}
+      >
         <Toolbar>
           <IconButton
             size="large"
             edge="start"
             color="inherit"
             aria-label="open drawer"
-            sx={{ mr: 2 }}
             onClick={toggleSidebar}
+            sx={{
+              mr: 2,
+              display: "block", // Ensure it's visible
+            }}
           >
             <MenuIcon />
           </IconButton>
@@ -237,7 +250,7 @@ export default function AdminHeaderDashboard({
             component="div"
             sx={{ display: { xs: "none", sm: "block" } }}
           >
-            Claim request
+            Approval Dashboard
           </Typography>
           <Search>
             <SearchIconWrapper>
@@ -298,4 +311,6 @@ export default function AdminHeaderDashboard({
       {renderMenu}
     </Box>
   );
-}
+};
+
+export default ApprovalHeaderDashboard;

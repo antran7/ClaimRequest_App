@@ -1,65 +1,134 @@
 import React, { useEffect, useState } from "react";
-import Navbar from "../components/Navbar";
-import AdminHeaderDashboard from "../components/AdminHeaderDashboard";
-import AdminSidebarDashboard from "../components/AdminSidebarDashboard";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import Header from "../../../shared/components/Header";
 import BackButton from "../components/BackButton";
-import { Button, Card, CardContent, CardHeader, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Typography } from "@mui/material";
-import { Add as PlusIcon, Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
-import PersonIcon from "@mui/icons-material/Person";
-import { Project } from "../types/project";
-import { fetchProjects, addProject, updateProject, deleteProject } from "../services/projectService";
+import {
+  Button,
+  Typography,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  TextField,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+} from "@mui/material";
+import Pagination from "@mui/material/Pagination";
+import Stack from "@mui/material/Stack";
+import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
+import {
+  fetchProjects,
+  addProject,
+  updateProject,
+  deleteProject,
+} from "../services/projectService";
+import { fetchUsers } from "../services/userService";
 import { toast } from "react-hot-toast";
+import { Project } from "../types/project";
+import { User } from "../types/user";
 
 const ProjectManagementPage: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
-  const [currentProject, setCurrentProject] = useState<Partial<Project>>({});
   const [isEditing, setIsEditing] = useState(false);
+  const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
 
   useEffect(() => {
     fetchProjects()
       .then(setProjects)
       .catch(() => toast.error("Failed to fetch projects"));
+
+    fetchUsers()
+      .then(setUsers)
+      .catch(() => toast.error("Failed to fetch users"));
   }, []);
 
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  const validationSchema = Yup.object({
+    name: Yup.string().required("Project name is required"),
+    budget: Yup.number()
+      .required("Budget is required")
+      .min(0, "Budget must be a positive number"),
+    startDate: Yup.date().required("Start date is required"),
+    endDate: Yup.date()
+      .required("End date is required")
+      .min(Yup.ref("startDate"), "End date must be after start date"),
+  });
+
+  const formik = useFormik({
+    initialValues: {
+      name: "",
+      budget: "",
+      startDate: "",
+      endDate: "",
+    },
+    validationSchema,
+    onSubmit: async (values) => {
+      try {
+        const projectData = {
+          ...values,
+          budget: Number(values.budget),
+        };
+
+        if (isEditing && editingProjectId) {
+          const updatedProject = await updateProject({
+            id: editingProjectId,
+            ...projectData,
+          });
+          setProjects((prev) =>
+            prev.map((p) => (p.id === updatedProject.id ? updatedProject : p))
+          );
+          toast.success("Project updated successfully!");
+        } else {
+          const newProject = await addProject(projectData);
+          setProjects((prev) => [...prev, newProject]);
+          toast.success("Project added successfully!");
+        }
+        handleCloseDialog();
+      } catch {
+        toast.error("Failed to save project");
+      }
+    },
+  });
+
   const handleOpenDialog = (project?: Project) => {
-    setCurrentProject(project || { name: "", budget: 0, startDate: "", endDate: "" });
-    setIsEditing(!!project);
+    if (project) {
+      setIsEditing(true);
+      setEditingProjectId(project.id);
+      formik.setValues({
+        name: project.name,
+        budget: project.budget.toString(),
+        startDate: project.startDate,
+        endDate: project.endDate,
+      });
+    } else {
+      setIsEditing(false);
+      setEditingProjectId(null);
+      formik.resetForm();
+    }
     setOpenDialog(true);
   };
 
-  const handleCloseDialog = () => setOpenDialog(false);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCurrentProject({ ...currentProject, [e.target.name]: e.target.value });
-  };
-
-  const handleSaveProject = async () => {
-    try {
-      if (isEditing && currentProject.id) {
-        const updatedProject = await updateProject(currentProject as Project);
-        setProjects(projects.map((p) => (p.id === updatedProject.id ? updatedProject : p)));
-        toast.success("Project updated successfully!");
-      } else {
-        const newProject = await addProject(currentProject);
-        setProjects([...projects, newProject]);
-        toast.success("Project added successfully!");
-      }
-      handleCloseDialog();
-    } catch {
-      toast.error("Failed to save project");
-    }
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    formik.resetForm();
   };
 
   const handleDeleteProject = async (id: string) => {
     try {
       await deleteProject(id);
-      setProjects(projects.filter((p) => p.id !== id));
+      setProjects((prev) => prev.filter((p) => p.id !== id));
       toast.success("Project deleted successfully!");
     } catch {
       toast.error("Failed to delete project");
@@ -68,75 +137,142 @@ const ProjectManagementPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <div className="col-span-2 bg-white shadow-lg flex flex-col h-full">
-        <AdminHeaderDashboard toggleSidebar={toggleSidebar} />
-        <AdminSidebarDashboard isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-      </div>
+      <Header toggleSideBar={toggleSidebar} />
 
-      <div className="col-span-10 p-8">
+      <div className="p-8">
         <div className="flex justify-between items-center mb-6">
           <BackButton to="/admin/dashboard" />
-          <Typography variant="h5" className="font-bold text-gray-800">Project Management</Typography>
-          <button
-            title="Add New Project"
-            className="group cursor-pointer outline-none hover:rotate-90 duration-300"
+          <Typography variant="h5">Project Management</Typography>
+          <Button
+            variant="contained"
+            color="primary"
             onClick={() => handleOpenDialog()}
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="50px"
-              height="50px"
-              viewBox="0 0 24 24"
-              className="stroke-blue-400 fill-none group-hover:fill-blue-800 group-active:stroke-blue-200 group-active:fill-blue-600 group-active:duration-0 duration-300"
-            >
-              <path
-                d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z"
-                stroke-width="1.5"
-              ></path>
-              <path d="M8 12H16" stroke-width="1.5"></path>
-              <path d="M12 16V8" stroke-width="1.5"></path>
-            </svg>
-          </button>
-
+            Add Project
+          </Button>
         </div>
 
-        <div className="grid grid-cols-3 gap-6">
-          {projects.length > 0 ? (
-            projects.map((project) => (
-              <Card key={project.id} className="shadow-md rounded-lg overflow-hidden">
-                <CardHeader title={<Typography variant="h6">{project.name}</Typography>} />
-                <CardContent>
-                  <Typography color="textSecondary">Budget: ${project.budget.toLocaleString()}</Typography>
-                  <Typography color="textSecondary">Start Date: {new Date(project.startDate).toLocaleDateString()}</Typography>
-                  <Typography color="textSecondary">End Date: {new Date(project.endDate).toLocaleDateString()}</Typography>
-                  <div className="flex justify-between mt-4">
-                    <Button variant="outlined" color="primary" startIcon={<EditIcon />} onClick={() => handleOpenDialog(project)}>
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Name</TableCell>
+                <TableCell>Budget</TableCell>
+                <TableCell>Start Date</TableCell>
+                <TableCell>End Date</TableCell>
+                <TableCell>Users</TableCell>
+                <TableCell>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {projects.map((project) => (
+                <TableRow key={project.id}>
+                  <TableCell>{project.name}</TableCell>
+                  <TableCell>${project.budget.toLocaleString()}</TableCell>
+                  <TableCell>
+                    {new Date(project.startDate).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    {new Date(project.endDate).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex">
+                      {users
+                        .filter((user) => user.projectId.includes(project.id))
+                        .map((user) => (
+                          <img
+                            key={user.id}
+                            src={user.url}
+                            alt={user.name}
+                            className="w-10 h-10 rounded-full border mr-2"
+                          />
+                        ))}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      startIcon={<EditIcon />}
+                      onClick={() => handleOpenDialog(project)}
+                      sx={{ mr: 1 }}
+                    >
                       Edit
                     </Button>
-                    <Button variant="outlined" color="secondary" startIcon={<DeleteIcon />} onClick={() => handleDeleteProject(project.id)}>
+                    <Button
+                      variant="outlined"
+                      color="secondary"
+                      startIcon={<DeleteIcon />}
+                      onClick={() => handleDeleteProject(project.id)}
+                    >
                       Delete
                     </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            <Typography variant="h6" className="text-center col-span-3">No projects found</Typography>
-          )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <div className="w-1/3 ml-auto p-4">
+          <Stack spacing={2}>
+            <Pagination count={10} variant="outlined" shape="rounded" />
+          </Stack>
         </div>
       </div>
 
-      <Dialog open={openDialog} onClose={handleCloseDialog}>
+      <Dialog open={openDialog} onClose={handleCloseDialog} fullWidth>
         <DialogTitle>{isEditing ? "Edit Project" : "Add Project"}</DialogTitle>
         <DialogContent>
-          <TextField fullWidth margin="dense" label="Project Name" name="name" value={currentProject.name || ""} onChange={handleChange} />
-          <TextField fullWidth margin="dense" label="Budget" name="budget" type="number" value={currentProject.budget || ""} onChange={handleChange} />
-          <TextField fullWidth margin="dense" label="Start Date" name="startDate" type="date" value={currentProject.startDate || ""} onChange={handleChange} InputLabelProps={{ shrink: true }} />
-          <TextField fullWidth margin="dense" label="End Date" name="endDate" type="date" value={currentProject.endDate || ""} onChange={handleChange} InputLabelProps={{ shrink: true }} />
+          <TextField
+            fullWidth
+            margin="normal"
+            label="Name"
+            {...formik.getFieldProps("name")}
+            error={formik.touched.name && Boolean(formik.errors.name)}
+            helperText={formik.touched.name && formik.errors.name}
+          />
+
+          <TextField
+            fullWidth
+            margin="normal"
+            label="Budget"
+            {...formik.getFieldProps("budget")}
+            type="number"
+            error={formik.touched.budget && Boolean(formik.errors.budget)}
+            helperText={formik.touched.budget && formik.errors.budget}
+          />
+
+          <TextField
+            fullWidth
+            margin="normal"
+            label="Start Date"
+            {...formik.getFieldProps("startDate")}
+            type="date"
+            InputLabelProps={{ shrink: true }}
+            error={formik.touched.startDate && Boolean(formik.errors.startDate)}
+            helperText={formik.touched.startDate && formik.errors.startDate}
+          />
+
+          <TextField
+            fullWidth
+            margin="normal"
+            label="End Date"
+            {...formik.getFieldProps("endDate")}
+            type="date"
+            InputLabelProps={{ shrink: true }}
+            error={formik.touched.endDate && Boolean(formik.errors.endDate)}
+            helperText={formik.touched.endDate && formik.errors.endDate}
+          />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog} color="secondary">Cancel</Button>
-          <Button onClick={handleSaveProject} color="primary">{isEditing ? "Update" : "Add"}</Button>
+          <Button onClick={handleCloseDialog}>Cancel</Button>
+          <Button
+            onClick={() => formik.handleSubmit()}
+            variant="contained"
+            color="primary"
+          >
+            Save
+          </Button>
         </DialogActions>
       </Dialog>
     </div>

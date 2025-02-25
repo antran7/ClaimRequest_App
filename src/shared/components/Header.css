@@ -1,0 +1,27 @@
+.layout-header {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 2px solid #EAEAEA;
+    height: 50px;
+}
+
+.layout-header-left {
+    display: flex;
+    align-items: center;
+    font-size: 30px;
+    font-weight: bold;
+}
+
+.layout-header-right {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 350px;
+}
+
+.header-right-item {
+    background-color: #484F68;
+    color: #ccc;
+    padding: 5px 10px;
+    border-radius: 8px;
+}

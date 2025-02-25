@@ -7,6 +7,8 @@ import {
   DollarOutlined,
 } from "@ant-design/icons";
 import "./PaidPage.css";
+import Layout from "../../../shared/layouts/Layout";
+import axios from "axios";
 
 interface ClaimRequest {
   id: number;
@@ -23,38 +25,54 @@ const PaidPage = () => {
   const [data, setData] = useState<ClaimRequest[]>([]);
 
   useEffect(() => {
-    // Lấy dữ liệu từ localStorage và chuyển đổi format
-    const savedRequests = JSON.parse(localStorage.getItem("requests") || "[]");
-    const formattedRequests = savedRequests
-      .filter((req: any) => req.status === "APPROVED" || req.status === "PAID")
-      .map((req: any) => ({
-        id: req.id,
-        employeeName: req.name || `User ${req.id}`,
-        projectName: `Project ${String.fromCharCode(65 + (req.id % 26))}`,
-        amount: Math.floor(Math.random() * 10000) + 1000,
-        status: req.status,
-        submittedDate: req.submittedDate,
-        approvedDate: req.approvedDate || req.submittedDate,
-      }));
-    setData(formattedRequests);
+    const fetchRequests = async () => {
+      try {
+        const response = await axios.get(
+          "https://67b5a06d07ba6e59083db637.mockapi.io/api/requests"
+        );
+        const approvedRequests = response.data
+          .filter(
+            (req: any) => req.status === "APPROVED" || req.status === "PAID"
+          )
+          .map((req: any) => ({
+            id: req.id,
+            employeeName: `User ${req.userId}`,
+            projectName: `Project ${String.fromCharCode(65 + (req.id % 26))}`,
+            amount: Math.floor(Math.random() * 10000) + 1000,
+            status: req.status,
+            submittedDate: req.submittedDate,
+            approvedDate: new Date().toISOString().split("T")[0],
+          }));
+        setData(approvedRequests);
+      } catch (error) {
+        console.error("Error fetching requests:", error);
+      }
+    };
+
+    fetchRequests();
   }, []);
 
-  const handlePaid = (record: ClaimRequest) => {
-    // Cập nhật trong state
-    setData((prevData) =>
-      prevData.map((item) =>
-        item.id === record.id ? { ...item, status: "PAID" } : item
-      )
-    );
+  const handlePaid = async (record: ClaimRequest) => {
+    try {
+      await axios.put(
+        `https://67b5a06d07ba6e59083db637.mockapi.io/api/requests/${record.id}`,
+        {
+          ...record,
+          status: "PAID",
+        }
+      );
 
-    // Cập nhật trong localStorage
-    const savedRequests = JSON.parse(localStorage.getItem("requests") || "[]");
-    const updatedRequests = savedRequests.map((req: any) =>
-      req.id === record.id ? { ...req, status: "PAID" } : req
-    );
-    localStorage.setItem("requests", JSON.stringify(updatedRequests));
+      setData((prevData) =>
+        prevData.map((item) =>
+          item.id === record.id ? { ...item, status: "PAID" } : item
+        )
+      );
 
-    message.success(`Claim #${record.id} has been marked as paid`);
+      message.success(`Claim #${record.id} has been marked as paid`);
+    } catch (error) {
+      console.error("Error marking as paid:", error);
+      message.error("Failed to mark as paid");
+    }
   };
 
   const handleDownload = (record: ClaimRequest) => {
@@ -154,31 +172,43 @@ const PaidPage = () => {
   );
 
   return (
-    <div className="paid-page">
-      <div className="page-header">
-        <h1 className="page-title">Finance Claims Management</h1>
-        <Input
-          placeholder="Search claims..."
-          prefix={<SearchOutlined />}
-          onChange={(e) => setSearchText(e.target.value)}
-          className="search-input"
-          style={{ width: 300 }}
-        />
+    <Layout>
+      <div className="paid-page">
+        <div className="page-header">
+          <div className="header-top">
+            <h1 className="page-title">Finance Claims Management</h1>
+            {/* <Button
+              icon={<LogoutOutlined />}
+              onClick={() => handleLogout(navigate)}
+              danger
+              className="logout-button"
+            >
+              Logout
+            </Button> */}
+          </div>
+          <Input
+            placeholder="Search claims..."
+            prefix={<SearchOutlined />}
+            onChange={(e) => setSearchText(e.target.value)}
+            className="search-input"
+            style={{ width: 300 }}
+          />
+        </div>
+        <div className="table-container">
+          <Table
+            columns={columns}
+            dataSource={filteredData}
+            rowKey="id"
+            scroll={{ x: 1300 }}
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: true,
+              showTotal: (total) => `Total ${total} items`,
+            }}
+          />
+        </div>
       </div>
-      <div className="table-container">
-        <Table
-          columns={columns}
-          dataSource={filteredData}
-          rowKey="id"
-          scroll={{ x: 1300 }}
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showTotal: (total) => `Total ${total} items`,
-          }}
-        />
-      </div>
-    </div>
+    </Layout>
   );
 };
 

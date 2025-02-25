@@ -1,13 +1,15 @@
-import './App.css'
-import AppRoutes from './shared/routes/routes'
+import "./App.css";
+import AppRoutes from "./shared/routes/routes";
+
 
 function App() {
-
+  
   return (
     <>
-      <AppRoutes/>
+   
+      <AppRoutes />
     </>
-  )
+  );
 }
 
-export default App
+export default App;
