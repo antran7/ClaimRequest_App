@@ -7,7 +7,7 @@ import IconButton from "@mui/material/IconButton";
 import { useAuth } from "../hooks/useAuth";
 
 interface HeaderProps {
-  toggleSidebar: () => void;
+  toggleSidebar?: () => void;
 }
 
 const Header = ({ toggleSidebar = () => {} }: HeaderProps) => {
