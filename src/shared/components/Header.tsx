@@ -2,8 +2,9 @@ import { Link, useNavigate } from "react-router-dom";
 import "./Header.css";
 import { useEffect, useState } from "react";
 import { Role } from "../constants/roles";
-import MenuIcon from "@mui/icons-material/Menu";  // Import Icon
+import MenuIcon from "@mui/icons-material/Menu";
 import IconButton from "@mui/material/IconButton";
+import { useAuth } from "../hooks/useAuth";
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -11,13 +12,15 @@ interface HeaderProps {
 
 const Header = ({ toggleSidebar }: HeaderProps) => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const user = localStorage.getItem("userRole") as Role | null;
 
   const handleLogOut = () => {
-    localStorage.removeItem("userRole");
-    setIsLoggedIn(false);
-    navigate("/login");
+    logout();
+    setTimeout(() => {
+      navigate("/login");
+    }, 100);
   };
 
   useEffect(() => {
@@ -30,13 +33,18 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
 
   return (
     <div className="layout-header">
-     
-      <IconButton  onClick={toggleSidebar} color="inherit" className="menu-button">
-        <div className="menuicon"> <MenuIcon /> </div>
-        
-      </IconButton>
 
-      <div className="layout-header-left">Claim Request</div>
+      <div className="layout-header-left">
+        <IconButton
+          onClick={toggleSidebar}
+          color="inherit"
+          style={{ marginRight: '10px' }}
+        >
+          <div> <MenuIcon style={{ fontSize: '30px' }}/> </div>
+
+        </IconButton>
+        <p>Claim Request</p>
+      </div>
 
       <div className="layout-header-right">
         <Link to="/#" className="header-right-item">

@@ -5,7 +5,7 @@ import Footer from "../../../../shared/components/Footer";
 
 
 
-const AdminDashboard: React.FC = () => {
+const UserDashboard: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
 
   const toggleSidebar = () => {
@@ -21,4 +21,4 @@ const AdminDashboard: React.FC = () => {
   );
 };
 
-export default AdminDashboard;
+export default UserDashboard;

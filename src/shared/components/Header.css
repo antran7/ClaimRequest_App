@@ -1,8 +1,8 @@
 .layout-header {
     display: flex;
     justify-content: space-between;
-    border-bottom: 2px solid #EAEAEA;
-    padding: 20px 50px;
+    border-bottom: 1px solid #EAEAEA;
+    padding: 20px;
     height: 50px;
 }
 
@@ -15,15 +15,48 @@
 
 .layout-header-right {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     width: 350px;
-    margin-left: 60%;
+    margin-right: 10px;
 }
 
 .header-right-item {
-    background-color: #484F68;
-    color: #ccc;
-    padding: 5px 10px;
-    border-radius: 8px;
+    font-family: Poppins, sans-serif;
+    text-align: center;
+    padding: 5px 13px;
+    position: relative;
+    width: fit-content;
+    z-index: 1;
+}
+
+.header-right-item::before {
+    content: '';
+    background: linear-gradient(to right, #dfdfdf, #D1D7F1);
+    width: 100%;
+    height: 0;
+    position: absolute;
+    bottom: -7px;
+    left: 0;
+    transition: 150ms ease-in-out;
+    z-index: -1;
+}
+
+.header-right-item:hover::before {
+    height: 150%;
+}
+
+.header-right-item::after {
+    content: '';
+    background: linear-gradient(to right, #00093c, #2d0b00);
+    height: 0;
+    width: 100%;
+    position: absolute;
+    bottom: -7px;
+    left: 0;
+    transition: 150ms ease-in-out;
+    z-index: 0;
+}
+
+.header-right-item:hover::after {
+    height: 3px;
 }
