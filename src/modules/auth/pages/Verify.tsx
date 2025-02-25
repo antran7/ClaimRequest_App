@@ -15,6 +15,7 @@ function Verify() {
             .post("/auth/verify-token", { token })
             .then((response) => {
                 setMessage("Xác minh thành công!");
+                console.log(response);
             })
             .catch((error) => {
                 setMessage(error);

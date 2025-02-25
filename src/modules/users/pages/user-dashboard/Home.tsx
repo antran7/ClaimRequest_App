@@ -3,7 +3,7 @@ import FeaturedInfo from "../../../users/components/FeaturedInfo/FeaturedInfo";
 import Chart from "../../../users/components/chart/Chart";
 import WidgetSm from "../../../users/components/WidgetSm/WidgetSm";
 import WidgetLg from "../../../users/components/widgetLg/WidgetLg";
-import { userData } from "./dumyData"; 
+import { userData } from "./dumyData"
 
 // Import Swiper
 import { Swiper, SwiperSlide } from "swiper/react";
