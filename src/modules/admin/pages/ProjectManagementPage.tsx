@@ -19,6 +19,7 @@ import {
   TableRow,
   Paper,
 } from "@mui/material";
+import Layout from "../../../shared/layouts/Layout";
 import Pagination from "@mui/material/Pagination";
 import Stack from "@mui/material/Stack";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
@@ -168,9 +169,8 @@ const ProjectManagementPage: React.FC = () => {
   );
 
   return (
+    <Layout>
     <div className="min-h-screen bg-gray-100">
-      <Header toggleSideBar={toggleSidebar} />
-
       <div className="p-8">
         <div className="flex justify-between items-center mb-6">
           <BackButton to="/admin/dashboard" />
@@ -342,6 +342,7 @@ const ProjectManagementPage: React.FC = () => {
       </Dialog>
 
     </div>
+    </Layout>
   );
 };
 
