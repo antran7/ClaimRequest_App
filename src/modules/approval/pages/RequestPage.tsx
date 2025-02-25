@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
-import { Modal, Button, Input, Form, DatePicker } from "antd";
+import { Modal, Button, TextField } from "@mui/material";
 import axios from "axios";
 import "./RequestPage.css";
 import moment from "moment";
+import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
+import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
 
 const API_REQUESTS = "https://67245b0d493fac3cf24dfc59.mockapi.io/api/approver";
 
@@ -27,7 +29,6 @@ const RequestPage = () => {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [currentRequest, setCurrentRequest] = useState<Request | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [form] = Form.useForm();
   const [userEmail, setUserEmail] = useState<string>("");
 
   useEffect(() => {
@@ -65,21 +66,17 @@ const RequestPage = () => {
     fetchRequests();
   }, [userEmail]);
 
-  const handleAddModalOk = async (values: {
-    name: string;
-    startDate: moment.Moment;
-    endDate: moment.Moment;
-    totalTimes: number;
-  }) => {
+  const handleAddModalOk = async (event: React.FormEvent) => {
+    event.preventDefault();
     if (!userEmail) return;
 
     try {
       const newRequest = {
-        name: values.name,
+        name: "New Request",
         status: "DRAFT",
-        startDate: values.startDate.format("YYYY-MM-DD"),
-        endDate: values.endDate.format("YYYY-MM-DD"),
-        totalTimes: values.totalTimes,
+        startDate: moment().format("YYYY-MM-DD"),
+        endDate: moment().add(1, "days").format("YYYY-MM-DD"),
+        totalTimes: 8,
         reason: "DRAFT",
         userEmail: userEmail,
         userId: 1,
@@ -88,17 +85,17 @@ const RequestPage = () => {
       const response = await axios.post(API_REQUESTS, newRequest);
       setRequests([...requests, response.data]);
       setIsAddModalVisible(false);
-      form.resetFields();
     } catch (error) {
       console.error("Error adding request:", error);
     }
   };
 
-  const handleEditModalOk = async (values: { name: string }) => {
+  const handleEditModalOk = async (event: React.FormEvent) => {
+    event.preventDefault();
     if (!currentRequest) return;
 
     try {
-      const updatedRequest = { ...currentRequest, name: values.name };
+      const updatedRequest = { ...currentRequest, name: "Updated Request" };
       await axios.put(`${API_REQUESTS}/${currentRequest.id}`, updatedRequest);
       setRequests(
         requests.map((req) =>
@@ -137,7 +134,6 @@ const RequestPage = () => {
     setIsAddModalVisible(false);
     setIsEditModalVisible(false);
     setCurrentRequest(null);
-    form.resetFields();
   };
 
   return (
@@ -150,7 +146,7 @@ const RequestPage = () => {
         <h1 className="request-title-approval">Manage Claim Requests</h1>
 
         <div className="search-container-approval">
-          <input
+          <TextField
             type="text"
             placeholder="Search requests..."
             className="search-input-approval"
@@ -238,103 +234,109 @@ const RequestPage = () => {
       </div>
 
       <Modal
-        title="Add Request"
         open={isAddModalVisible}
-        onCancel={handleModalCancel}
-        footer={null}
+        onClose={handleModalCancel}
         className="custom-modal-approval"
       >
-        <Form
-          form={form}
-          onFinish={handleAddModalOk}
-          initialValues={{
-            name: "",
-            startDate: null,
-            endDate: null,
-            totalTimes: 0,
-          }}
-        >
-          <Form.Item
-            label="Request Name"
-            name="name"
-            rules={[
-              { required: true, message: "Please input the request name!" },
-            ]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            label="Start Date"
-            name="startDate"
-            rules={[
-              { required: true, message: "Please select the start date!" },
-            ]}
-          >
-            <DatePicker />
-          </Form.Item>
-          <Form.Item
-            label="End Date"
-            name="endDate"
-            rules={[
-              { required: true, message: "Please select the end date!" },
-              ({ getFieldValue }) => ({
-                validator(_, value) {
-                  if (!value || getFieldValue("startDate") <= value) {
-                    return Promise.resolve();
-                  }
-                  return Promise.reject(
-                    new Error("End date cannot be before start date!")
-                  );
-                },
-              }),
-            ]}
-          >
-            <DatePicker />
-          </Form.Item>
-          <Form.Item
-            label="Total Times (Hours)"
-            name="totalTimes"
-            rules={[
-              { required: true, message: "Please input the total times!" },
-            ]}
-          >
-            <Input type="number" />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit">
+        <div className="modal-content">
+          <h2>Add Request</h2>
+          <form onSubmit={handleAddModalOk}>
+            <TextField
+              label="Request Name"
+              name="name"
+              required
+              fullWidth
+              margin="normal"
+            />
+            <LocalizationProvider dateAdapter={AdapterMoment}>
+              <DatePicker
+                label="Start Date"
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    margin: "normal",
+                    required: true,
+                  },
+                }}
+              />
+              <DatePicker
+                label="End Date"
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    margin: "normal",
+                    required: true,
+                  },
+                }}
+              />
+            </LocalizationProvider>
+            <TextField
+              label="Total Times"
+              name="totalTimes"
+              type="number"
+              required
+              fullWidth
+              margin="normal"
+              inputProps={{ min: 1 }}
+            />
+            <Button type="submit" variant="contained" color="primary">
               Add
             </Button>
-          </Form.Item>
-        </Form>
+          </form>
+        </div>
       </Modal>
 
       <Modal
-        title="Edit Request"
         open={isEditModalVisible}
-        onCancel={handleModalCancel}
-        footer={null}
+        onClose={handleModalCancel}
         className="custom-modal-approval"
       >
-        <Form
-          key={currentRequest?.id}
-          initialValues={currentRequest ?? {}}
-          onFinish={handleEditModalOk}
-        >
-          <Form.Item
-            label="Request Name"
-            name="name"
-            rules={[
-              { required: true, message: "Please input the request name!" },
-            ]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit">
+        <div className="modal-content">
+          <h2>Edit Request</h2>
+          <form onSubmit={handleEditModalOk}>
+            <TextField
+              label="Request Name"
+              name="name"
+              required
+              fullWidth
+              margin="normal"
+            />
+            <LocalizationProvider dateAdapter={AdapterMoment}>
+              <DatePicker
+                label="Start Date"
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    margin: "normal",
+                    required: true,
+                  },
+                }}
+              />
+              <DatePicker
+                label="End Date"
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    margin: "normal",
+                    required: true,
+                  },
+                }}
+              />
+            </LocalizationProvider>
+            <TextField
+              label="Total Times"
+              name="totalTimes"
+              type="number"
+              required
+              fullWidth
+              margin="normal"
+              inputProps={{ min: 1 }}
+            />
+            <Button type="submit" variant="contained" color="primary">
               Save
             </Button>
-          </Form.Item>
-        </Form>
+          </form>
+        </div>
       </Modal>
     </div>
   );

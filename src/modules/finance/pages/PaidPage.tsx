@@ -1,14 +1,20 @@
 import { useState, useEffect } from "react";
-import { Table, Input, Button, Tag, Space, message } from "antd";
-import type { ColumnsType } from "antd/es/table";
 import {
-  SearchOutlined,
-  DownloadOutlined,
-  DollarOutlined,
-} from "@ant-design/icons";
-import "./PaidPage.css";
-import Layout from "../../../shared/layouts/Layout";
+  TableContainer,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  Paper,
+  TextField,
+  Typography,
+  IconButton,
+  Tooltip,
+} from "@mui/material";
+import { Search, Download, AttachMoney } from "@mui/icons-material";
 import axios from "axios";
+import "./PaidPage.css";
 
 interface ClaimRequest {
   id: number;
@@ -68,100 +74,16 @@ const PaidPage = () => {
         )
       );
 
-      message.success(`Claim #${record.id} has been marked as paid`);
+      alert(`Claim #${record.id} has been marked as paid`);
     } catch (error) {
       console.error("Error marking as paid:", error);
-      message.error("Failed to mark as paid");
+      alert("Failed to mark as paid");
     }
   };
 
   const handleDownload = (record: ClaimRequest) => {
-    message.info(`Downloading claim #${record.id} details...`);
-    // Implement actual download logic here
+    alert(`Downloading claim #${record.id} details...`);
   };
-
-  const columns: ColumnsType<ClaimRequest> = [
-    {
-      title: "ID",
-      dataIndex: "id",
-      key: "id",
-      width: 80,
-    },
-    {
-      title: "Employee Name",
-      dataIndex: "employeeName",
-      key: "employeeName",
-      width: 150,
-    },
-    {
-      title: "Project",
-      dataIndex: "projectName",
-      key: "projectName",
-      width: 150,
-    },
-    {
-      title: "Amount ($)",
-      dataIndex: "amount",
-      key: "amount",
-      width: 120,
-      render: (amount: number) => (
-        <span className="amount-cell">${amount.toFixed(2)}</span>
-      ),
-    },
-    {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      width: 120,
-      render: (status: string) => (
-        <Tag
-          color={status === "PAID" ? "green" : "gold"}
-          className="status-tag"
-        >
-          {status}
-        </Tag>
-      ),
-    },
-    {
-      title: "Submitted Date",
-      dataIndex: "submittedDate",
-      key: "submittedDate",
-      width: 150,
-    },
-    {
-      title: "Approved Date",
-      dataIndex: "approvedDate",
-      key: "approvedDate",
-      width: 150,
-    },
-    {
-      title: "Actions",
-      key: "actions",
-      fixed: "right",
-      width: 200,
-      render: (_, record) => (
-        <Space>
-          {record.status !== "PAID" && (
-            <Button
-              type="primary"
-              icon={<DollarOutlined />}
-              onClick={() => handlePaid(record)}
-              className="paid-button"
-            >
-              Mark as Paid
-            </Button>
-          )}
-          <Button
-            icon={<DownloadOutlined />}
-            onClick={() => handleDownload(record)}
-            className="download-button"
-          >
-            Download
-          </Button>
-        </Space>
-      ),
-    },
-  ];
 
   const filteredData = data.filter((item) =>
     Object.values(item).some(
@@ -172,43 +94,86 @@ const PaidPage = () => {
   );
 
   return (
-    <Layout>
-      <div className="paid-page">
-        <div className="page-header">
-          <div className="header-top">
-            <h1 className="page-title">Finance Claims Management</h1>
-            {/* <Button
-              icon={<LogoutOutlined />}
-              onClick={() => handleLogout(navigate)}
-              danger
-              className="logout-button"
-            >
-              Logout
-            </Button> */}
-          </div>
-          <Input
-            placeholder="Search claims..."
-            prefix={<SearchOutlined />}
-            onChange={(e) => setSearchText(e.target.value)}
-            className="search-input"
-            style={{ width: 300 }}
-          />
+    <div className="paid-page">
+      <div className="page-header">
+        <div className="header-top">
+          <Typography variant="h4" className="page-title">
+            Finance Claims Management
+          </Typography>
         </div>
-        <div className="table-container">
-          <Table
-            columns={columns}
-            dataSource={filteredData}
-            rowKey="id"
-            scroll={{ x: 1300 }}
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: true,
-              showTotal: (total) => `Total ${total} items`,
-            }}
-          />
-        </div>
+        <TextField
+          placeholder="Search claims..."
+          variant="outlined"
+          onChange={(e) => setSearchText(e.target.value)}
+          className="search-input"
+          InputProps={{
+            startAdornment: <Search />,
+          }}
+        />
       </div>
-    </Layout>
+      <div className="table-container">
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>ID</TableCell>
+                <TableCell>Employee Name</TableCell>
+                <TableCell>Project</TableCell>
+                <TableCell>Amount ($)</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Submitted Date</TableCell>
+                <TableCell>Approved Date</TableCell>
+                <TableCell>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredData.map((record) => (
+                <TableRow key={record.id}>
+                  <TableCell>{record.id}</TableCell>
+                  <TableCell>{record.employeeName}</TableCell>
+                  <TableCell>{record.projectName}</TableCell>
+                  <TableCell className="amount-cell">
+                    ${record.amount.toFixed(2)}
+                  </TableCell>
+                  <TableCell>
+                    <span
+                      className={`status-tag ${
+                        record.status === "PAID" ? "paid" : "approved"
+                      }`}
+                    >
+                      {record.status}
+                    </span>
+                  </TableCell>
+                  <TableCell>{record.submittedDate}</TableCell>
+                  <TableCell>{record.approvedDate}</TableCell>
+                  <TableCell>
+                    <Tooltip title="Mark as Paid">
+                      <span>
+                        <IconButton
+                          color="primary"
+                          onClick={() => handlePaid(record)}
+                          disabled={record.status === "PAID"}
+                        >
+                          <AttachMoney />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+                    <Tooltip title="Download">
+                      <IconButton
+                        color="default"
+                        onClick={() => handleDownload(record)}
+                      >
+                        <Download />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </div>
+    </div>
   );
 };
 

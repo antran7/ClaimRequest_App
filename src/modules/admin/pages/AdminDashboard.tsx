@@ -1,11 +1,11 @@
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { Doughnut } from "react-chartjs-2";
 import "./AdminDashboard.css";
-import { AccountCircleOutlined, Folder } from "@mui/icons-material"; // Removed HomeOutlined
-import { Col, Row } from "antd";
+import { AccountCircleOutlined, Folder } from "@mui/icons-material";
+import { Grid } from "@mui/material";
 import { useState } from "react";
 import AdminHeaderDashboard from "../components/AdminHeaderDashboard";
-import AdminSidebarDashboard from "../components/AdminSidebarDashboard"; // Import the sidebar component
+import AdminSidebarDashboard from "../components/AdminSidebarDashboard";
 import { useNavigate } from "react-router-dom";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -39,15 +39,14 @@ function AdminDashboard() {
       <AdminSidebarDashboard
         isOpen={isSidebarOpen}
         toggleSidebar={toggleSidebar}
-      />{" "}
-      {/* Add the sidebar component */}
+      />
       <div className="admin-dashboard-container">
         <div className="header"></div>
         <div className="content-dashboard">
           <h2>Welcome!</h2>
           <p>This is the admin dashboard.</p>
-          <Row className="items-card">
-            <Col span={6} onClick={() => navigate("/admin/manageuser")}>
+          <Grid container spacing={2} className="items-card">
+            <Grid item xs={3} onClick={() => navigate("/admin/manageuser")}>
               <div className="user-card">
                 <div className="user-card-left">
                   <p>Users</p>
@@ -57,8 +56,8 @@ function AdminDashboard() {
                   <AccountCircleOutlined style={{ fontSize: "50px" }} />
                 </div>
               </div>
-            </Col>
-            <Col span={6} onClick={() => navigate("/admin/manageproject")}>
+            </Grid>
+            <Grid item xs={3} onClick={() => navigate("/admin/manageproject")}>
               <div className="project-card">
                 <div className="project-card-left">
                   <p>Project</p>
@@ -68,19 +67,19 @@ function AdminDashboard() {
                   <Folder style={{ fontSize: "50px" }} />
                 </div>
               </div>
-            </Col>
-            <Col span={6}>
+            </Grid>
+            <Grid item xs={3}>
               <div className="project-card">
                 <div className="project-card-left">
-                  <p>Request procescing</p>
+                  <p>Request processing</p>
                   <p>20</p>
                 </div>
                 <div className="user-card-right">
                   <Folder style={{ fontSize: "50px" }} />
                 </div>
               </div>
-            </Col>
-            <Col span={6}>
+            </Grid>
+            <Grid item xs={3}>
               <div className="project-card">
                 <div className="project-card-left">
                   <p>Request processed</p>
@@ -90,8 +89,8 @@ function AdminDashboard() {
                   <Folder style={{ fontSize: "50px" }} />
                 </div>
               </div>
-            </Col>
-          </Row>
+            </Grid>
+          </Grid>
 
           <div className="chart-container">
             <Doughnut data={data} />
