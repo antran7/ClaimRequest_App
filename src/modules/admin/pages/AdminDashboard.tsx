@@ -1,22 +1,20 @@
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { Doughnut } from "react-chartjs-2";
 import "./AdminDashboard.css";
-import { AccountCircleOutlined, Folder } from "@mui/icons-material"; // Removed HomeOutlined
+import { AccountCircleOutlined, Folder } from "@mui/icons-material"; 
 import { Col, Row } from "antd";
-import { useState } from "react";
-import AdminHeaderDashboard from "../components/AdminHeaderDashboard";
-import AdminSidebarDashboard from "../components/AdminSidebarDashboard"; // Import the sidebar component
+
 import { useNavigate } from "react-router-dom";
+import Header from "../../../shared/components/Header";
+import Footer from "../../../shared/components/Footer";
+import AdminSidebarVer2 from "../components/AdminSidebarVer2";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 function AdminDashboard() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
+
 
   const data = {
     labels: ["Red", "Blue", "Yellow"],
@@ -35,11 +33,10 @@ function AdminDashboard() {
 
   return (
     <div>
-      <AdminHeaderDashboard toggleSidebar={toggleSidebar} />
-      <AdminSidebarDashboard
-        isOpen={isSidebarOpen}
-        toggleSidebar={toggleSidebar}
-      />
+      <Header />    
+      <div className="include-all">
+        <div className="sidebar-admin">      <AdminSidebarVer2/>  
+        </div>
       <div className="admin-dashboard-container">
         <div className="header"></div>
         <div className="content-dashboard">
@@ -97,6 +94,8 @@ function AdminDashboard() {
           </div>
         </div>
       </div>
+      </div>
+      <Footer/>
     </div>
   );
 }

@@ -3,8 +3,17 @@
     height: 300px; 
     margin: auto;
 }
+.include-all{
+    display: flex;
+}
+.sidebar-admin{
+    width: 200px;
+    box-shadow: 0px  1px 1px rgba(0, 0, 0, 0.4);
+    
+}
 .admin-dashboard-container {
     display: flex;
+    min-height: 100vh;
 }
 .content-dashboard {
     padding: 20px;
