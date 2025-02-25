@@ -18,7 +18,7 @@ import Contact from "../../modules/common/pages/Contact";
 const AppRoutes = () => {
   // const [isLoading, setIsLoading] = useState(true);
   // useEffect(() => {
-  //   // Hiển thị LoadingScreen trong 2 giây
+  //   // Hiển thị LoadingScreen trong 3 giây
   //   const timer = setTimeout(() => {
   //     setIsLoading(false);
   //   }, 3000);
