@@ -20,7 +20,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <SideBar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar}/>
 
             <div className="flex-1 flex flex-col">
-                <Header toggleSideBar={toggleSidebar}/>
+                <Header toggleSidebar={toggleSidebar}/>
 
                 <main className="flex-1 p-4 bg-white">{children}</main>
                 <Footer />

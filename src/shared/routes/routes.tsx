@@ -7,24 +7,25 @@ import { adminRoutes } from "../../modules/admin/routes";
 import { financeRoutes } from "../../modules/finance/routes";
 import { approvalRoutes } from "../../modules/approval/routes";
 import { Toaster } from "react-hot-toast";
-import Home from "../../modules/auth/pages/Home";
+import Home from "../../modules/common/pages/Home";
 import ApprovalDashboard from "../../modules/approval/pages/ApprovalDashboard";
 import ApprovalPage from "../../modules/approval/pages/ApprovalPage";
 import LoadingScreen from "../components/LoadingScreen";
 import { useState,useEffect } from "react";
+import Contact from "../../modules/common/pages/Contact";
 
 
 const AppRoutes = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  useEffect(() => {
-    // Hiển thị LoadingScreen trong 2 giây
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, []);
+  // const [isLoading, setIsLoading] = useState(true);
+  // useEffect(() => {
+  //   // Hiển thị LoadingScreen trong 3 giây
+  //   const timer = setTimeout(() => {
+  //     setIsLoading(false);
+  //   }, 3000);
+  //   return () => clearTimeout(timer);
+  // }, []);
 
-  if (isLoading) return <LoadingScreen />; // Hiện trang loading trước
+  // if (isLoading) return <LoadingScreen />; // Hiện trang loading trước
 
   return (
     <AuthProvider>
@@ -34,6 +35,7 @@ const AppRoutes = () => {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/unauthorized" element={<Error />} />
+          <Route path="/contact" element={<Contact />} />
           <Route path="/approval/dashboard" element={<ApprovalDashboard />}>
             <Route path="home" element={<ApprovalPage />} />
             <Route path="profile" element={<div>Profile Content</div>} />

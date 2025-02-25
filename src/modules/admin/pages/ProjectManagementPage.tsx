@@ -19,6 +19,7 @@ import {
   TableRow,
   Paper,
 } from "@mui/material";
+import Layout from "../../../shared/layouts/Layout";
 import Pagination from "@mui/material/Pagination";
 import Stack from "@mui/material/Stack";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
@@ -40,6 +41,11 @@ const ProjectManagementPage: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const itemPerPage = 10;
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+
 
   useEffect(() => {
     fetchProjects()
@@ -125,31 +131,70 @@ const ProjectManagementPage: React.FC = () => {
     formik.resetForm();
   };
 
-  const handleDeleteProject = async (id: string) => {
-    try {
-      await deleteProject(id);
-      setProjects((prev) => prev.filter((p) => p.id !== id));
-      toast.success("Project deleted successfully!");
-    } catch {
-      toast.error("Failed to delete project");
+  const handleOpenConfirmDialog = (id: string) => {
+    setSelectedProjectId(id);
+    setConfirmDialogOpen(true);
+  };
+
+
+  // const handleDeleteProject = async (id: string) => {
+  //   try {
+  //     await deleteProject(id);
+  //     setProjects((prev) => prev.filter((p) => p.id !== id));
+  //     toast.success("Project deleted successfully!");
+  //   } catch {
+  //     toast.error("Failed to delete project");
+  //   }
+  // };
+
+  const handleConfirmDelete = async () => {
+    if (selectedProjectId) {
+      try {
+        await deleteProject(selectedProjectId);
+        setProjects((prev) => prev.filter((p) => p.id !== selectedProjectId));
+        toast.success("Project deleted successfully!");
+      } catch {
+        toast.error("Failed to delete project");
+      } finally {
+        setConfirmDialogOpen(false);
+        setSelectedProjectId(null);
+      }
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gray-100">
-      <Header toggleSideBar={toggleSidebar} />
 
+  const paginatedProject = projects.slice(
+    (page - 1) * itemPerPage,
+    page * itemPerPage
+  );
+
+  return (
+    <Layout>
+    <div className="min-h-screen bg-gray-100">
       <div className="p-8">
         <div className="flex justify-between items-center mb-6">
           <BackButton to="/admin/dashboard" />
           <Typography variant="h5">Project Management</Typography>
-          <Button
-            variant="contained"
-            color="primary"
+          <button
+            title="Add New"
+            className="group cursor-pointer outline-none hover:rotate-90 duration-300"
             onClick={() => handleOpenDialog()}
           >
-            Add Project
-          </Button>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="50px"
+              height="50px"
+              viewBox="0 0 24 24"
+              className="stroke-zinc-400 fill-none group-active:stroke-zinc-200 group-active:duration-0 duration-300"
+            >
+              <path
+                d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z"
+                stroke-width="1.5"
+              ></path>
+              <path d="M8 12H16" stroke-width="1.5"></path>
+              <path d="M12 16V8" stroke-width="1.5"></path>
+            </svg>
+          </button>
         </div>
 
         <TableContainer component={Paper}>
@@ -165,7 +210,7 @@ const ProjectManagementPage: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {projects.map((project) => (
+              {paginatedProject.map((project) => (
                 <TableRow key={project.id}>
                   <TableCell>{project.name}</TableCell>
                   <TableCell>${project.budget.toLocaleString()}</TableCell>
@@ -201,12 +246,13 @@ const ProjectManagementPage: React.FC = () => {
                     </Button>
                     <Button
                       variant="outlined"
-                      color="secondary"
+                      color="error"
                       startIcon={<DeleteIcon />}
-                      onClick={() => handleDeleteProject(project.id)}
+                      onClick={() => handleOpenConfirmDialog(project.id)}
                     >
                       Delete
                     </Button>
+
                   </TableCell>
                 </TableRow>
               ))}
@@ -215,13 +261,18 @@ const ProjectManagementPage: React.FC = () => {
         </TableContainer>
         <div className="w-1/3 ml-auto p-4">
           <Stack spacing={2}>
-            <Pagination count={10} variant="outlined" shape="rounded" />
+            <Pagination
+              count={Math.ceil(projects.length / itemPerPage)}
+              page={page}
+              onChange={(event, value) => setPage(value)}
+              variant="outlined"
+              shape="rounded" />
           </Stack>
         </div>
       </div>
 
       <Dialog open={openDialog} onClose={handleCloseDialog} fullWidth>
-        <DialogTitle>{isEditing ? "Edit Project" : "Add Project"}</DialogTitle>
+        <DialogTitle className="bg-gray-400">{isEditing ? "Edit Project" : "Add Project"}</DialogTitle>
         <DialogContent>
           <TextField
             fullWidth
@@ -275,7 +326,23 @@ const ProjectManagementPage: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      <Dialog open={confirmDialogOpen} onClose={() => setConfirmDialogOpen(false)}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <Typography>Are you sure you want to delete this project?</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmDialogOpen(false)} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleConfirmDelete} color="success" variant="contained">
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
+
     </div>
+    </Layout>
   );
 };
 

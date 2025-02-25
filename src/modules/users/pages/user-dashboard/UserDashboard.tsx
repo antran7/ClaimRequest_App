@@ -1,22 +1,22 @@
 import React, { useState } from "react";
-
-
-import UserSidebarDashboardProps from "../../../../shared/components/UserSidebarDashboard";
-import AdminHeaderDashboard from "../../../admin/components/AdminHeaderDashboard";
+import Header from "../../../../shared/components/Header";
+import UserSidebarDashboard from "../../../../shared/components/UserSidebarDashboard";
+import Footer from "../../../../shared/components/Footer";
 
 
 
 const UserDashboard: React.FC = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
 
   const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
+    setIsSidebarOpen((prev) => !prev);
   };
 
   return (
     <>
-      <AdminHeaderDashboard toggleSidebar={toggleSidebar} /> 
-      <UserSidebarDashboardProps isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+      <Header toggleSidebar={toggleSidebar} />
+      <UserSidebarDashboard isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+      <Footer/>
     </>
   );
 };

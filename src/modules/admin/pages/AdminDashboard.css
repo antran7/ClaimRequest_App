@@ -1,61 +1,61 @@
 .chart-container {
-    width: 300px; 
-    height: 300px; 
-    margin: auto;
+  width: 300px;
+  height: 300px;
+  margin: auto;
 }
 .admin-dashboard-container {
-    display: flex;
+  display: flex;
 }
 .content-dashboard {
-    padding: 20px;
+  padding: 20px;
 }
 .sidebar-dashboard {
-    width: 300px;
-    height: 100vh;
-    background-color: rgb(243, 242, 242);
+  width: 300px;
+  height: 100vh;
+  background-color: rgb(243, 242, 242);
 }
 .items-sidebar {
-    font-size: 18px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 .user-card {
-    display: flex;
-    width: 250px;
-    align-items: center;
-    justify-content: space-between;
-    padding: 15px;
-    line-height: 30px;
-    color: white;
-    background: linear-gradient(135deg, #5aa7ff, #4a9eff);
-    border-radius: 10px;
-    margin: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    transition: transform 0.2s;
+  display: flex;
+  width: 250px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px;
+  line-height: 30px;
+  color: white;
+  background: linear-gradient(135deg, #5aa7ff, #4a9eff);
+  border-radius: 10px;
+  margin: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s;
 }
 .user-card:hover {
-    transform: translateY(-2px);
+  transform: translateY(-2px);
 }
 .project-card {
-    display: flex;
-    width: 250px;
-    align-items: center;
-    justify-content: space-between;
-    padding: 15px;
-    line-height: 30px;
-    color: white;
-    background: linear-gradient(135deg, #4caf50, #43a047);
-    border-radius: 10px;
-    margin: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    transition: transform 0.2s;
+  display: flex;
+  width: 250px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px;
+  line-height: 30px;
+  color: white;
+  background: linear-gradient(135deg, #4caf50, #43a047);
+  border-radius: 10px;
+  margin: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s;
 }
 .project-card:hover {
-    transform: translateY(-2px);
+  transform: translateY(-2px);
 }
 .items-card {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
