@@ -40,6 +40,8 @@ const ProjectManagementPage: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const itemPerPage = 10;
 
   useEffect(() => {
     fetchProjects()
@@ -135,6 +137,11 @@ const ProjectManagementPage: React.FC = () => {
     }
   };
 
+  const paginatedProject = projects.slice(
+    (page - 1) * itemPerPage,
+    page * itemPerPage
+  );
+
   return (
     <div className="min-h-screen bg-gray-100">
       <Header toggleSideBar={toggleSidebar} />
@@ -165,7 +172,7 @@ const ProjectManagementPage: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {projects.map((project) => (
+              {paginatedProject.map((project) => (
                 <TableRow key={project.id}>
                   <TableCell>{project.name}</TableCell>
                   <TableCell>${project.budget.toLocaleString()}</TableCell>
@@ -215,7 +222,12 @@ const ProjectManagementPage: React.FC = () => {
         </TableContainer>
         <div className="w-1/3 ml-auto p-4">
           <Stack spacing={2}>
-            <Pagination count={10} variant="outlined" shape="rounded" />
+            <Pagination 
+            count={Math.ceil(projects.length/itemPerPage)} 
+            page={page}
+            onChange={(event, value) => setPage(value)}
+            variant="outlined" 
+            shape="rounded" />
           </Stack>
         </div>
       </div>
