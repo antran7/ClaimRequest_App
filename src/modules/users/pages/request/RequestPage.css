@@ -8,7 +8,7 @@
 .request-box {
   width: 120%;
   max-width: 2000px;
-  background: white;
+  background-color: #fff;
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -16,7 +16,7 @@
 
 .request-title {
   font-size: 24px;
-  font-weight: bold;
+  font-weight: 600;
   color: #1d4ed8;
   text-align: center;
   margin-bottom: 20px;
@@ -29,15 +29,16 @@
 }
 
 .search-input {
-  width: 70%;
+  flex: 1;
+  margin-right: 10px;
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
 }
 
 .add-button {
-  background-color: #1890ff;
-  color: white;
+  background-color: #215381;
+  color: #fff;
   padding: 8px 16px;
   border: none;
   border-radius: 4px;
@@ -46,7 +47,8 @@
 }
 
 .add-button:hover {
-  background-color: #40a9ff;
+  background-color: #0c76da;
+  color: #ffffff;
 }
 
 .request-table {
@@ -58,13 +60,18 @@
 .request-table th,
 .request-table td {
   padding: 12px;
-  border: 1px solid #ddd;
+  border: 1px solid #f0f0f0;
   text-align: left;
 }
 
 .request-table th {
-  background-color: #f5f5f5;
-  color: #1e3a8a;
+  background-color: #fafafa;
+  color: #3553ac;
+  font-weight: 600;
+}
+
+.request-table tr:nth-of-type(even) {
+  background-color: #fafafa;
 }
 
 .status-draft {
@@ -107,15 +114,17 @@
   font-size: 14px;
   transition: all 0.3s ease-in-out;
   font-weight: 600;
+  margin-right: 8px;
 }
 
 .edit-button {
-  background-color: #facc15;
+  background-color: #e6cb62;
   color: black;
 }
 
 .edit-button:hover {
   background-color: #eab308;
+  color: #ffffff;
   transform: scale(1.05);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
@@ -126,7 +135,8 @@
 }
 
 .delete-button:hover {
-  background-color: #b91c1c;
+  background-color: #eb3e3e;
+  color: #ffffff;
   transform: scale(1.05);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
 }
@@ -231,7 +241,7 @@
 }
 
 .approve-button {
-  background-color: #16a34a;
+  background-color: #46d179;
   color: #ffffff;
   font-weight: 600;
   font-size: 14px;
@@ -242,7 +252,24 @@
 }
 
 .approve-button:hover {
-  background-color: #eab308;
+  background-color: #16a34a;
+  color: #ffffff;
   transform: scale(1.05);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.custom-modal .modal-content {
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.custom-modal h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+.custom-modal .MuiButton-root {
+  margin-right: 10px;
 }
