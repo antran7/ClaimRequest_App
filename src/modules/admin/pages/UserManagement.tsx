@@ -22,7 +22,7 @@ export default function UserManagement() {
   const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalContent, setModalContent] = useState<JSX.Element | null>(null);
+  const [modalContent, setModalContent] = useState<React.ReactNode | null>(null);
 
   useEffect(() => {
     fetchUsers();
@@ -33,17 +33,33 @@ export default function UserManagement() {
       const response = await fetch(API_URL);
       if (!response.ok) throw new Error("Failed to fetch users");
       const data = await response.json();
-      setUsers(Array.isArray(data) ? data : []);
+      console.log("Fetched data:", data);
+      setUsers(
+        Array.isArray(data)
+          ? data.map((item) => ({
+              id: item.id,
+              staffName: item.staffName || "Unknown",
+              email: item.email || "",
+              password: item.password || "",
+              role: item.role || "Claimer",
+              jobRank: item.jobRank || "PM",
+              status: item.status || "Active",
+              created_at: item.created_at || new Date().toISOString(),
+              updated_at: item.updated_at || new Date().toISOString(),
+            }))
+          : []
+      );
     } catch {
       showModal("Error", <p>Failed to fetch users.</p>);
     }
   };
 
+
   const getCurrentTimestamp = () => new Date().toLocaleString();
 
   const showModal = (
     title: string,
-    content: JSX.Element,
+    content: React.ReactNode,
     confirmAction?: () => void
   ) => {
     setModalContent(
@@ -106,7 +122,7 @@ export default function UserManagement() {
   };
 
   const editUser = (user: User) => {
-    let updatedName = user.name;
+    let updatedName = user.staffName;
     let updatedEmail = user.email;
     let updatedPassword = user.password;
     let updatedRole = user.role;
@@ -115,7 +131,7 @@ export default function UserManagement() {
     showModal(
       "Edit User",
       <div className="form-container">
-        <label>Name: <input defaultValue={user.name} onChange={(e) => (updatedName = e.target.value)} /></label>
+        <label>Name: <input defaultValue={user.staffName} onChange={(e) => (updatedName = e.target.value)} /></label>
         <label>Email: <input defaultValue={user.email} onChange={(e) => (updatedEmail = e.target.value)} /></label>
         <label>Password: <input type="password" defaultValue={user.password} onChange={(e) => (updatedPassword = e.target.value)} /></label>
         <label>Role:
@@ -182,7 +198,7 @@ export default function UserManagement() {
   };
 
   const filteredUsers = users.filter((user) =>
-    (user.name ?? "").toLowerCase().includes(search.toLowerCase())
+    (user.staffName ?? "").toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -214,7 +230,7 @@ export default function UserManagement() {
               filteredUsers.map((user) => (
                 <tr key={user.id}>
                   <td>{user.id}</td>
-                  <td>{user.name}</td>
+                  <td>{user.staffName}</td>
                   <td>{user.email}</td>
                   <td>{user.password}</td>
                   <td>{user.role}</td>

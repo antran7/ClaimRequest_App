@@ -10,22 +10,10 @@ import { Toaster } from "react-hot-toast";
 import Home from "../../modules/common/pages/Home";
 import ApprovalDashboard from "../../modules/approval/pages/ApprovalDashboard";
 import ApprovalPage from "../../modules/approval/pages/ApprovalPage";
-import LoadingScreen from "../components/LoadingScreen";
-import { useState,useEffect } from "react";
 import Contact from "../../modules/common/pages/Contact";
 
 
 const AppRoutes = () => {
-  // const [isLoading, setIsLoading] = useState(true);
-  // useEffect(() => {
-  //   // Hiển thị LoadingScreen trong 3 giây
-  //   const timer = setTimeout(() => {
-  //     setIsLoading(false);
-  //   }, 3000);
-  //   return () => clearTimeout(timer);
-  // }, []);
-
-  // if (isLoading) return <LoadingScreen />; // Hiện trang loading trước
 
   return (
     <AuthProvider>

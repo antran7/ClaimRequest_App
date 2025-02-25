@@ -43,7 +43,6 @@ const menuItems = [
 const ApprovalSidebarDashboard: React.FC<ApprovalSidebarDashboardProps> = ({
   isOpen,
   onPageChange,
-  currentPage,
 }) => {
   return (
     <Drawer
