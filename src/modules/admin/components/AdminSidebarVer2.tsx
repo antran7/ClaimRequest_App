@@ -17,7 +17,7 @@ function AdminSidebarVer2() {
             </ListItemButton>
           </ListItem>
           <ListItem key="User Management" disablePadding>
-            <ListItemButton component={Link} to="/manageuser">
+            <ListItemButton component={Link} to="/admin/manageuser">
               <ListItemIcon>
                 <Mail />
               </ListItemIcon>
@@ -25,7 +25,7 @@ function AdminSidebarVer2() {
             </ListItemButton>
           </ListItem>
           <ListItem key="Project Management" disablePadding>
-              <ListItemButton component={Link} to="/manageproject"> 
+              <ListItemButton component={Link} to="/admin/manageproject"> 
                 <ListItemIcon>
                   <Mail />
                 </ListItemIcon>
