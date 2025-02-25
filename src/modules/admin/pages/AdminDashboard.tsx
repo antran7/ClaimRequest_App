@@ -45,8 +45,8 @@ function AdminDashboard() {
         <div className="content-dashboard">
           <h2>Welcome!</h2>
           <p>This is the admin dashboard.</p>
-          <Grid container spacing={2} className="items-card">
-            <Grid item xs={3} onClick={() => navigate("/admin/manageuser")}>
+          <Row className="items-card">
+            <Col span={6} onClick={() => navigate("/admin/manageuser")}>
               <div className="user-card">
                 <div className="user-card-left">
                   <p>Users</p>
