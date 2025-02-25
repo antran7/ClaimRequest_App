@@ -10,7 +10,7 @@ interface HeaderProps {
   toggleSidebar: () => void;
 }
 
-const Header = ({ toggleSidebar }: HeaderProps) => {
+const Header = ({ toggleSidebar = () => {} }: HeaderProps) => {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const [isLoggedIn, setIsLoggedIn] = useState(false);

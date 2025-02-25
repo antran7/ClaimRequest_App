@@ -1,7 +1,7 @@
 import React from "react";
 import Layout from "../../../shared/layouts/Layout";
 import './Home.css';
-import { Box, Button, Divider } from "@mui/material";
+import { Box, Button } from "@mui/material";
 import EastIcon from '@mui/icons-material/East';
 import { useNavigate } from "react-router";
 

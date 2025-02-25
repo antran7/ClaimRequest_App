@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import apiService from '../services/api';
 import { useParams } from 'react-router';
 
@@ -17,7 +17,7 @@ function Verify() {
                 setMessage("Xác minh thành công!");
             })
             .catch((error) => {
-                setMessage("Xác minh thất bại. Vui lòng thử lại!");
+                setMessage(error);
             });
     }, [token]);
 
