@@ -48,7 +48,7 @@
 
 .add-button:hover {
   background-color: #0c76da;
-  color: #ffffff;
+    color: #ffffff;
 }
 
 .request-table {
@@ -141,21 +141,13 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
 }
 
-.custom-modal .ant-modal-content {
-  height: 50vh;
-  width: 100vw;
-  margin: 0;
-  padding: 0;
-  max-width: 100%;
-  max-height: 100%;
+.custom-modal {
   border-radius: 8px;
-  margin-top: 10vh;
+  margin-top: 18vh;
+  padding: 0px 500px;
 }
 
-.custom-modal .ant-modal-header,
-.custom-modal .ant-modal-footer {
-  padding: 10px 24px;
-}
+
 
 .custom-modal .ant-modal-header {
   border-bottom: none;
@@ -189,7 +181,7 @@
   width: 100%;
 }
 
-.confirm-modal .ant-modal-content {
+.confirm-modal .modal-content {
   border-radius: 8px;
   padding: 20px;
   background-color: #f9fafb;
@@ -220,7 +212,7 @@
   justify-content: flex-end;
 }
 
-.confirm-modal .ant-btn-primary {
+.confirm-modal {
   background-color: #16a34a;
   border-color: #16a34a;
 }
@@ -272,4 +264,22 @@
 
 .custom-modal .MuiButton-root {
   margin-right: 10px;
+}
+.modal-content p{
+  padding-bottom: 15px;
+}
+.modal-content h2{
+  font-weight: bold;
+}
+button.MuiButtonBase-root.MuiButton-root.MuiButton-contained.MuiButton-containedSecondary.MuiButton-sizeMedium.MuiButton-containedSizeMedium.MuiButton-colorSecondary.MuiButton-root.MuiButton-contained.MuiButton-containedSecondary.MuiButton-sizeMedium.MuiButton-containedSizeMedium.MuiButton-colorSecondary.css-1mns5ui-MuiButtonBase-root-MuiButton-root {
+  background-color: rgba(216, 4, 39, 0.952);
+}
+button.MuiButtonBase-root.MuiButton-root.MuiButton-contained.MuiButton-containedSecondary.MuiButton-sizeMedium.MuiButton-containedSizeMedium.MuiButton-colorSecondary.MuiButton-root.MuiButton-contained.MuiButton-containedSecondary.MuiButton-sizeMedium.MuiButton-containedSizeMedium.MuiButton-colorSecondary.css-1mns5ui-MuiButtonBase-root-MuiButton-root:hover {
+  background-color: rgba(252, 57, 90, 0.952);
+}
+button.MuiButtonBase-root.MuiButton-root.MuiButton-contained.MuiButton-containedPrimary.MuiButton-sizeMedium.MuiButton-containedSizeMedium.MuiButton-colorPrimary.MuiButton-root.MuiButton-contained.MuiButton-containedPrimary.MuiButton-sizeMedium.MuiButton-containedSizeMedium.MuiButton-colorPrimary.css-74d805-MuiButtonBase-root-MuiButton-root {
+  background-color: #0c76da;
+}
+button.MuiButtonBase-root.MuiButton-root.MuiButton-contained.MuiButton-containedPrimary.MuiButton-sizeMedium.MuiButton-containedSizeMedium.MuiButton-colorPrimary.MuiButton-root.MuiButton-contained.MuiButton-containedPrimary.MuiButton-sizeMedium.MuiButton-containedSizeMedium.MuiButton-colorPrimary.css-74d805-MuiButtonBase-root-MuiButton-root:hover {
+  background-color:#3b9bf5 ;
 }
