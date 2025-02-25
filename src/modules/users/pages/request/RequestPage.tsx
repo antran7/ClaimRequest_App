@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
-import { Modal, Button, Input, Form, DatePicker, Select } from "antd";
+import { Modal, Button, TextField, MenuItem, Select, InputLabel, FormControl } from "@mui/material";
 import axios from "axios";
 import "./RequestPage.css";
 import moment from "moment";
+import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
+import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
 
 const API_REQUESTS = "https://67b5a06d07ba6e59083db637.mockapi.io/api/requests";
 const API_PROJECTS = "https://67aaae7465ab088ea7e73b54.mockapi.io/project";
@@ -35,12 +37,25 @@ const RequestPage = () => {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [currentRequest, setCurrentRequest] = useState<Request | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [form] = Form.useForm();
+  const [formValues, setFormValues] = useState<{
+    name: string;
+    projectName: string;
+    startDate: moment.Moment | null;
+    endDate: moment.Moment | null;
+    totalTimes: number;
+  }>({
+    name: "",
+    projectName: "",
+    startDate: null,
+    endDate: null,
+    totalTimes: 0,
+  });
   const [userEmail, setUserEmail] = useState<string>("");
   const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false);
   const [requestToApprove, setRequestToApprove] = useState<number | null>(null);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [requestToDelete, setRequestToDelete] = useState<number | null>(null);
+  const [dateError, setDateError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -58,22 +73,18 @@ const RequestPage = () => {
   }, []);
 
   useEffect(() => {
+    if (!userEmail) return;
+
     const fetchRequests = async () => {
       try {
         const response = await axios.get(API_REQUESTS);
         const userRequests = response.data.filter(
-          (req: Request) =>
-            req.userEmail === userEmail &&
-            (req.status === "Rejected" ||
-              req.status === "Returned" ||
-              req.status === "Approved" ||
-              req.status === "DRAFT" ||
-              req.status === "Pending")
+          (req: Request) => req.userEmail === userEmail
         );
         setRequests(userRequests);
-        setLoading(false);
       } catch (error) {
         console.error("Error fetching requests:", error);
+      } finally {
         setLoading(false);
       }
     };
@@ -94,71 +105,79 @@ const RequestPage = () => {
     fetchProjects();
   }, []);
 
-  const handleAddModalOk = async (values: {
-    name: string;
-    projectName: string;
-    startDate: moment.Moment;
-    endDate: moment.Moment;
-    totalTimes: number;
-  }) => {
+  const handleAddModalOk = async (event: React.FormEvent) => {
+    event.preventDefault();
     if (!userEmail) return;
+
+    if (formValues.endDate && formValues.startDate && formValues.endDate.isBefore(formValues.startDate)) {
+      setDateError("End date cannot be before start date");
+      return;
+    }
 
     try {
       const newRequest = {
-        name: values.name,
-        projectName: values.projectName,
-        status: "DRAFT",
-        startDate: values.startDate.format("YYYY-MM-DD"),
-        endDate: values.endDate.format("YYYY-MM-DD"),
-        totalTimes: values.totalTimes,
+        name: formValues.name,
+        projectName: formValues.projectName,
+        status: "Draft",
+        startDate: formValues.startDate ? formValues.startDate.format("YYYY-MM-DD") : "",
+        endDate: formValues.endDate ? formValues.endDate.format("YYYY-MM-DD") : "",
+        totalTimes: formValues.totalTimes,
         createDate: moment().format("YYYY-MM-DD"),
         submittedDate: moment().format("YYYY-MM-DD"),
         userEmail: userEmail,
         userId: 1,
-        reason: "DRAFT",
+        reason: "Draft",
       };
 
       const response = await axios.post(API_REQUESTS, newRequest);
       setRequests([...requests, response.data]);
       setIsAddModalVisible(false);
-      form.resetFields();
+      setFormValues({
+        name: "",
+        projectName: "",
+        startDate: null,
+        endDate: null,
+        totalTimes: 0,
+      });
+      setDateError(null);
     } catch (error) {
       console.error("Error adding request:", error);
     }
   };
 
-  const handleEditModalOk = async (values: {
-    name: string;
-    projectName: string;
-    startDate: moment.Moment;
-    endDate: moment.Moment;
-    totalTimes: number;
-  }) => {
+  const handleEditModalOk = async (event: React.FormEvent) => {
+    event.preventDefault();
     if (!currentRequest) return;
+
+    if (formValues.endDate && formValues.startDate && formValues.endDate.isBefore(formValues.startDate)) {
+      setDateError("End date cannot be before start date");
+      return;
+    }
 
     try {
       const updatedRequest = {
         ...currentRequest,
-        name: values.name,
-        projectName: values.projectName,
-        startDate: values.startDate.format("YYYY-MM-DD"),
-        endDate: values.endDate.format("YYYY-MM-DD"),
-        totalTimes: values.totalTimes,
+        name: formValues.name,
+        projectName: formValues.projectName,
+        startDate: formValues.startDate ? formValues.startDate.format("YYYY-MM-DD") : null,
+        endDate: formValues.endDate ? formValues.endDate.format("YYYY-MM-DD") : null,
+        totalTimes: formValues.totalTimes,
       };
       await axios.put(`${API_REQUESTS}/${currentRequest.id}`, updatedRequest);
       setRequests(
         requests.map((req) =>
-          req.id === currentRequest.id ? updatedRequest : req
+          req.id === currentRequest.id ? { ...updatedRequest, startDate: updatedRequest.startDate || "", endDate: updatedRequest.endDate || "" } : req
         )
       );
       setIsEditModalVisible(false);
       setCurrentRequest(null);
+      setDateError(null);
     } catch (error) {
       console.error("Error editing request:", error);
     }
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     setRequestToDelete(id);
     setIsDeleteModalVisible(true);
   };
@@ -176,7 +195,7 @@ const RequestPage = () => {
     }
   };
 
-  const handleRequestApproval = (id: number) => {
+  const handleRequestApproval = async (id: number) => {
     setRequestToApprove(id);
     setIsConfirmModalVisible(true);
   };
@@ -187,10 +206,11 @@ const RequestPage = () => {
     try {
       await axios.put(`${API_REQUESTS}/${requestToApprove}`, {
         status: "Pending",
+        reason: "Draft",
       });
       setRequests(
         requests.map((req) =>
-          req.id === requestToApprove ? { ...req, status: "Pending" } : req
+          req.id === requestToApprove ? { ...req, status: "Pending", reason: "Draft" } : req
         )
       );
       setIsConfirmModalVisible(false);
@@ -205,7 +225,23 @@ const RequestPage = () => {
     setIsEditModalVisible(false);
     setIsDeleteModalVisible(false);
     setCurrentRequest(null);
-    form.resetFields();
+    setFormValues({
+      name: "",
+      projectName: "",
+      startDate: null,
+      endDate: null,
+      totalTimes: 0,
+    });
+    setDateError(null);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormValues({ ...formValues, [name]: value });
+  };
+
+  const handleDateChange = (name: string, date: moment.Moment | null) => {
+    setFormValues({ ...formValues, [name]: date });
   };
 
   return (
@@ -218,7 +254,7 @@ const RequestPage = () => {
         <h1 className="request-title">Manage Claim Requests</h1>
 
         <div className="search-container">
-          <input
+          <TextField
             type="text"
             placeholder="Search requests..."
             className="search-input"
@@ -245,7 +281,7 @@ const RequestPage = () => {
                 <th>Status</th>
                 <th>Start Date</th>
                 <th>End Date</th>
-                <th>Total Times</th>
+                <th>Total Times (Hours)</th>
                 <th>Reason</th>
                 <th>Actions</th>
               </tr>
@@ -272,7 +308,7 @@ const RequestPage = () => {
                         onClick={() => {
                           setCurrentRequest(req);
                           setIsEditModalVisible(true);
-                          form.setFieldsValue({
+                          setFormValues({
                             name: req.name,
                             projectName: req.projectName,
                             startDate: moment(req.startDate),
@@ -281,21 +317,18 @@ const RequestPage = () => {
                           });
                         }}
                         className="edit-button"
-                        disabled={
-                          req.status !== "DRAFT" && req.status !== "Returned"
-                        }
+                        disabled={req.status !== "Draft" && req.status !== "Returned"}
                       >
                         Edit
                       </Button>
                       <Button
                         onClick={() => handleDelete(req.id)}
                         className="delete-button"
-                        disabled={req.status !== "DRAFT"}
+                        disabled={req.status !== "Draft"}
                       >
                         Delete
                       </Button>
-                      {(req.status === "DRAFT" ||
-                        req.status === "Returned") && (
+                      {(req.status === "Draft" || req.status === "Returned") && (
                         <Button
                           onClick={() => handleRequestApproval(req.id)}
                           className="approve-button"
@@ -312,196 +345,167 @@ const RequestPage = () => {
       </div>
 
       <Modal
-        title="Add Request"
         open={isAddModalVisible}
-        onCancel={handleModalCancel}
-        footer={null}
+        onClose={handleModalCancel}
         className="custom-modal"
       >
-        <Form
-          form={form}
-          onFinish={handleAddModalOk}
-          initialValues={{
-            name: "",
-            projectName: "",
-            startDate: null,
-            endDate: null,
-            totalTimes: 0,
-          }}
-        >
-          <Form.Item
-            label="Request Name"
-            name="name"
-            rules={[
-              { required: true, message: "Please input the request name!" },
-            ]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            label="Project Name"
-            name="projectName"
-            rules={[
-              { required: true, message: "Please select the project name!" },
-            ]}
-          >
-            <Select>
-              {projects.map((project) => (
-                <Select.Option key={project.id} value={project.name}>
+        <div className="modal-content">
+          <h2>Add Request</h2>
+          <form onSubmit={handleAddModalOk}>
+            <TextField
+              label="Request Name"
+              name="name"
+              value={formValues.name}
+              onChange={(e) => handleInputChange({ target: { name: e.target.name, value: e.target.value } } as React.ChangeEvent<HTMLInputElement>)}
+              required
+              fullWidth
+              margin="normal"
+            />
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Project Name</InputLabel>
+                <Select
+                name="projectName"
+                value={formValues.projectName}
+                onChange={(e) => handleInputChange(e as React.ChangeEvent<HTMLInputElement>)}
+                required
+                >
+                {projects.map((project) => (
+                  <MenuItem key={project.id} value={project.name}>
                   {project.name}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-          <Form.Item
-            label="Start Date"
-            name="startDate"
-            rules={[
-              { required: true, message: "Please select the start date!" },
-            ]}
-          >
-            <DatePicker />
-          </Form.Item>
-          <Form.Item
-            label="End Date"
-            name="endDate"
-            rules={[
-              { required: true, message: "Please select the end date!" },
-              ({ getFieldValue }) => ({
-                validator(_, value) {
-                  if (!value || getFieldValue("startDate") <= value) {
-                    return Promise.resolve();
-                  }
-                  return Promise.reject(
-                    new Error("End date cannot be before start date!")
-                  );
-                },
-              }),
-            ]}
-          >
-            <DatePicker />
-          </Form.Item>
-          <Form.Item
-            label="Total Times"
-            name="totalTimes"
-            rules={[
-              { required: true, message: "Please input the total times!" },
-            ]}
-          >
-            <Input type="number" />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit">
+                  </MenuItem>
+                ))}
+                </Select>
+            </FormControl>
+            <LocalizationProvider dateAdapter={AdapterMoment}>
+              <DatePicker
+              label="Start Date"
+              value={formValues.startDate}
+              onChange={(date) => handleDateChange("startDate", date)}
+              slotProps={{ textField: { fullWidth: true, margin: "normal", required: true } }}
+              />
+              <DatePicker
+              label="End Date"
+              value={formValues.endDate}
+              onChange={(date) => handleDateChange("endDate", date)}
+              slotProps={{ textField: { fullWidth: true, margin: "normal", required: true } }}
+              />
+            </LocalizationProvider>
+            {dateError && <p className="error-message">{dateError}</p>}
+            <TextField
+              label="Total Times"
+              name="totalTimes"
+              type="number"
+              value={formValues.totalTimes}
+              onChange={handleInputChange}
+              required
+              fullWidth
+              margin="normal"
+              inputProps={{ min: 1 }}
+            />
+            <Button type="submit" variant="contained" color="primary">
               Add
             </Button>
-          </Form.Item>
-        </Form>
+          </form>
+        </div>
       </Modal>
 
       <Modal
-        title="Edit Request"
         open={isEditModalVisible}
-        onCancel={handleModalCancel}
-        footer={null}
+        onClose={handleModalCancel}
         className="custom-modal"
       >
-        <Form
-          form={form}
-          key={currentRequest?.id}
-          initialValues={{
-            name: currentRequest?.name,
-            projectName: currentRequest?.projectName,
-            startDate: currentRequest ? moment(currentRequest.startDate) : null,
-            endDate: currentRequest ? moment(currentRequest.endDate) : null,
-            totalTimes: currentRequest?.totalTimes,
-          }}
-          onFinish={handleEditModalOk}
-        >
-          <Form.Item
-            label="Request Name"
-            name="name"
-            rules={[
-              { required: true, message: "Please input the request name!" },
-            ]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            label="Project Name"
-            name="projectName"
-            rules={[
-              { required: true, message: "Please select the project name!" },
-            ]}
-          >
-            <Select>
-              {projects.map((project) => (
-                <Select.Option key={project.id} value={project.name}>
+        <div className="modal-content">
+          <h2>Edit Request</h2>
+          <form onSubmit={handleEditModalOk}>
+            <TextField
+              label="Request Name"
+              name="name"
+              value={formValues.name}
+              onChange={handleInputChange}
+              required
+              fullWidth
+              margin="normal"
+            />
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Project Name</InputLabel>
+                <Select
+                name="projectName"
+                value={formValues.projectName}
+                onChange={(e) => handleInputChange(e as React.ChangeEvent<HTMLInputElement>)}
+                required
+                >
+                {projects.map((project) => (
+                  <MenuItem key={project.id} value={project.name}>
                   {project.name}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-          <Form.Item
-            label="Start Date"
-            name="startDate"
-            rules={[
-              { required: true, message: "Please select the start date!" },
-            ]}
-          >
-            <DatePicker />
-          </Form.Item>
-          <Form.Item
-            label="End Date"
-            name="endDate"
-            rules={[
-              { required: true, message: "Please select the end date!" },
-              ({ getFieldValue }) => ({
-                validator(_, value) {
-                  if (!value || getFieldValue("startDate") <= value) {
-                    return Promise.resolve();
-                  }
-                  return Promise.reject(
-                    new Error("End date cannot be before start date!")
-                  );
-                },
-              }),
-            ]}
-          >
-            <DatePicker />
-          </Form.Item>
-          <Form.Item
-            label="Total Times"
-            name="totalTimes"
-            rules={[
-              { required: true, message: "Please input the total times!" },
-            ]}
-          >
-            <Input type="number" />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit">
+                  </MenuItem>
+                ))}
+                </Select>
+            </FormControl>
+            <LocalizationProvider dateAdapter={AdapterMoment}>
+              <DatePicker
+              label="Start Date"
+              value={formValues.startDate}
+              onChange={(date) => handleDateChange("startDate", date)}
+              slotProps={{ textField: { fullWidth: true, margin: "normal", required: true } }}
+              />
+              <DatePicker
+              label="End Date"
+              value={formValues.endDate}
+              onChange={(date) => handleDateChange("endDate", date)}
+              slotProps={{ textField: { fullWidth: true, margin: "normal", required: true } }}
+              />
+            </LocalizationProvider>
+            {dateError && <p className="error-message">{dateError}</p>}
+            <TextField
+              label="Total Times"
+              name="totalTimes"
+              type="number"
+              value={formValues.totalTimes}
+              onChange={handleInputChange}
+              required
+              fullWidth
+              margin="normal"
+              inputProps={{ min: 1 }}
+            />
+            <Button type="submit" variant="contained" color="primary">
               Save
             </Button>
-          </Form.Item>
-        </Form>
+          </form>
+        </div>
       </Modal>
 
       <Modal
-        title="Confirm Approval"
         open={isConfirmModalVisible}
-        onCancel={() => setIsConfirmModalVisible(false)}
-        onOk={handleConfirmApproval}
+        onClose={() => setIsConfirmModalVisible(false)}
+        className="custom-modal"
       >
-        <p>Are you sure you want to approve this request?</p>
+        <div className="modal-content">
+          <h2>Confirm Approval</h2>
+          <p>Are you sure you want to approve this request?</p>
+          <Button onClick={handleConfirmApproval} variant="contained" color="primary">
+            Confirm
+          </Button>
+          <Button onClick={() => setIsConfirmModalVisible(false)} variant="contained" color="secondary">
+            Cancel
+          </Button>
+        </div>
       </Modal>
 
       <Modal
-        title="Confirm Delete"
         open={isDeleteModalVisible}
-        onCancel={() => setIsDeleteModalVisible(false)}
-        onOk={handleConfirmDelete}
+        onClose={() => setIsDeleteModalVisible(false)}
+        className="custom-modal"
       >
-        <p>Are you sure you want to delete this request?</p>
+        <div className="modal-content">
+          <h2>Confirm Delete</h2>
+          <p>Are you sure you want to delete this request?</p>
+          <Button onClick={handleConfirmDelete} variant="contained" color="primary">
+            Confirm
+          </Button>
+          <Button onClick={() => setIsDeleteModalVisible(false)} variant="contained" color="secondary">
+            Cancel
+          </Button>
+        </div>
       </Modal>
     </div>
   );

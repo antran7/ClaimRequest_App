@@ -53,7 +53,7 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
         <Link to="/#" className="header-right-item">
           About
         </Link>
-        <Link to="/#" className="header-right-item">
+        <Link to="/Contact" className="header-right-item">
           Contact
         </Link>
         {!isLoggedIn ? (

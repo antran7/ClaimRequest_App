@@ -6,6 +6,8 @@ import ApprovalPage from "./ApprovalPage";
 import Approver from "./Approver";
 import RequestPage from "./RequestPage";
 import "./ApprovalDashboard.css";
+import Header from "../../../shared/components/Header";
+import Layout from "../../../shared/layouts/Layout";
 
 interface PageContent {
   [key: string]: React.ReactNode;
@@ -30,13 +32,8 @@ const ApprovalDashboard: React.FC = () => {
   };
 
   return (
-    <Box sx={{ display: "flex", margin: 0, padding: 0 }}>
-      <ApprovalHeaderDashboard toggleSidebar={toggleSidebar} />
-      <ApprovalSidebarDashboard
-        isOpen={isSidebarOpen}
-        onPageChange={setCurrentPage}
-        currentPage={currentPage}
-      />
+    <Layout>
+      <Box sx={{ display: "flex", margin: 0, padding: 0 }}>
       <Box
         component="main"
         sx={{
@@ -60,6 +57,7 @@ const ApprovalDashboard: React.FC = () => {
         </Box>
       </Box>
     </Box>
+    </Layout>
   );
 };
 
