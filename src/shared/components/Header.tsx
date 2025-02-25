@@ -7,10 +7,10 @@ import IconButton from "@mui/material/IconButton";
 import { useAuth } from "../hooks/useAuth";
 
 interface HeaderProps {
-  toggleSidebar: () => void;
+  toggleSidebar?: () => void;
 }
 
-const Header = ({ toggleSidebar }: HeaderProps) => {
+const Header = ({ toggleSidebar = () => {} }: HeaderProps) => {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const [isLoggedIn, setIsLoggedIn] = useState(false);

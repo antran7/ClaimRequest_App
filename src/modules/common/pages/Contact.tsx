@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Layout from "../../../shared/layouts/Layout";
-import { ArrowRightOutlined } from "@ant-design/icons";
+import { ArrowForward } from "@mui/icons-material";
 
 
 const Contact: React.FC = () => {
@@ -48,7 +48,7 @@ const Contact: React.FC = () => {
           
             <div className="flex flex-col justify-between ">
             <div className="flex items-center gap-2 bg-gray ">
-            <ArrowRightOutlined className="text-2xl text-black pl-5"/>
+            <ArrowForward className="text-2xl text-black pl-5"/>
             <h2 className="m-13">
                 Great! We're excited to hear from you and let's start something special together.
             Call us for any inquery

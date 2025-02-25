@@ -24,10 +24,6 @@
   border-radius: 6px;
 }
 
-.search-input input {
-  height: 40px;
-}
-
 .table-container {
   background-color: white;
   padding: 24px;
@@ -35,53 +31,25 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Table Styles */
-.ant-table {
-  border-radius: 8px;
+.amount-cell {
+  font-family: "Roboto Mono", monospace;
+  font-weight: 500;
 }
 
-.ant-table-thead > tr > th {
-  background-color: #f8f9fa !important;
-  font-weight: 600;
-  color: #1a1a1a;
-}
-
-.ant-table-tbody > tr:hover > td {
-  background-color: #f0f7ff !important;
-}
-
-/* Button Styles */
-.paid-button {
-  background-color: #52c41a;
-  border-color: #52c41a;
-}
-
-.paid-button:hover {
-  background-color: #389e0d !important;
-  border-color: #389e0d !important;
-}
-
-.download-button {
-  background-color: #ffffff;
-  border-color: #d9d9d9;
-}
-
-.download-button:hover {
-  color: #1890ff !important;
-  border-color: #1890ff !important;
-}
-
-/* Tag Styles */
 .status-tag {
   padding: 4px 12px;
   border-radius: 4px;
   font-weight: 500;
 }
 
-/* Amount Column */
-.amount-cell {
-  font-family: "Roboto Mono", monospace;
-  font-weight: 500;
+.status-tag.paid {
+  background-color: #52c41a;
+  color: white;
+}
+
+.status-tag.approved {
+  background-color: #faad14;
+  color: white;
 }
 
 .header-top {
