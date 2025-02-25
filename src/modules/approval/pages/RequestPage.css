@@ -1,0 +1,160 @@
+.request-container-approval {
+  display: flex;
+  justify-content: center;
+  height: 100vh;
+  padding: 10px;
+  margin-left: 280px;
+}
+
+.request-box-approval {
+  width: 120%;
+  max-width: 2000px;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.request-title-approval {
+  font-size: 24px;
+  font-weight: bold;
+  color: #1d4ed8;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.search-container-approval {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.search-input-approval {
+  width: 70%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.add-button-approval {
+  background-color: #1890ff;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.add-button-approval:hover {
+  background-color: #40a9ff;
+}
+
+.request-table-approval {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.request-table-approval th,
+.request-table-approval td {
+  padding: 12px;
+  border: 1px solid #ddd;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.request-table-approval td:nth-child(4),
+.request-table-approval td:nth-child(5) {
+  width: 150px;
+}
+
+.request-table-approval td:last-child {
+  width: 300px;
+}
+
+.request-table-approval th {
+  background-color: #f5f5f5;
+  color: #1e3a8a;
+}
+
+.status-draft-approval {
+  color: #ff9800;
+  font-weight: bold;
+}
+
+.status-pending-approval {
+  color: #2196f3;
+  font-weight: bold;
+}
+
+.status-approved-approval {
+  color: #52c41a;
+  font-weight: bold;
+}
+
+.status-rejected-approval {
+  color: #f5222d;
+  font-weight: bold;
+}
+
+.status-paid-approval {
+  color: #1890ff;
+  font-weight: bold;
+}
+
+.edit-button-approval,
+.delete-button-approval,
+.approve-button-approval {
+  border: none;
+  padding: 7px 10px;
+  margin: 0 5px;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 14px;
+  margin-right: 8px;
+}
+
+.edit-button-approval {
+  background-color: #facc15;
+  color: black;
+}
+
+.delete-button-approval {
+  background-color: #dc2626;
+  color: white;
+}
+
+.approve-button-approval {
+  background-color: #16a34a;
+  color: white;
+}
+
+.edit-button-approval:hover {
+  background-color: #eab308;
+}
+
+.delete-button-approval:hover {
+  background-color: #b91c1c;
+}
+
+.approve-button-approval:hover {
+  background-color: #15803d;
+}
+
+.custom-modal-approval .modal-content {
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.blur-background-approval {
+  filter: blur(6px);
+  transition: filter 0.3s;
+}
+
+.reason-draft-approval {
+  color: blue;
+  font-weight: bold;
+}

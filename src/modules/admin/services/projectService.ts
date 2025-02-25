@@ -7,7 +7,9 @@ export const fetchProjects = async (): Promise<Project[]> => {
   return response.json();
 };
 
-export const addProject = async (project: Partial<Project>): Promise<Project> => {
+export const addProject = async (
+  project: Partial<Project>
+): Promise<Project> => {
   const response = await fetch(API_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

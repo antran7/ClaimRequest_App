@@ -1,46 +1,50 @@
-import { useState, useEffect } from "react";
-import { Table, Input, Button, Tag, Space, message } from "antd";
-import type { ColumnsType } from "antd/es/table";
-import {
-  SearchOutlined,
-  CheckOutlined,
-  CloseOutlined,
-  LogoutOutlined,
-} from "@ant-design/icons";
-import "./ApprovalPage.css";
-import { handleLogout } from "../../../shared/utils/auth";
-import { useNavigate } from "react-router-dom";
-import Layout from "../../../shared/layouts/Layout";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
+import "./ApprovalPage.css";
 
-interface ClaimRequest {
-  id: number;
+const API_REQUESTS = "https://67b5a06d07ba6e59083db637.mockapi.io/api/requests";
+const API_USERS = "https://67b416e6392f4aa94fa93e19.mockapi.io/api/user";
+
+interface RequestData {
+  id: string;
   name: string;
-  submittedDate: string;
-  status: string;
+  projectName: string;
   requesterName: string;
-  amount: number;
+  startDate: string;
+  endDate: string;
+  totalTimes: number;
 }
 
-const ApprovalPage = () => {
-  const navigate = useNavigate();
-  const [searchText, setSearchText] = useState("");
-  const [requests, setRequests] = useState<ClaimRequest[]>([]);
+const ApprovalPage: React.FC = () => {
+  const [requests, setRequests] = useState<RequestData[]>([]);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalReason, setModalReason] = useState("");
+  const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
+  const [currentAction, setCurrentAction] = useState<
+    "Rejected" | "Returned" | null
+  >(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchRequests = async () => {
       try {
-        const response = await axios.get(
-          "https://67b5a06d07ba6e59083db637.mockapi.io/api/requests"
-        );
-        const pendingRequests = response.data
-          .filter((req: any) => req.status === "PENDING")
-          .map((req: any) => ({
-            ...req,
-            requesterName: "User " + req.userId,
-            amount: Math.floor(Math.random() * 10000) + 1000,
-          }));
-        setRequests(pendingRequests);
+        const response = await axios.get(API_REQUESTS);
+        const userResponse = await axios.get(API_USERS);
+        const users = userResponse.data;
+
+        const requestsWithRequester = response.data
+          .filter((request: any) => request.status === "Pending")
+          .map((request: any) => {
+            const user = users.find((u: any) => u.email === request.userEmail);
+            return {
+              ...request,
+              requesterName: user ? user.staffName : "Unknown",
+            };
+          });
+
+        setRequests(requestsWithRequester);
       } catch (error) {
         console.error("Error fetching requests:", error);
       }
@@ -49,153 +53,178 @@ const ApprovalPage = () => {
     fetchRequests();
   }, []);
 
-  const handleApprove = async (record: ClaimRequest) => {
+  const handleApprove = async (id: string) => {
     try {
-      await axios.put(
-        `https://67b5a06d07ba6e59083db637.mockapi.io/api/requests/${record.id}`,
-        {
-          ...record,
-          status: "APPROVED",
-        }
-      );
-      setRequests((prevRequests) =>
-        prevRequests.filter((req) => req.id !== record.id)
-      );
-      message.success(`Request #${record.id} has been approved`);
+      await axios.put(`${API_REQUESTS}/${id}`, { status: "Approved" });
+      setRequests((prev) => prev.filter((req) => req.id !== id));
     } catch (error) {
       console.error("Error approving request:", error);
-      message.error("Failed to approve request");
     }
   };
 
-  const handleReject = async (record: ClaimRequest) => {
+  const handleRejectOrReturn = (
+    id: string,
+    action: "Rejected" | "Returned"
+  ) => {
+    setCurrentRequestId(id);
+    setCurrentAction(action);
+    setIsModalOpen(true);
+  };
+
+  const handleModalSubmit = async (action: "Rejected" | "Returned") => {
+    if (!modalReason.trim()) {
+      setError("Reason is required.");
+      return;
+    }
+
+    if (!currentRequestId) return;
+
     try {
-      await axios.put(
-        `https://67b5a06d07ba6e59083db637.mockapi.io/api/requests/${record.id}`,
-        {
-          ...record,
-          status: "REJECTED",
-        }
-      );
-      setRequests((prevRequests) =>
-        prevRequests.filter((req) => req.id !== record.id)
-      );
-      message.error(`Request #${record.id} has been rejected`);
+      await axios.put(`${API_REQUESTS}/${currentRequestId}`, {
+        status: action,
+        reason: modalReason,
+      });
+      setRequests((prev) => prev.filter((req) => req.id !== currentRequestId));
+      setIsModalOpen(false);
+      setModalReason("");
+      setCurrentRequestId(null);
+      setError(null);
     } catch (error) {
-      console.error("Error rejecting request:", error);
-      message.error("Failed to reject request");
+      console.error(`Error ${action.toLowerCase()} request:`, error);
     }
   };
 
-  const columns: ColumnsType<ClaimRequest> = [
-    {
-      title: "ID",
-      dataIndex: "id",
-      key: "id",
-    },
-    {
-      title: "Request Name",
-      dataIndex: "name",
-      key: "name",
-    },
-    {
-      title: "Requester",
-      dataIndex: "requesterName",
-      key: "requesterName",
-    },
-    {
-      title: "Amount ($)",
-      dataIndex: "amount",
-      key: "amount",
-      render: (amount: number) => (
-        <span className="amount-cell">${amount.toFixed(2)}</span>
-      ),
-    },
-    {
-      title: "Submitted Date",
-      dataIndex: "submittedDate",
-      key: "submittedDate",
-    },
-    {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      render: (status: string) => (
-        <Tag color="gold" className="status-tag">
-          {status}
-        </Tag>
-      ),
-    },
-    {
-      title: "Actions",
-      key: "actions",
-      render: (_, record) => (
-        <Space>
-          <Button
-            type="primary"
-            icon={<CheckOutlined />}
-            onClick={() => handleApprove(record)}
-            className="approve-button"
-          >
-            Approve
-          </Button>
-          <Button
-            danger
-            icon={<CloseOutlined />}
-            onClick={() => handleReject(record)}
-            className="reject-button"
-          >
-            Reject
-          </Button>
-        </Space>
-      ),
-    },
-  ];
-
-  const filteredData = requests.filter((item) =>
-    Object.values(item).some(
-      (value) =>
-        value &&
-        value.toString().toLowerCase().includes(searchText.toLowerCase())
-    )
-  );
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setModalReason("");
+    setError(null);
+  };
 
   return (
-    <Layout>
-      <div className="approval-page">
-        <div className="page-header">
-          <div className="header-top">
-            <h1 className="page-title">Approval Management</h1>
-            <Button
-              icon={<LogoutOutlined />}
-              onClick={() => handleLogout(navigate)}
-              danger
-              className="logout-button"
-            >
-              Logout
-            </Button>
+    <div className="approval-container">
+      <div
+        className={`approval-content ${isModalOpen ? "blur-background" : ""}`}
+      >
+        <div className="approval-box">
+          <h1 className="approval-title">Pending Requests</h1>
+
+          <div className="approval-table-container">
+            <table className="approval-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Request Name</th>
+                  <th>Project Name</th>
+                  <th>Requester</th>
+                  <th>Start Date</th>
+                  <th>End Date</th>
+                  <th>Total Times (Hours)</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {requests
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((row) => (
+                    <tr key={row.id}>
+                      <td>{row.id}</td>
+                      <td>{row.name}</td>
+                      <td>{row.projectName}</td>
+                      <td>{row.requesterName}</td>
+                      <td>{row.startDate}</td>
+                      <td>{row.endDate}</td>
+                      <td>{row.totalTimes}</td>
+                      <td align="center">
+                        <div className="action-buttons">
+                          <button
+                            className="approve-button"
+                            onClick={() => handleApprove(row.id)}
+                          >
+                            Approve
+                          </button>
+                          <button
+                            className="reject-button"
+                            onClick={() =>
+                              handleRejectOrReturn(row.id, "Rejected")
+                            }
+                          >
+                            Reject
+                          </button>
+                          <button
+                            className="return-button"
+                            onClick={() =>
+                              handleRejectOrReturn(row.id, "Returned")
+                            }
+                          >
+                            Return
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
           </div>
-          <Input
-            placeholder="Search requests..."
-            prefix={<SearchOutlined />}
-            onChange={(e) => setSearchText(e.target.value)}
-            className="search-input"
-          />
-        </div>
-        <div className="table-container">
-          <Table
-            columns={columns}
-            dataSource={filteredData}
-            rowKey="id"
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: true,
-              showTotal: (total) => `Total ${total} items`,
-            }}
-          />
+
+          <div className="pagination">
+            <span>
+              Rows per page:
+              <select
+                value={rowsPerPage}
+                onChange={(event) =>
+                  setRowsPerPage(parseInt(event.target.value, 10))
+                }
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+              </select>
+            </span>
+            <span>
+              {page * rowsPerPage + 1}-
+              {Math.min((page + 1) * rowsPerPage, requests.length)} of{" "}
+              {requests.length}
+            </span>
+            <button onClick={() => setPage(page - 1)} disabled={page === 0}>
+              {"<"}
+            </button>
+            <button
+              onClick={() => setPage(page + 1)}
+              disabled={(page + 1) * rowsPerPage >= requests.length}
+            >
+              {">"}
+            </button>
+          </div>
         </div>
       </div>
-    </Layout>
+
+      {isModalOpen && (
+        <div className="modal">
+          <button className="close-button" onClick={handleCloseModal}>
+            X
+          </button>
+          <h6>Provide a reason for this action</h6>
+          <textarea
+            rows={4}
+            value={modalReason}
+            onChange={(e) => setModalReason(e.target.value)}
+            className="modal-textfield"
+          />
+          {error && <p className="error-message">{error}</p>}
+          <div className="modal-actions">
+            <button
+              onClick={() => handleModalSubmit(currentAction!)}
+              className="submit-button"
+            >
+              Submit
+            </button>
+            <button onClick={handleCloseModal} className="cancel-button">
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
