@@ -34,7 +34,7 @@ h1 {
   color: #333;
 }
 
-button {
+.user-management-page button {
   padding: 8px 10px; /* Reduced padding */
   font-size: 0.9rem; /* Smaller font size */
   margin-right: 10px;
@@ -45,7 +45,7 @@ button {
   transition: background-color 0.3s, transform 0.2s;
 }
 
-button:hover {
+.user-management-page button:hover {
   transform: scale(1.05);
 }
 
@@ -102,9 +102,9 @@ th, td {
   color: white;
 }
 
-tr:nth-child(even) {
+/* tr:nth-child(even) {
   background-color: #f2f2f2;
-}
+} */
 
 tr:hover {
   background-color: #e9ecef;
