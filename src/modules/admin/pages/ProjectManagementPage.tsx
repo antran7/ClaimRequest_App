@@ -42,8 +42,9 @@ const ProjectManagementPage: React.FC = () => {
   const [page, setPage] = useState(1);
   const itemPerPage = 10;
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     fetchProjects()
@@ -130,7 +131,6 @@ const ProjectManagementPage: React.FC = () => {
     setConfirmDialogOpen(true);
   };
 
-
   // const handleDeleteProject = async (id: string) => {
   //   try {
   //     await deleteProject(id);
@@ -155,7 +155,6 @@ const ProjectManagementPage: React.FC = () => {
       }
     }
   };
-
 
   const paginatedProject = projects.slice(
     (page - 1) * itemPerPage,
@@ -191,10 +190,10 @@ const ProjectManagementPage: React.FC = () => {
             </button>
           </div>
 
-          <TableContainer component={Paper}>
+          <TableContainer>
             <Table>
               <TableHead>
-                <TableRow>
+                <TableRow className="bg-gray-500">
                   <TableCell>Name</TableCell>
                   <TableCell>Budget</TableCell>
                   <TableCell>Start Date</TableCell>
@@ -230,11 +229,15 @@ const ProjectManagementPage: React.FC = () => {
                     </TableCell>
                     <TableCell>
                       <Button
-                        variant="outlined"
-                        color="primary"
+                        variant="contained"
+                        sx={{
+                          backgroundColor: "gray",
+                          color: "white",
+                          "&:hover": { backgroundColor: "darkgray" },
+                          mr:1
+                        }}
                         startIcon={<EditIcon />}
                         onClick={() => handleOpenDialog(project)}
-                        sx={{ mr: 1 }}
                       >
                         Edit
                       </Button>
@@ -246,7 +249,6 @@ const ProjectManagementPage: React.FC = () => {
                       >
                         Delete
                       </Button>
-
                     </TableCell>
                   </TableRow>
                 ))}
@@ -267,7 +269,9 @@ const ProjectManagementPage: React.FC = () => {
         </div>
 
         <Dialog open={openDialog} onClose={handleCloseDialog} fullWidth>
-          <DialogTitle className="bg-gray-400">{isEditing ? "Edit Project" : "Add Project"}</DialogTitle>
+          <DialogTitle className="bg-gray-500">
+            {isEditing ? "Edit Project" : "Add Project"}
+          </DialogTitle>
           <DialogContent>
             <TextField
               fullWidth
@@ -295,7 +299,9 @@ const ProjectManagementPage: React.FC = () => {
               {...formik.getFieldProps("startDate")}
               type="date"
               InputLabelProps={{ shrink: true }}
-              error={formik.touched.startDate && Boolean(formik.errors.startDate)}
+              error={
+                formik.touched.startDate && Boolean(formik.errors.startDate)
+              }
               helperText={formik.touched.startDate && formik.errors.startDate}
             />
 
@@ -311,31 +317,49 @@ const ProjectManagementPage: React.FC = () => {
             />
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleCloseDialog}>Cancel</Button>
+            <Button onClick={handleCloseDialog} sx={{ color: "gray" }}>
+              Cancel
+            </Button>
             <Button
               onClick={() => formik.handleSubmit()}
               variant="contained"
-              color="primary"
+              sx={{
+                backgroundColor: "gray",
+                color: "white",
+                "&:hover": { backgroundColor: "darkgray" },
+              }}
             >
               Save
             </Button>
           </DialogActions>
         </Dialog>
-        <Dialog open={confirmDialogOpen} onClose={() => setConfirmDialogOpen(false)}>
+        <Dialog
+          open={confirmDialogOpen}
+          onClose={() => setConfirmDialogOpen(false)}
+        >
           <DialogTitle>Confirm Delete</DialogTitle>
           <DialogContent>
-            <Typography>Are you sure you want to delete this project?</Typography>
+            <Typography>
+              Are you sure you want to delete this project?
+            </Typography>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setConfirmDialogOpen(false)} color="primary">
+            <Button onClick={() => setConfirmDialogOpen(false)} sx={{ color: "gray" }}>
               Cancel
             </Button>
-            <Button onClick={handleConfirmDelete} color="success" variant="contained">
+            <Button
+              onClick={handleConfirmDelete}
+              sx={{
+                backgroundColor: "gray",
+                color: "white",
+                "&:hover": { backgroundColor: "darkgray" },
+              }}
+              variant="contained"
+            >
               Confirm
             </Button>
           </DialogActions>
         </Dialog>
-
       </div>
     </Layout>
   );

@@ -97,7 +97,7 @@ th, td {
   white-space: nowrap; /* Prevent text wrapping */
 }
 
-th {
+.user-management-container th {
   background-color: #007bff;
   color: white;
 }
