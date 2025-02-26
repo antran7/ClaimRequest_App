@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { Box } from "@mui/material";
+import Layout from "../../../shared/layouts/Layout";
 import Approver from "./Approver";
 import RequestPage from "./RequestPage";
 import ApprovalPage from "./ApprovalPage";
 import ApprovalSidebarDashboard from "./ApprovalSidebarDashboard";
-import Layout from "../../../shared/layouts/Layout";
 
 const ApprovalDashboard = () => {
   const [currentSection, setCurrentSection] = useState<string>(
@@ -40,7 +40,6 @@ const ApprovalDashboard = () => {
             setCurrentSection(page);
             localStorage.setItem("currentSection", page);
           }}
-          sx={{ position: "static" }}
         />
         <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
           {renderContent()}

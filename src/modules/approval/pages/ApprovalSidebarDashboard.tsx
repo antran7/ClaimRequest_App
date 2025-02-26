@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Drawer,
@@ -50,9 +49,11 @@ const ApprovalSidebarDashboard = ({
     <Drawer
       variant="permanent"
       sx={{
+        position: "static",
         width: drawerWidth,
         flexShrink: 0,
         "& .MuiDrawer-paper": {
+          position: "static",
           width: drawerWidth,
           boxSizing: "border-box",
         },
