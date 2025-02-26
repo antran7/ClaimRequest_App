@@ -8,10 +8,8 @@ interface User {
   id: number;
   staffName: string;
   email: string;
-  password: string;
-  role: "Admin" | "Claimer" | "Approver" | "Financer";
-  jobRank: "PM" | "QA" | "Tester" | "Technical Lead" | "BA" | "Dev" | "Tech Consultancy";
-  status: "Active" | "Locked";
+  role_code: "A001" | "A002" | "A003" | "A004";
+  blocked: "Yes" | "No";
   created_at: string;
   updated_at: string;
 }
@@ -77,39 +75,44 @@ export default function UserManagement() {
   const addUser = () => {
     let name = "";
     let email = "";
-    let password = "";
-    let role: User["role"] = "Claimer";
-    let jobRank: User["jobRank"] = "PM";
+    let role_code: User["role_code"] = "A001";
+    let blocked: User["blocked"] = "No";
 
     showModal(
       "Add New User",
       <div className="form-container">
         <label>Name: <input placeholder="Name" onChange={(e) => (name = e.target.value)} /></label>
         <label>Email: <input placeholder="Email" onChange={(e) => (email = e.target.value)} /></label>
-        <label>Password: <input type="password" placeholder="Password" onChange={(e) => (password = e.target.value)} /></label>
-        <label>Role:
-          <select defaultValue={role} onChange={(e) => (role = e.target.value as User["role"])}>
-            {['Admin', 'Claimer', 'Approver', 'Financer'].map((r) => (
-              <option key={r} value={r}>{r}</option>
+        <label>Role Code:
+          <select defaultValue={role_code} onChange={(e) => (role_code = e.target.value as User["role_code"]) }>
+            {["A001", "A002", "A003", "A004"].map((code) => (
+              <option key={code} value={code}>{code}</option>
             ))}
           </select>
         </label>
-        <label>Job Rank:
-          <select defaultValue={jobRank} onChange={(e) => (jobRank = e.target.value as User["jobRank"])}>
-            {["PM", "QA", "Tester", "Technical Lead", "BA", "Dev", "Tech Consultancy"].map((rank) => (
-              <option key={rank} value={rank}>{rank}</option>
+        <label>Blocked:
+          <select defaultValue={blocked} onChange={(e) => (blocked = e.target.value as User["blocked"]) }>
+            {["Yes", "No"].map((status) => (
+              <option key={status} value={status}>{status}</option>
             ))}
           </select>
         </label>
       </div>,
       async () => {
-        if (!name || !email || !password) return showModal("Error", <p>All fields are required.</p>);
+        if (!name || !email) return showModal("Error", <p>All fields are required.</p>);
         try {
           const timestamp = getCurrentTimestamp();
           const response = await fetch(API_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, email, password, role, jobRank, status: "Active", created_at: timestamp, updated_at: timestamp }),
+            body: JSON.stringify({
+              staffName: name,
+              email,
+              role_code,
+              blocked,
+              created_at: timestamp,
+              updated_at: timestamp
+            }),
           });
           if (!response.ok) throw new Error("Failed to add user");
           await fetchUsers();
@@ -124,39 +127,44 @@ export default function UserManagement() {
   const editUser = (user: User) => {
     let updatedName = user.staffName;
     let updatedEmail = user.email;
-    let updatedPassword = user.password;
-    let updatedRole = user.role;
-    let updatedJobRank = user.jobRank;
+    let updatedRoleCode = user.role_code;
+    let updatedBlocked = user.blocked;
 
     showModal(
       "Edit User",
       <div className="form-container">
         <label>Name: <input defaultValue={user.staffName} onChange={(e) => (updatedName = e.target.value)} /></label>
         <label>Email: <input defaultValue={user.email} onChange={(e) => (updatedEmail = e.target.value)} /></label>
-        <label>Password: <input type="password" defaultValue={user.password} onChange={(e) => (updatedPassword = e.target.value)} /></label>
-        <label>Role:
-          <select defaultValue={user.role} onChange={(e) => (updatedRole = e.target.value as User["role"])}>
-            {['Admin', 'Claimer', 'Approver', 'Financer'].map((r) => (
-              <option key={r} value={r}>{r}</option>
+        <label>Role Code:
+          <select defaultValue={user.role_code} onChange={(e) => (updatedRoleCode = e.target.value as User["role_code"])}>
+            {["A001", "A002", "A003", "A004"].map((code) => (
+              <option key={code} value={code}>{code}</option>
             ))}
           </select>
         </label>
-        <label>Job Rank:
-          <select defaultValue={user.jobRank} onChange={(e) => (updatedJobRank = e.target.value as User["jobRank"])}>
-            {["PM", "QA", "Tester", "Technical Lead", "BA", "Dev", "Tech Consultancy"].map((rank) => (
-              <option key={rank} value={rank}>{rank}</option>
+        <label>Blocked:
+          <select defaultValue={user.blocked} onChange={(e) => (updatedBlocked = e.target.value as User["blocked"])}>
+            {["Yes", "No"].map((status) => (
+              <option key={status} value={status}>{status}</option>
             ))}
           </select>
         </label>
       </div>,
       async () => {
-        if (!updatedName || !updatedEmail || !updatedPassword) return showModal("Error", <p>All fields are required.</p>);
+        if (!updatedName || !updatedEmail) return showModal("Error", <p>All fields are required.</p>);
         try {
           const timestamp = getCurrentTimestamp();
           const response = await fetch(`${API_URL}/${user.id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ...user, name: updatedName, email: updatedEmail, password: updatedPassword, role: updatedRole, jobRank: updatedJobRank, updated_at: timestamp }),
+            body: JSON.stringify({
+              ...user,
+              staffName: updatedName,
+              email: updatedEmail,
+              role_code: updatedRoleCode,
+              blocked: updatedBlocked,
+              updated_at: timestamp
+            }),
           });
           if (!response.ok) throw new Error("Failed to update user");
           await fetchUsers();
@@ -183,12 +191,12 @@ export default function UserManagement() {
 
   const toggleLockStatus = async (user: User) => {
     try {
-      const newStatus = user.status === "Active" ? "Locked" : "Active";
+      const newBlockedStatus = user.blocked === "Yes" ? "No" : "Yes";
       const timestamp = getCurrentTimestamp();
       const response = await fetch(`${API_URL}/${user.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...user, status: newStatus, updated_at: timestamp }),
+        body: JSON.stringify({ ...user, blocked: newBlockedStatus, updated_at: timestamp }),
       });
       if (!response.ok) throw new Error("Failed to change status");
       await fetchUsers();
@@ -216,10 +224,8 @@ export default function UserManagement() {
               <th>ID</th>
               <th>Name</th>
               <th>Email</th>
-              <th>Password</th>
-              <th>Role</th>
-              <th>Job Rank</th>
-              <th>Status</th>
+              <th>Role Code</th>
+              <th>Blocked</th>
               <th>Created At</th>
               <th>Updated At</th>
               <th>Actions</th>
@@ -232,22 +238,22 @@ export default function UserManagement() {
                   <td>{user.id}</td>
                   <td>{user.staffName}</td>
                   <td>{user.email}</td>
-                  <td>{user.password}</td>
-                  <td>{user.role}</td>
-                  <td>{user.jobRank}</td>
-                  <td>{user.status}</td>
+                  <td>{user.role_code}</td>
+                  <td>{user.blocked}</td>
                   <td>{user.created_at}</td>
                   <td>{user.updated_at}</td>
                   <td className="action-buttons">
                     <button className="edit-btn" onClick={() => editUser(user)}>Edit</button>
                     <button className="delete-btn" onClick={() => deleteUser(user.id)}>Delete</button>
-                    <button className="lock-btn" onClick={() => toggleLockStatus(user)}>{user.status === "Active" ? "Lock" : "Unlock"}</button>
+                    <button className="lock-btn" onClick={() => toggleLockStatus(user)}>
+                      {user.blocked === "Yes" ? "Unlock" : "Lock"}
+                    </button>
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={10} className="no-users">No users found.</td>
+                <td colSpan={8} className="no-users">No users found.</td>
               </tr>
             )}
           </tbody>
