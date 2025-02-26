@@ -3,13 +3,13 @@ import FeaturedInfo from "../../../users/components/FeaturedInfo/FeaturedInfo";
 import Chart from "../../../users/components/chart/Chart";
 import WidgetSm from "../../../users/components/WidgetSm/WidgetSm";
 import WidgetLg from "../../../users/components/widgetLg/WidgetLg";
-import { userData } from "./dumyData"; 
+import { userData } from "./dumyData";
 
-// Import Swiper
+
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Autoplay, Pagination } from "swiper/modules";
 
-// Import Swiper styles
+
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
@@ -18,21 +18,21 @@ export default function Home() {
   return (
     <div className="home">
       <div className="backgroud-banner">
-      <img src="https://1900.com.vn/storage/uploads/companies/banner/94/129920059-3503629313066805-4741456723758232911-n-1720064347.png" alt="" ></img>
-    </div>
+        <img src="https://1900.com.vn/storage/uploads/companies/banner/94/129920059-3503629313066805-4741456723758232911-n-1720064347.png" alt="" ></img>
+      </div>
       <div className="swiper">
-      
-      <Swiper
+
+        <Swiper
           navigation={true}
-          modules={[Navigation, Autoplay, Pagination]} 
+          modules={[Navigation, Autoplay, Pagination]}
           className="mySwiper"
           autoplay={{
             delay: 2500,
             disableOnInteraction: false,
           }}
-          pagination={{ clickable: true }} 
+          pagination={{ clickable: true }}
         >
-        
+
           {[
             "https://career.fpt-software.com/wp-content/uploads/2020/07/fville-hanoi.jpg",
             "https://image.baophapluat.vn/w840/Uploaded/2025/vngtsu/2022_05_30/284310238-5510887465596059-5514030432590567305-n-1963.jpg",
@@ -54,5 +54,6 @@ export default function Home() {
         <WidgetLg />
       </div>
     </div>
+
   );
 }
