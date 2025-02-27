@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   CalendarToday as CalendarTodayIcon,
   LocationSearching as LocationSearchingIcon,
@@ -11,15 +12,15 @@ import "./User.css";
 
 export default function User() {
   const [formData, setFormData] = useState({
-    username: "mixigaming",
-    fullName: "Độ Mixi",
-    email: "mixigaming@gmail.com",
-    phone: "0988888888",
-    address: "HaNoi | VN",
+    staffName: "",
+    fullName: "",
+    email: "",
+    phone: "",
+    address: "",
   });
 
   const [errors, setErrors] = useState({
-    username: "",
+    staffName: "",
     fullName: "",
     email: "",
     phone: "",
@@ -28,19 +29,40 @@ export default function User() {
 
   const [isFormValid, setIsFormValid] = useState(true);
 
+  useEffect(() => {
+    fetch("https://67b416e6392f4aa94fa93e19.mockapi.io/api/user/1")
+      .then((response) => response.json())
+      .then((data) => {
+        setFormData({
+          staffName: data.staffName || "",
+          fullName: data.fullName || "",
+          email: data.email || "",
+          phone: data.phone || "",
+          address: data.address || "",
+        });
+      })
+      .catch((error) => console.error("Error fetching user data:", error));
+  }, []);
+
   const validate = () => {
-    let newErrors = { username: "", fullName: "", email: "", phone: "", address: "" };
+    let newErrors = {
+      staffName: "",
+      fullName: "",
+      email: "",
+      phone: "",
+      address: "",
+    };
     let isValid = true;
 
-    if (formData.username.trim().length < 3) {
-      newErrors.username = "Username must be at least 10 characters.";
+    if (formData.staffName.trim().length < 3) {
+      newErrors.staffName = "Username must be at least 3 characters.";
       isValid = false;
     }
     if (!formData.fullName.trim()) {
       newErrors.fullName = "Full Name is required.";
       isValid = false;
     }
-    if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
+    if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = "Invalid email format.";
       isValid = false;
     }
@@ -58,18 +80,27 @@ export default function User() {
   };
 
   useEffect(() => {
-    setIsFormValid(validate()); // Validate form whenever data changes
+    setIsFormValid(validate());
   }, [formData]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     if (validate()) {
-      alert("Profile updated successfully!");
-      console.log("Updated Data:", formData);
+      fetch("https://67b416e6392f4aa94fa93e19.mockapi.io/api/user/1", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          alert("Profile updated successfully!");
+          console.log("Updated Data:", data);
+        })
+        .catch((error) => console.error("Error updating user data:", error));
     }
   };
 
@@ -86,8 +117,8 @@ export default function User() {
               alt=""
               className="userShowImg"
             />
-            <div className="userShowTopTitle">
-              <span className="userShowUsername">Độ Mixi</span>
+                        <div className="userShowTopTitle">
+              <span className="userShowUsername">{formData.fullName}</span>
               <span className="userShowUserTitle">Software Engineer</span>
             </div>
           </div>
@@ -95,11 +126,7 @@ export default function User() {
             <span className="userShowTitle">Account Details</span>
             <div className="userShowInfo">
               <PermIdentityIcon className="userShowIcon" />
-              <span className="userShowInfoTitle">{formData.username}</span>
-            </div>
-            <div className="userShowInfo">
-              <CalendarTodayIcon className="userShowIcon" />
-              <span className="userShowInfoTitle">12.9.1989</span>
+              <span className="userShowInfoTitle">{formData.staffName}</span>
             </div>
             <span className="userShowTitle">Contact Details</span>
             <div className="userShowInfo">
@@ -116,7 +143,6 @@ export default function User() {
             </div>
           </div>
         </div>
-
         <div className="userUpdate">
           <span className="userUpdateTitle">Edit</span>
           <form className="userUpdateForm" onSubmit={handleSubmit}>
@@ -125,12 +151,12 @@ export default function User() {
                 <label>Username</label>
                 <input
                   type="text"
-                  name="username"
-                  value={formData.username}
+                  name="staffName"
+                  value={formData.staffName}
                   onChange={handleChange}
                   className="userUpdateInput"
                 />
-                {errors.username && <span className="error">{errors.username}</span>}
+                {errors.staffName && <span className="error">{errors.staffName}</span>}
               </div>
               <div className="userUpdateItem">
                 <label>Full Name</label>
@@ -177,23 +203,9 @@ export default function User() {
                 {errors.address && <span className="error">{errors.address}</span>}
               </div>
             </div>
-
-            <div className="userUpdateRight">
-              <div className="userUpdateUpload">
-                <img
-                  className="userUpdateImg"
-                  src="https://yt3.googleusercontent.com/YaAFWY03ER0DfF77HAyMqNlRxmJiSEDq_I7ZF0MlcgRcVzOhIhZfB8QlwNhAuVXZesi2I2zy=s900-c-k-c0x00ffffff-no-rj"
-                  alt=""
-                />
-                <label htmlFor="file">
-                  <PublishIcon className="userUpdateIcon" />
-                </label>
-                <input type="file" id="file" style={{ display: "none" }} />
-              </div>
-              <button className="userUpdateButton" disabled={!isFormValid}>
-                Update
-              </button>
-            </div>
+            <button className="userUpdateButton" disabled={!isFormValid}>
+              Update
+            </button>
           </form>
         </div>
       </div>
