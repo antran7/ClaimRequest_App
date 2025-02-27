@@ -18,7 +18,7 @@ const AppRoutes = () => {
   return (
     <AuthProvider>
       <Router>
-        <Toaster position="bottom-right" reverseOrder={false} />
+        <Toaster position="top-center" reverseOrder={false} />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />

@@ -12,6 +12,7 @@ interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  forgotPawssword: () => void;
   loading: boolean;
 }
 
@@ -19,6 +20,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   login: async () => Promise.resolve(),
   logout: () => { },
+  forgotPawssword: () => { },
   loading: true,
 });
 
@@ -30,31 +32,49 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await apiService.get<User[]>('/user');
-      const users: User[] = response.data;
-
-      const user = users.find(
-        (o) => o.email === email && o.password === password
-      );
-
-      if (user) {
-        setUser(user);
-        localStorage.setItem("userRole", user.role);
-        localStorage.setItem("userEmail", user.email);
-      }else {
+      const loginData = {
+        email: email,
+        password: password
+      }
+      const response = await apiService.post('/auth', loginData);
+      if (response) {
+        localStorage.setItem("token", response.data.data.token);
+        localStorage.setItem("userEmail", email);
+      } else {
         throw new Error('Thông tin đăng nhập không chính xác');
       }
+      console.log(response);
     } catch (error) {
-      console.error('Error:',error);
+      console.error('Error:', error);
       throw error;
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("userEmail");
+  const logout = async () => {
+    try {
+      const response = await apiService.post('/auth/logout');
+      if (response) {
+        setUser(null);
+        localStorage.removeItem("token");
+      } else {
+        throw new Error("Log out that bai!");
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
   };
+
+  const forgotPawssword = async () => {
+    try {
+      const email: string = localStorage.getItem("userEmail");
+      const sendData = {
+        email: email,
+      }
+      const response = await apiService.put('/auth/forgot-password', sendData);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  }
 
   useEffect(() => {
     const savedRole = localStorage.getItem("userRole") as Role | null;
@@ -66,7 +86,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [user]);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, forgotPawssword, loading }}>
       {children}
     </AuthContext.Provider>
   );
