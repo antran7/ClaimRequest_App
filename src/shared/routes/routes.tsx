@@ -26,12 +26,12 @@ const AppRoutes = () => {
           <Route path="/unauthorized" element={<Error />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/about" element={<About/>} />
-          <Route path="/approval/dashboard" element={<ApprovalDashboard />}>
+          {/* <Route path="/approval/dashboard" element={<ApprovalDashboard />}>
             <Route path="home" element={<ApprovalPage />} />
             <Route path="profile" element={<Approver />} />
             <Route path="request" element={<RequestPage />} />
             <Route path="history" element={<div>History Content</div>} />
-          </Route>
+          </Route> */}
 
           {/* Import route từ các module */}
           {adminRoutes.map((route, index) => (
