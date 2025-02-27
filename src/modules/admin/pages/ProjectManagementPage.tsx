@@ -203,7 +203,7 @@ const ProjectManagementPage: React.FC = () => {
                   <TableCell>Department</TableCell>
                   <TableCell>Start Date</TableCell>
                   <TableCell>End Date</TableCell>
-                  <TableCell>Project Members</TableCell>
+                  {/* <TableCell>Project Members</TableCell> */}
                   <TableCell>Actions</TableCell>
                 </TableRow>
               </TableHead>
@@ -215,7 +215,7 @@ const ProjectManagementPage: React.FC = () => {
                     <TableCell>{project.project_department}</TableCell>
                     <TableCell>{formatDate(project.project_start_date)}</TableCell>
                     <TableCell>{formatDate(project.project_end_date)}</TableCell>
-                    <TableCell>
+                    {/* <TableCell>
                       <div className="flex flex-col">
                         {project.project_members.map((member) => (
                           <span key={member.user_id} className="mr-2">
@@ -223,7 +223,7 @@ const ProjectManagementPage: React.FC = () => {
                           </span>
                         ))}
                       </div>
-                    </TableCell>
+                    </TableCell> */}
                     <TableCell>
                       <Button
                         variant="contained"

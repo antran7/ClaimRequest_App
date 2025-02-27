@@ -13,6 +13,7 @@ import ApprovalPage from "../../modules/approval/pages/ApprovalPage";
 import Contact from "../../modules/common/pages/Contact";
 import Approver from "../../modules/approval/pages/Approver";
 import RequestPage from "../../modules/approval/pages/RequestPage";
+import Verify from "../../modules/auth/pages/Verify";
 
 const AppRoutes = () => {
   return (
@@ -22,6 +23,7 @@ const AppRoutes = () => {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/verify" element={<Verify />} />
           <Route path="/unauthorized" element={<Error />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/approval/dashboard" element={<ApprovalDashboard />}>
