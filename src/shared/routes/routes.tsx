@@ -11,8 +11,6 @@ import Home from "../../modules/common/pages/Home";
 import ApprovalDashboard from "../../modules/approval/pages/ApprovalDashboard";
 import ApprovalPage from "../../modules/approval/pages/ApprovalPage";
 import Contact from "../../modules/common/pages/Contact";
-import Approver from "../../modules/approval/pages/Approver";
-import RequestPage from "../../modules/approval/pages/RequestPage";
 import Verify from "../../modules/auth/pages/Verify";
 
 const AppRoutes = () => {
@@ -28,8 +26,8 @@ const AppRoutes = () => {
           <Route path="/contact" element={<Contact />} />
           <Route path="/approval/dashboard" element={<ApprovalDashboard />}>
             <Route path="home" element={<ApprovalPage />} />
-            <Route path="profile" element={<Approver />} />
-            <Route path="request" element={<RequestPage />} />
+            <Route path="profile" element={<div>Profile Content</div>} />
+            <Route path="request" element={<div>Request Content</div>} />
             <Route path="history" element={<div>History Content</div>} />
           </Route>
 
