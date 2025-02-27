@@ -14,7 +14,7 @@ const Header = ({ toggleSidebar = () => {} }: HeaderProps) => {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const user = localStorage.getItem("userRole") as Role | null;
+  const token = localStorage.getItem("token") as Role | null;
 
   const handleLogOut = () => {
     logout();
@@ -24,12 +24,12 @@ const Header = ({ toggleSidebar = () => {} }: HeaderProps) => {
   };
 
   useEffect(() => {
-    if (user) {
+    if (token) {
       setIsLoggedIn(true);
     } else {
       setIsLoggedIn(false);
     }
-  }, [user]);
+  }, [token]);
 
   return (
     <div className="layout-header">
