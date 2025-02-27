@@ -5,6 +5,7 @@
 }
 .admin-dashboard-container {
   display: flex;
+  min-height: 80vh;
 }
 .content-dashboard {
   padding: 20px;
@@ -58,4 +59,38 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+.processcing-card {
+  display: flex;
+  width: 250px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px;
+  line-height: 30px;
+  color: white;
+  background: linear-gradient(135deg, #a5ca64, #5dc862);
+  border-radius: 10px;
+  margin: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s;
+}
+.processcing-card:hover {
+  transform: translateY(-2px);
+}
+.processced-card {
+  display: flex;
+  width: 250px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px;
+  line-height: 30px;
+  color: white;
+  background: linear-gradient(135deg, #418c9f, #5dbac8);
+  border-radius: 10px;
+  margin: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s;
+}
+.processced-card:hover {
+  transform: translateY(-2px);
 }
