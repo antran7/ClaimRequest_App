@@ -8,8 +8,6 @@ import { financeRoutes } from "../../modules/finance/routes";
 import { approvalRoutes } from "../../modules/approval/routes";
 import { Toaster } from "react-hot-toast";
 import Home from "../../modules/common/pages/Home";
-import ApprovalDashboard from "../../modules/approval/pages/ApprovalDashboard";
-import ApprovalPage from "../../modules/approval/pages/ApprovalPage";
 import Contact from "../../modules/common/pages/Contact";
 import Verify from "../../modules/auth/pages/Verify";
 
@@ -24,12 +22,6 @@ const AppRoutes = () => {
           <Route path="/verify" element={<Verify />} />
           <Route path="/unauthorized" element={<Error />} />
           <Route path="/contact" element={<Contact />} />
-          <Route path="/approval/dashboard" element={<ApprovalDashboard />}>
-            <Route path="home" element={<ApprovalPage />} />
-            <Route path="profile" element={<div>Profile Content</div>} />
-            <Route path="request" element={<div>Request Content</div>} />
-            <Route path="history" element={<div>History Content</div>} />
-          </Route>
 
           {/* Import route từ các module */}
           {adminRoutes.map((route, index) => (
