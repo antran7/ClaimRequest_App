@@ -30,3 +30,16 @@ export const updateProject = async (project: Project): Promise<Project> => {
 export const deleteProject = async (id: string): Promise<void> => {
   await fetch(`${API_URL}/${id}`, { method: "DELETE" });
 };
+
+export const fetchProjectById = async (projectId: string): Promise<Project> => {
+  try {
+    const response = await fetch(`${API_URL}/${projectId}`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch project data");
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching project:", error);
+    throw error;
+  }
+};
