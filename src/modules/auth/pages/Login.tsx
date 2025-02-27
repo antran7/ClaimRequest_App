@@ -17,24 +17,7 @@ const Login = () => {
     e.preventDefault();
     try {
       await login(email, password);
-
-      const role = localStorage.getItem("userRole");
-      switch (role) {
-        case Role.ADMIN:
-          navigate("/admin/dashboard");
-          break;
-        case Role.USER:
-          navigate("/user/dashboard");
-          break;
-        case Role.APPROVER:
-          navigate("/approval/dashboard");
-          break;
-        case Role.FINANCE:
-          navigate("/finance/claims");
-          break;
-        default:
-          navigate("/");
-      }
+      navigate("/");
       toast.success('Login successfully!');
     } catch (error) {
       toast.error("Thông tin đăng nhập không chính xác!", {

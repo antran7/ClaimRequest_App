@@ -13,6 +13,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   forgotPawssword: () => void;
+  getUserInfo: () => void;
   loading: boolean;
 }
 
@@ -21,6 +22,7 @@ const AuthContext = createContext<AuthContextType>({
   login: async () => Promise.resolve(),
   logout: () => { },
   forgotPawssword: () => { },
+  getUserInfo: () => { },
   loading: true,
 });
 
@@ -43,7 +45,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } else {
         throw new Error('Thông tin đăng nhập không chính xác');
       }
-      console.log(response);
     } catch (error) {
       console.error('Error:', error);
       throw error;
@@ -54,7 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const response = await apiService.post('/auth/logout');
       if (response) {
-        setUser(null);
+        localStorage.removeItem("userRole");
         localStorage.removeItem("token");
       } else {
         throw new Error("Log out that bai!");
@@ -76,6 +77,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
+  const getUserInfo = async () => {
+    try {
+      const response = await apiService.get('/auth');
+      if (response) {
+        const role = response.data.data.role_code;
+        switch (role) {
+          case "A001":
+            localStorage.setItem("userRole", Role.ADMIN);
+            break;
+          case "A002":
+            localStorage.setItem("userRole", Role.FINANCE);
+            break;
+          case "A003":
+            localStorage.setItem("userRole", Role.APPROVER);
+            break;
+          case "A004":
+            localStorage.setItem("userRole", Role.USER);
+            break;
+        }
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  }
+
   useEffect(() => {
     const savedRole = localStorage.getItem("userRole") as Role | null;
     const savedEmail = localStorage.getItem("userEmail");
@@ -86,7 +112,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [user]);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, forgotPawssword, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, forgotPawssword, getUserInfo, loading }}>
       {children}
     </AuthContext.Provider>
   );
