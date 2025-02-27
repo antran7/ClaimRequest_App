@@ -3,20 +3,16 @@ import { Doughnut } from "react-chartjs-2";
 import "./AdminDashboard.css";
 import { AccountCircleOutlined, Folder } from "@mui/icons-material";
 import { Grid } from "@mui/material";
-import { useState } from "react";
-import AdminHeaderDashboard from "../components/AdminHeaderDashboard";
-import AdminSidebarDashboard from "../components/AdminSidebarDashboard";
+
 import { useNavigate } from "react-router-dom";
+import Layout from "../../../shared/layouts/Layout";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 function AdminDashboard() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
+  
 
   const data = {
     labels: ["Red", "Blue", "Yellow"],
@@ -35,16 +31,10 @@ function AdminDashboard() {
 
   return (
     <div>
-      <AdminHeaderDashboard toggleSidebar={toggleSidebar} />
-      <AdminSidebarDashboard
-        isOpen={isSidebarOpen}
-        toggleSidebar={toggleSidebar}
-      />
-      <div className="admin-dashboard-container">
-        <div className="header"></div>
+    <Layout>
+    <div className="admin-dashboard-container">
         <div className="content-dashboard">
           <h2>Welcome!</h2>
-          <p>This is the admin dashboard.</p>
           <Grid container spacing={2} className="items-card">
             <Grid item xs={3} onClick={() => navigate("/admin/manageuser")}>
               <div className="user-card">
@@ -69,9 +59,9 @@ function AdminDashboard() {
               </div>
             </Grid>
             <Grid item xs={3}>
-              <div className="project-card">
-                <div className="project-card-left">
-                  <p>Request processing</p>
+            <div className="processcing-card">
+                <div className="processcing-card-left">
+                  <p>Request procescing</p>
                   <p>20</p>
                 </div>
                 <div className="user-card-right">
@@ -80,8 +70,8 @@ function AdminDashboard() {
               </div>
             </Grid>
             <Grid item xs={3}>
-              <div className="project-card">
-                <div className="project-card-left">
+            <div className="processced-card">
+                <div className="processced-card-left">
                   <p>Request processed</p>
                   <p>20</p>
                 </div>
@@ -97,6 +87,7 @@ function AdminDashboard() {
           </div>
         </div>
       </div>
+    </Layout>    
     </div>
   );
 }
