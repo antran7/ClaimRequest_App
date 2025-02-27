@@ -38,14 +38,14 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
   const menuItems = [
     { text: "Home", icon: <HouseIcon />, path: "/" },
     {
-      text: "Profile",
+      text: "Dashboard",
       icon: <BadgeIcon />,
-      path: "/approval/dashboard",
+      path: "dashboard",
     },
     {
       text: "My Requests",
       icon: <RequestPageIcon />,
-      path: "/approval/dashboard",
+      path: "/my-requests",
     },
   ];
 
@@ -101,12 +101,12 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
       try {
         await getUserInfo();
       } catch (error) {
-        console.error('Error:', error);
+        console.error("Error:", error);
       }
     };
-  
+
     fetchAuth();
-  })
+  });
 
   return (
     <Drawer open={isOpen} onClose={toggleSidebar}>
