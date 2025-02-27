@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./ApprovalPage.css";
+import { Button, Modal, TextField } from "@mui/material";
 
 const API_REQUESTS = "https://67b5a06d07ba6e59083db637.mockapi.io/api/requests";
 const API_USERS = "https://67b416e6392f4aa94fa93e19.mockapi.io/api/user";
@@ -105,124 +106,133 @@ const ApprovalPage: React.FC = () => {
       <div
         className={`approval-content ${isModalOpen ? "blur-background" : ""}`}
       >
-        <div className="approval-box">
-          <h1 className="approval-title">Pending Requests</h1>
+        <h1 className="approval-title">Pending Requests</h1>
 
-          <div className="approval-table-container">
-            <table className="approval-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Request Name</th>
-                  <th>Project Name</th>
-                  <th>Requester</th>
-                  <th>Start Date</th>
-                  <th>End Date</th>
-                  <th>Total Times (Hours)</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {requests
-                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                  .map((row) => (
-                    <tr key={row.id}>
-                      <td>{row.id}</td>
-                      <td>{row.name}</td>
-                      <td>{row.projectName}</td>
-                      <td>{row.requesterName}</td>
-                      <td>{row.startDate}</td>
-                      <td>{row.endDate}</td>
-                      <td>{row.totalTimes}</td>
-                      <td align="center">
-                        <div className="action-buttons">
-                          <button
-                            className="approve-button"
-                            onClick={() => handleApprove(row.id)}
-                          >
-                            Approve
-                          </button>
-                          <button
-                            className="reject-button"
-                            onClick={() =>
-                              handleRejectOrReturn(row.id, "Rejected")
-                            }
-                          >
-                            Reject
-                          </button>
-                          <button
-                            className="return-button"
-                            onClick={() =>
-                              handleRejectOrReturn(row.id, "Returned")
-                            }
-                          >
-                            Return
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
+        <div className="approval-table-container">
+          <table className="approval-table" style={{ width: "100%" }}>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Request Name</th>
+                <th>Project Name</th>
+                <th>Requester</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Total Times (Hours)</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {requests
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((row) => (
+                  <tr key={row.id}>
+                    <td>{row.id}</td>
+                    <td>{row.name}</td>
+                    <td>{row.projectName}</td>
+                    <td>{row.requesterName}</td>
+                    <td>{row.startDate}</td>
+                    <td>{row.endDate}</td>
+                    <td>{row.totalTimes}</td>
+                    <td align="center">
+                      <div className="action-buttons">
+                        <button
+                          className="approve-button"
+                          onClick={() => handleApprove(row.id)}
+                        >
+                          Approve
+                        </button>
+                        <button
+                          className="reject-button"
+                          onClick={() =>
+                            handleRejectOrReturn(row.id, "Rejected")
+                          }
+                        >
+                          Reject
+                        </button>
+                        <button
+                          className="return-button"
+                          onClick={() =>
+                            handleRejectOrReturn(row.id, "Returned")
+                          }
+                        >
+                          Return
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
 
-          <div className="pagination">
-            <span>
-              Rows per page:
-              <select
-                value={rowsPerPage}
-                onChange={(event) =>
-                  setRowsPerPage(parseInt(event.target.value, 10))
-                }
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={25}>25</option>
-              </select>
-            </span>
-            <span>
-              {page * rowsPerPage + 1}-
-              {Math.min((page + 1) * rowsPerPage, requests.length)} of{" "}
-              {requests.length}
-            </span>
-            <button onClick={() => setPage(page - 1)} disabled={page === 0}>
-              {"<"}
-            </button>
-            <button
-              onClick={() => setPage(page + 1)}
-              disabled={(page + 1) * rowsPerPage >= requests.length}
+        <div className="pagination">
+          <span>
+            Rows per page:
+            <select
+              value={rowsPerPage}
+              onChange={(event) =>
+                setRowsPerPage(parseInt(event.target.value, 10))
+              }
             >
-              {">"}
-            </button>
-          </div>
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+            </select>
+          </span>
+          <span>
+            {page * rowsPerPage + 1}-
+            {Math.min((page + 1) * rowsPerPage, requests.length)} of{" "}
+            {requests.length}
+          </span>
+          <button onClick={() => setPage(page - 1)} disabled={page === 0}>
+            {"<"}
+          </button>
+          <button
+            onClick={() => setPage(page + 1)}
+            disabled={(page + 1) * rowsPerPage >= requests.length}
+          >
+            {">"}
+          </button>
         </div>
       </div>
 
       {isModalOpen && (
-        <div className="modal">
-          <button className="close-button" onClick={handleCloseModal}>
-            X
-          </button>
-          <h6>Provide a reason for this action</h6>
-          <textarea
-            rows={4}
-            value={modalReason}
-            onChange={(e) => setModalReason(e.target.value)}
-            className="modal-textfield"
-          />
-          {error && <p className="error-message">{error}</p>}
-          <div className="modal-actions">
-            <button
-              onClick={() => handleModalSubmit(currentAction!)}
-              className="submit-button"
-            >
-              Submit
-            </button>
-            <button onClick={handleCloseModal} className="cancel-button">
-              Cancel
-            </button>
+        <Modal
+          open={isModalOpen}
+          onClose={handleCloseModal}
+          className="custom-modal"
+        >
+          <div className="modal-content">
+            <h2>Provide a reason for this action</h2>
+            <TextField
+              multiline
+              rows={4}
+              value={modalReason}
+              onChange={(e) => setModalReason(e.target.value)}
+              fullWidth
+              margin="normal"
+              variant="outlined"
+            />
+            {error && <p className="error-message">{error}</p>}
+            <div className="modal-actions">
+              <Button
+                onClick={() => handleModalSubmit(currentAction!)}
+                variant="contained"
+                color="primary"
+              >
+                Submit
+              </Button>
+              <Button
+                onClick={handleCloseModal}
+                variant="contained"
+                color="secondary"
+              >
+                Cancel
+              </Button>
+            </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

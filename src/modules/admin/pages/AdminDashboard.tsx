@@ -3,6 +3,7 @@ import { Doughnut } from "react-chartjs-2";
 import "./AdminDashboard.css";
 import { AccountCircleOutlined, Folder } from "@mui/icons-material"; 
 
+
 import { useNavigate } from "react-router-dom";
 import Layout from "../../../shared/layouts/Layout";
 
@@ -33,11 +34,13 @@ function AdminDashboard() {
       <Layout>
       <div className="include-all">
         
+
       <div className="admin-dashboard-container">
         <div className="content-dashboard">
           <h2>Welcome!</h2>
           <div className="items-card">
             <div  onClick={() => navigate("/admin/manageuser")}>
+
               <div className="user-card">
                 <div className="user-card-left">
                   <p>Users</p>
@@ -49,6 +52,7 @@ function AdminDashboard() {
               </div>
             </div>
             <div  onClick={() => navigate("/admin/manageproject")}>
+
               <div className="project-card">
                 <div className="project-card-left">
                   <p>Project</p>
@@ -63,6 +67,7 @@ function AdminDashboard() {
               <div className="processcing-card">
                 <div className="processcing-card-left">
                   <p>Request procescing</p>
+
                   <p>20</p>
                 </div>
                 <div className="user-card-right">
@@ -73,6 +78,7 @@ function AdminDashboard() {
             <div >
               <div className="processced-card">
                 <div className="processced-card-left">
+
                   <p>Request processed</p>
                   <p>20</p>
                 </div>
@@ -82,6 +88,7 @@ function AdminDashboard() {
               </div>
             </div>
           </div>
+
 
           <div className="chart-container">
             <Doughnut data={data} />

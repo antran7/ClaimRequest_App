@@ -3,8 +3,6 @@
   justify-content: center;
   height: 100vh;
   padding: 10px;
-  margin-right: 120px;
-  margin-left: 250px;
 }
 
 .request-box-approval {
@@ -139,55 +137,20 @@
   background-color: #b91c1c;
 }
 
-.approve-button-approval :hover {
+.approve-button-approval:hover {
   background-color: #15803d;
 }
-.custom-modal-approval .ant-modal-content {
-  height: 46vh;
-  width: 100vw;
-  margin: 0;
-  padding: 0;
-  max-width: 100%;
-  max-height: 100%;
+
+.custom-modal-approval .modal-content {
+  padding: 20px;
+  background-color: #fff;
   border-radius: 8px;
-  margin-top: 10vh;
-}
-
-.custom-modal-approval .ant-modal-header,
-.custom-modal-approval .ant-modal-footer {
-  padding: 10px 24px;
-}
-
-.custom-modal-approval .ant-modal-header {
-  border-bottom: none;
-  border-radius: 8px 8px 0 0;
-}
-
-.custom-modal-approval .ant-modal-footer {
-  border-top: none;
-}
-
-.custom-modal-approval .ant-modal-body {
-  height: calc(100vh - 108px);
-  overflow-y: auto;
-  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .blur-background-approval {
   filter: blur(6px);
   transition: filter 0.3s;
-}
-.custom-modal-approval .ant-form-item {
-  width: 100%;
-  margin-bottom: 16px;
-}
-
-.custom-modal-approval .ant-form-item button {
-  width: 100%;
-}
-
-.custom-modal-approval .ant-picker {
-  width: 100%;
 }
 
 .reason-draft-approval {
