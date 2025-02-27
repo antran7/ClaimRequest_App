@@ -1,7 +1,7 @@
 .chart-container {
-    width: 300px; 
-    height: 300px; 
-    margin: auto;
+  width: 300px;
+  height: 300px;
+  margin: auto;
 }
 .include-all{
     display: flex;
@@ -16,7 +16,7 @@
     min-height: 100vh;
 }
 .content-dashboard {
-    padding: 20px;
+  padding: 20px;
 }
 .user-card {
     display: flex;
@@ -33,7 +33,7 @@
     transition: transform 0.2s;
 }
 .user-card:hover {
-    transform: translateY(-2px);
+  transform: translateY(-2px);
 }
 .project-card {
     display: flex;
@@ -50,12 +50,12 @@
     transition: transform 0.2s;
 }
 .project-card:hover {
-    transform: translateY(-2px);
+  transform: translateY(-2px);
 }
 .items-card {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 .processcing-card {
     display: flex;
