@@ -3,33 +3,20 @@
   justify-content: center;
   height: 100vh;
   padding: 20px;
-  margin-left: 300px;
   transition: filter 0.3s;
 }
 
 .approval-content.blur-background {
-  filter: blur(5px);
-}
-
-.approval-box {
-  width: 100%;
-  max-width: 1200px;
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  filter: blur(6px);
+  transition: filter 0.3s;
 }
 
 .approval-title {
   font-size: 24px;
-  font-weight: bold;
+  font-weight: 600;
   color: #1d4ed8;
   text-align: center;
   margin-bottom: 20px;
-}
-
-.approval-table-container {
-  overflow-x: auto;
 }
 
 .approval-table {
@@ -162,6 +149,6 @@
   font-size: 16px;
   cursor: pointer;
 }
-.error-message{
+.error-message {
   color: red;
 }

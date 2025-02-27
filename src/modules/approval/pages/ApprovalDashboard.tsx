@@ -1,46 +1,48 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { Box } from "@mui/material";
-import ApprovalPage from "./ApprovalPage";
+import Layout from "../../../shared/layouts/Layout";
 import Approver from "./Approver";
 import RequestPage from "./RequestPage";
-import "./ApprovalDashboard.css";
-import Layout from "../../../shared/layouts/Layout";
+import ApprovalPage from "./ApprovalPage";
+import ApprovalSidebarDashboard from "./ApprovalSidebarDashboard";
 
-interface PageContent {
-  [key: string]: React.ReactNode;
-}
+const ApprovalDashboard = () => {
+  const [currentSection, setCurrentSection] = useState<string>(
+    () => localStorage.getItem("currentSection") || "profile"
+  );
 
-const ApprovalDashboard: React.FC = () => {
-  const [currentPage] = useState("home");
-
-  const pageContent: PageContent = {
-    home: <ApprovalPage />,
-    profile: <Approver />,
-    request: <RequestPage />,
-  };
+  useEffect(() => {
+    const section = localStorage.getItem("currentSection");
+    if (section) {
+      setCurrentSection(section);
+    }
+  }, []);
 
   const renderContent = () => {
-    return pageContent[currentPage] || pageContent.home;
+    switch (currentSection) {
+      case "profile":
+        return <Approver />;
+      case "requests":
+        return <RequestPage />;
+      case "approve":
+        return <ApprovalPage />;
+      default:
+        return <Approver />;
+    }
   };
 
   return (
     <Layout>
-      <Box sx={{ display: "flex", margin: 0, padding: 0 }}>
-        <Box
-          component="main"
-          sx={{
-            flexGrow: 1,
-            height: "100vh",
-            overflow: "auto",
-            backgroundColor: "#f5f5f5",
-            paddingTop: "64px",
-            marginLeft: "-540px",
-            transition: "margin-left 0.2s",
+      <Box sx={{ display: "flex" }}>
+        <ApprovalSidebarDashboard
+          isOpen={true}
+          onPageChange={(page) => {
+            setCurrentSection(page);
+            localStorage.setItem("currentSection", page);
           }}
-        >
-          <Box sx={{ padding: 0, width: "100%", margin: 0 }}>
-            {renderContent()}
-          </Box>
+        />
+        <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+          {renderContent()}
         </Box>
       </Box>
     </Layout>
