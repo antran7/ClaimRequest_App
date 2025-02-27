@@ -3,6 +3,7 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
 import BackButton from "../components/BackButton";
+import Search from "../../../shared/components/searchComponent/Search";
 import {
   Button,
   Typography,
@@ -66,7 +67,16 @@ const ProjectManagementPage: React.FC = () => {
     project_end_date: Yup.date()
       .required("End date is required")
       .min(Yup.ref("project_start_date"), "End date must be after start date"),
-    project_members: Yup.array().min(1, "At least one project member is required")
+      project_members: Yup.array().of(
+        Yup.object().shape({
+          user_id: Yup.string(),
+          project_role: Yup.string(),
+          employee_id: Yup.string(),
+          user_name: Yup.string(),
+          full_name: Yup.string(),
+        })
+      ).min(1, "At least one project member is required"),
+    
   });
 
   const formik = useFormik({
@@ -169,9 +179,10 @@ const ProjectManagementPage: React.FC = () => {
     <Layout>
       <div className="min-h-screen bg-gray-100">
         <div className="p-8">
-          <div className="flex justify-between items-center mb-6">
             <BackButton to="/admin/dashboard" />
+          <div className="flex justify-between items-center mb-6">
             <Typography variant="h5">Project Management</Typography>
+            <Search />
             <button
               title="Add New"
               className="group cursor-pointer outline-none hover:rotate-90 duration-300"
