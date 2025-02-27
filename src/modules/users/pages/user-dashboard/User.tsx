@@ -43,7 +43,6 @@ export default function User() {
       })
       .catch((error) => console.error("Error fetching user data:", error));
   }, []);
-
   const validate = () => {
     let newErrors = {
       staffName: "",
@@ -78,7 +77,6 @@ export default function User() {
     setErrors(newErrors);
     return isValid;
   };
-
   useEffect(() => {
     setIsFormValid(validate());
   }, [formData]);
@@ -86,7 +84,6 @@ export default function User() {
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validate()) {
@@ -103,7 +100,6 @@ export default function User() {
         .catch((error) => console.error("Error updating user data:", error));
     }
   };
-
   return (
     <div className="user">
       <div className="userTitleContainer">

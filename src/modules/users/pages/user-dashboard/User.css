@@ -112,25 +112,21 @@
     margin-bottom: 5px;
     font-size: 14px;
 }
-
 .userUpdateInput{
     border: none;
     width: 250px;
     height: 30px;
     border-bottom: 1px solid gray;
 }
-
 .userUpdateRight{
     display: flex;
     flex-direction: column;
     justify-content: space-between;
 }
-
 .userUpdateUpload{
     display: flex;
     align-items: center;
 }
-
 .userUpdateImg{
     width: 200px;
     height: 200px;
@@ -138,11 +134,9 @@
     object-fit: cover;
     margin-right: 20px;
 }
-
 .userUpdateIcon{
     cursor: pointer;
 }
-
 .userUpdateButton{
     border-radius: 10px;
     border: none;
@@ -154,13 +148,11 @@
     width: 100px;
     height: 50px;
   }
-
 .error {
   color: red;
   font-size: 12px;
   margin-top: 5px;
 }
-
 .userUpdateInput.error {
   border-bottom: 2px solid red;
 }
