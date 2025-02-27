@@ -63,7 +63,7 @@ const Login = () => {
     <div className="login-page">
       <div className="login-left">
         <div className="login-home-container">
-          <Link to="/" className="login-home-link">HOME.</Link>
+          <Link to="/" className="login-home-link">HOME</Link>
         </div>
 
         <img
