@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Divider,
@@ -22,6 +22,7 @@ import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import PaidIcon from "@mui/icons-material/Paid";
 import { useNavigate } from "react-router-dom";
 import { Role } from "../constants/roles";
+import { useAuth } from "../hooks/useAuth";
 
 interface SideBarProps {
   isOpen: boolean;
@@ -30,6 +31,7 @@ interface SideBarProps {
 
 const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
   const navigate = useNavigate();
+  const { getUserInfo } = useAuth();
   const role = localStorage.getItem("userRole");
   const [openManagement, setOpenManagement] = useState(false);
 
@@ -93,6 +95,18 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
     }
     toggleSidebar();
   };
+
+  useEffect(() => {
+    const fetchAuth = async () => {
+      try {
+        await getUserInfo();
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    };
+  
+    fetchAuth();
+  })
 
   return (
     <Drawer open={isOpen} onClose={toggleSidebar}>
