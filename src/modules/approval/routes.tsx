@@ -9,7 +9,7 @@ export const approvalRoutes: RouteObject[] = [
     element: <PrivateRoute allowedRoles={[Role.APPROVER]} />,
     children: [
       {
-        path: "dashboard/*",
+        path: "dashboard",
         element: <ApprovalDashboard />,
       },
     ],
