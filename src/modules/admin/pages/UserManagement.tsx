@@ -52,14 +52,9 @@ export default function UserManagement() {
     }
   };
 
-
   const getCurrentTimestamp = () => new Date().toLocaleString();
 
-  const showModal = (
-    title: string,
-    content: React.ReactNode,
-    confirmAction?: () => void
-  ) => {
+  const showModal = (title: string, content: React.ReactNode, confirmAction?: () => void) => {
     setModalContent(
       <Modal
         isOpen={true}
@@ -81,19 +76,29 @@ export default function UserManagement() {
     showModal(
       "Add New User",
       <div className="form-container">
-        <label>Name: <input placeholder="Name" onChange={(e) => (name = e.target.value)} /></label>
-        <label>Email: <input placeholder="Email" onChange={(e) => (email = e.target.value)} /></label>
-        <label>Role Code:
-          <select defaultValue={role_code} onChange={(e) => (role_code = e.target.value as User["role_code"]) }>
+        <label>
+          Name: <input placeholder="Name" onChange={(e) => (name = e.target.value)} />
+        </label>
+        <label>
+          Email: <input placeholder="Email" onChange={(e) => (email = e.target.value)} />
+        </label>
+        <label>
+          Role Code:
+          <select defaultValue={role_code} onChange={(e) => (role_code = e.target.value as User["role_code"])}>
             {["A001", "A002", "A003", "A004"].map((code) => (
-              <option key={code} value={code}>{code}</option>
+              <option key={code} value={code}>
+                {code}
+              </option>
             ))}
           </select>
         </label>
-        <label>Blocked:
-          <select defaultValue={blocked} onChange={(e) => (blocked = e.target.value as User["blocked"]) }>
+        <label>
+          Blocked:
+          <select defaultValue={blocked} onChange={(e) => (blocked = e.target.value as User["blocked"])}>
             {["Yes", "No"].map((status) => (
-              <option key={status} value={status}>{status}</option>
+              <option key={status} value={status}>
+                {status}
+              </option>
             ))}
           </select>
         </label>
@@ -111,7 +116,7 @@ export default function UserManagement() {
               role_code,
               blocked,
               created_at: timestamp,
-              updated_at: timestamp
+              updated_at: timestamp,
             }),
           });
           if (!response.ok) throw new Error("Failed to add user");
@@ -133,19 +138,32 @@ export default function UserManagement() {
     showModal(
       "Edit User",
       <div className="form-container">
-        <label>Name: <input defaultValue={user.staffName} onChange={(e) => (updatedName = e.target.value)} /></label>
-        <label>Email: <input defaultValue={user.email} onChange={(e) => (updatedEmail = e.target.value)} /></label>
-        <label>Role Code:
-          <select defaultValue={user.role_code} onChange={(e) => (updatedRoleCode = e.target.value as User["role_code"])}>
+        <label>
+          Name: <input defaultValue={user.staffName} onChange={(e) => (updatedName = e.target.value)} />
+        </label>
+        <label>
+          Email: <input defaultValue={user.email} onChange={(e) => (updatedEmail = e.target.value)} />
+        </label>
+        <label>
+          Role Code:
+          <select
+            defaultValue={user.role_code}
+            onChange={(e) => (updatedRoleCode = e.target.value as User["role_code"])}
+          >
             {["A001", "A002", "A003", "A004"].map((code) => (
-              <option key={code} value={code}>{code}</option>
+              <option key={code} value={code}>
+                {code}
+              </option>
             ))}
           </select>
         </label>
-        <label>Blocked:
+        <label>
+          Blocked:
           <select defaultValue={user.blocked} onChange={(e) => (updatedBlocked = e.target.value as User["blocked"])}>
             {["Yes", "No"].map((status) => (
-              <option key={status} value={status}>{status}</option>
+              <option key={status} value={status}>
+                {status}
+              </option>
             ))}
           </select>
         </label>
@@ -163,7 +181,7 @@ export default function UserManagement() {
               email: updatedEmail,
               role_code: updatedRoleCode,
               blocked: updatedBlocked,
-              updated_at: timestamp
+              updated_at: timestamp,
             }),
           });
           if (!response.ok) throw new Error("Failed to update user");
@@ -205,9 +223,7 @@ export default function UserManagement() {
     }
   };
 
-  const filteredUsers = users.filter((user) =>
-    (user.staffName ?? "").toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredUsers = users.filter((user) => (user.staffName ?? "").toLowerCase().includes(search.toLowerCase()));
 
   return (
     <div className="user-management-page">
@@ -215,7 +231,9 @@ export default function UserManagement() {
       <div className="user-management-container">
         <h1>User Management</h1>
         <div className="controls">
-          <button className="add-btn" onClick={addUser}>Add New User</button>
+          <button className="add-btn" onClick={addUser}>
+            Add New User
+          </button>
           <input type="text" placeholder="Search user..." value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
         <table>
@@ -243,8 +261,12 @@ export default function UserManagement() {
                   <td>{user.created_at}</td>
                   <td>{user.updated_at}</td>
                   <td className="action-buttons">
-                    <button className="edit-btn" onClick={() => editUser(user)}>Edit</button>
-                    <button className="delete-btn" onClick={() => deleteUser(user.id)}>Delete</button>
+                    <button className="edit-btn" onClick={() => editUser(user)}>
+                      Edit
+                    </button>
+                    <button className="delete-btn" onClick={() => deleteUser(user.id)}>
+                      Delete
+                    </button>
                     <button className="lock-btn" onClick={() => toggleLockStatus(user)}>
                       {user.blocked === "Yes" ? "Unlock" : "Lock"}
                     </button>
@@ -253,7 +275,9 @@ export default function UserManagement() {
               ))
             ) : (
               <tr>
-                <td colSpan={8} className="no-users">No users found.</td>
+                <td colSpan={8} className="no-users">
+                  No users found.
+                </td>
               </tr>
             )}
           </tbody>
