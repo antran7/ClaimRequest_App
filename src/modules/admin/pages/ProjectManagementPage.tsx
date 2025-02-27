@@ -137,7 +137,7 @@ const ProjectManagementPage: React.FC = () => {
   };
 
   const handleViewProject = (projectId: string) => {
-    navigate(`/admin/projects/${projectId}`);
+    navigate(`/admin/manageproject/${projectId}`);
   };
 
   const handleConfirmDelete = async () => {
