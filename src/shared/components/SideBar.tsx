@@ -43,7 +43,7 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
       path: "dashboard",
     },
     {
-      text: "My Requests",
+      text: "My Claims",
       icon: <RequestPageIcon />,
       path: "/my-requests",
     },
