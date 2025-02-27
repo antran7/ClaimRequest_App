@@ -9,6 +9,9 @@ import { approvalRoutes } from "../../modules/approval/routes";
 import { Toaster } from "react-hot-toast";
 import Home from "../../modules/common/pages/Home";
 import Contact from "../../modules/common/pages/Contact";
+import Approver from "../../modules/approval/pages/Approver";
+import RequestPage from "../../modules/approval/pages/RequestPage";
+import About from "../../modules/common/pages/About";
 import Verify from "../../modules/auth/pages/Verify";
 
 const AppRoutes = () => {
@@ -22,6 +25,13 @@ const AppRoutes = () => {
           <Route path="/verify" element={<Verify />} />
           <Route path="/unauthorized" element={<Error />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/about" element={<About/>} />
+          <Route path="/approval/dashboard" element={<ApprovalDashboard />}>
+            <Route path="home" element={<ApprovalPage />} />
+            <Route path="profile" element={<Approver />} />
+            <Route path="request" element={<RequestPage />} />
+            <Route path="history" element={<div>History Content</div>} />
+          </Route>
 
           {/* Import route từ các module */}
           {adminRoutes.map((route, index) => (
