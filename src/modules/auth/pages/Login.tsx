@@ -3,40 +3,22 @@ import "./Login.css";
 import { Role } from "../../../shared/constants/roles";
 import { useAuth } from "../../../shared/hooks/useAuth";
 import { Link, useNavigate } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import toast from "react-hot-toast";
 
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, forgotPawssword } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       await login(email, password);
-      console.log("Thành công!");
-  
-      const role = localStorage.getItem("userRole");
-      switch (role) {
-        case Role.ADMIN:
-          navigate("/admin/dashboard");
-          break;
-        case Role.USER:
-          navigate("/user/dashboard");
-          break;
-        case Role.APPROVER:
-          navigate("/approval/dashboard");
-          break;
-        case Role.FINANCE:
-          navigate("/finance/claims");
-          break;
-        default:
-          navigate("/");
-      }
+      navigate("/");
+      toast.success('Login successfully!');
     } catch (error) {
       toast.error("Thông tin đăng nhập không chính xác!", {
         position: "top-center",
@@ -49,15 +31,24 @@ const Login = () => {
       });
     }
   };
-  
+
+  const handleForgotPassword = async () => {
+    try {
+      await forgotPawssword();
+      toast.success('Please check your email to get new password!');
+    } catch(error) {
+      console.error('Error:',error);
+      toast.error("This didn't work.");
+    }
+  }
 
   return (
     <div className="login-page">
       <div className="login-left">
         <div className="login-home-container">
-          <Link to="/" className="login-home-link">HOME.</Link>
+          <Link to="/" className="login-home-link">HOME</Link>
         </div>
-        
+
         <img
           src="https://tailwindui.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600"
           alt="#"
@@ -90,7 +81,12 @@ const Login = () => {
               />
               Remember me
             </label>
-            <a className="forgot-password" href="">Forgot password?</a>
+            <div
+              className="forgot-password"
+              onClick={handleForgotPassword}
+            >
+              Forgot password?
+            </div>
           </div>
           <button type="submit" className="login-submit">Sign in</button>
         </form>
@@ -98,7 +94,6 @@ const Login = () => {
       <div className="login-right">
         <div className="login-background"></div>
       </div>
-      <ToastContainer />
     </div>
   );
 };

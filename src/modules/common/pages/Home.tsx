@@ -113,16 +113,28 @@ const Home: React.FC = () => {
                         </div>
                     </div>
 
-                    <div
-                        className=""
-                        style={{
-                            fontSize: '50px',
-                            marginTop: '200px',
-                            marginBottom: '200px',
-                            textAlign: 'center',
-                        }}
-                    >
-                        Quotes
+                    <div className="homepage-quotes" >
+                        <div className="quotes-leftside">
+                            <img
+                                src="https://ictv.1cdn.vn/2023/04/26/chu-tich-hdqt-fpt-truong-gia-binh.jpg"
+                            />
+                        </div>
+                        <div className="quotes-rightside">
+                            <p className="quotes-content">
+                                Việt Nam đã thành lập các tập đoàn lớn, nhưng câu hỏi đặt ra là
+                                chúng ta có chung sức để làm những việc lớn hơn nữa không?
+                                <b>
+                                    Bài học lịch sử trả lời rằng, chỉ khi nào đối diện thử thách lớn thì chúng
+                                    ta mới có thể chung tay, chung sức đồng lòng.
+                                </b>
+                                <div className="quotes-divider"></div>
+                                <p className="quotes-quoter">
+                                    Doanh nhân <b>TRƯƠNG GIA BÌNH</b>
+                                    <br />
+                                    <i>Chủ tịch FPT</i>
+                                </p>
+                            </p>
+                        </div>
                     </div>
 
                     <div className="homepage-services">

@@ -3,6 +3,7 @@ import PrivateRoute from "../../shared/routes/PrivateRoute";
 import UserManagement from "./pages/UserManagement";
 import { Role } from "../../shared/constants/roles";
 import ProjectManagementPage from "./pages/ProjectManagementPage";
+import ProjectDetail from "./pages/ProjectDetail";
 import AdminDashboard from "./pages/AdminDashboard";
 import Profile from "./pages/Profile";
 
@@ -26,6 +27,10 @@ export const adminRoutes: RouteObject[] = [
       {
         path: "manageproject",
         element: <ProjectManagementPage />,
+      },
+      {
+        path: "manageproject/:projectId",
+        element: <ProjectDetail />,
       },
     ],
   },
