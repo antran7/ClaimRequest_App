@@ -5,6 +5,7 @@ import { Role } from "../../shared/constants/roles";
 import ProjectManagementPage from "./pages/ProjectManagementPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import Profile from "./pages/Profile";
+import EditProfile from "./pages/EditProfile";
 
 export const adminRoutes: RouteObject[] = [
   {
@@ -18,6 +19,10 @@ export const adminRoutes: RouteObject[] = [
       {
         path: "profile",
         element: <Profile />,
+      },
+      {
+        path: "edit-profile",
+        element: <EditProfile />,
       },
       {
         path: "managestaff",
