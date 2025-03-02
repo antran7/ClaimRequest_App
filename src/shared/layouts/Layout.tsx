@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import Header from '../components/Header'
-import Footer from '../components/Footer';
 import SideBar from '../components/SideBar';
 
 type LayoutProps = {
@@ -23,7 +22,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <Header toggleSidebar={toggleSidebar}/>
 
                 <main className="flex-1 p-4 bg-white">{children}</main>
-                <Footer />
             </div>
         </div>
     )

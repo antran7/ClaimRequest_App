@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import Modal from "./Modal";
-import Header from "../../../shared/components/Header";
-import Footer from "../../../shared/components/Footer";
 import "./UserManagement.css";
+import Layout from "../../../shared/layouts/Layout";
 
 interface User {
   id: number;
@@ -35,16 +34,16 @@ export default function UserManagement() {
       setUsers(
         Array.isArray(data)
           ? data.map((item) => ({
-              id: item.id,
-              staffName: item.staffName || "Unknown",
-              email: item.email || "",
-              password: item.password || "",
-              role: item.role || "Claimer",
-              jobRank: item.jobRank || "PM",
-              status: item.status || "Active",
-              created_at: item.created_at || new Date().toISOString(),
-              updated_at: item.updated_at || new Date().toISOString(),
-            }))
+            id: item.id,
+            staffName: item.staffName || "Unknown",
+            email: item.email || "",
+            password: item.password || "",
+            role: item.role || "Claimer",
+            jobRank: item.jobRank || "PM",
+            status: item.status || "Active",
+            created_at: item.created_at || new Date().toISOString(),
+            updated_at: item.updated_at || new Date().toISOString(),
+          }))
           : []
       );
     } catch {
@@ -84,14 +83,14 @@ export default function UserManagement() {
         <label>Name: <input placeholder="Name" onChange={(e) => (name = e.target.value)} /></label>
         <label>Email: <input placeholder="Email" onChange={(e) => (email = e.target.value)} /></label>
         <label>Role Code:
-          <select defaultValue={role_code} onChange={(e) => (role_code = e.target.value as User["role_code"]) }>
+          <select defaultValue={role_code} onChange={(e) => (role_code = e.target.value as User["role_code"])}>
             {["A001", "A002", "A003", "A004"].map((code) => (
               <option key={code} value={code}>{code}</option>
             ))}
           </select>
         </label>
         <label>Blocked:
-          <select defaultValue={blocked} onChange={(e) => (blocked = e.target.value as User["blocked"]) }>
+          <select defaultValue={blocked} onChange={(e) => (blocked = e.target.value as User["blocked"])}>
             {["Yes", "No"].map((status) => (
               <option key={status} value={status}>{status}</option>
             ))}
@@ -210,57 +209,57 @@ export default function UserManagement() {
   );
 
   return (
-    <div className="user-management-page">
-      <Header />
-      <div className="user-management-container">
-        <h1>User Management</h1>
-        <div className="controls">
-          <button className="add-btn" onClick={addUser}>Add New User</button>
-          <input type="text" placeholder="Search user..." value={search} onChange={(e) => setSearch(e.target.value)} />
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Role Code</th>
-              <th>Blocked</th>
-              <th>Created At</th>
-              <th>Updated At</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredUsers.length > 0 ? (
-              filteredUsers.map((user) => (
-                <tr key={user.id}>
-                  <td>{user.id}</td>
-                  <td>{user.staffName}</td>
-                  <td>{user.email}</td>
-                  <td>{user.role_code}</td>
-                  <td>{user.blocked}</td>
-                  <td>{user.created_at}</td>
-                  <td>{user.updated_at}</td>
-                  <td className="action-buttons">
-                    <button className="edit-btn" onClick={() => editUser(user)}>Edit</button>
-                    <button className="delete-btn" onClick={() => deleteUser(user.id)}>Delete</button>
-                    <button className="lock-btn" onClick={() => toggleLockStatus(user)}>
-                      {user.blocked === "Yes" ? "Unlock" : "Lock"}
-                    </button>
-                  </td>
-                </tr>
-              ))
-            ) : (
+    <Layout>
+      <div className="user-management-page">
+        <div className="user-management-container">
+          <h1>User Management</h1>
+          <div className="controls">
+            <button className="add-btn" onClick={addUser}>Add New User</button>
+            <input type="text" placeholder="Search user..." value={search} onChange={(e) => setSearch(e.target.value)} />
+          </div>
+          <table>
+            <thead>
               <tr>
-                <td colSpan={8} className="no-users">No users found.</td>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role Code</th>
+                <th>Blocked</th>
+                <th>Created At</th>
+                <th>Updated At</th>
+                <th>Actions</th>
               </tr>
-            )}
-          </tbody>
-        </table>
-        {modalOpen && modalContent}
+            </thead>
+            <tbody>
+              {filteredUsers.length > 0 ? (
+                filteredUsers.map((user) => (
+                  <tr key={user.id}>
+                    <td>{user.id}</td>
+                    <td>{user.staffName}</td>
+                    <td>{user.email}</td>
+                    <td>{user.role_code}</td>
+                    <td>{user.blocked}</td>
+                    <td>{user.created_at}</td>
+                    <td>{user.updated_at}</td>
+                    <td className="action-buttons">
+                      <button className="edit-btn" onClick={() => editUser(user)}>Edit</button>
+                      <button className="delete-btn" onClick={() => deleteUser(user.id)}>Delete</button>
+                      <button className="lock-btn" onClick={() => toggleLockStatus(user)}>
+                        {user.blocked === "Yes" ? "Unlock" : "Lock"}
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={8} className="no-users">No users found.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+          {modalOpen && modalContent}
+        </div>
       </div>
-      <Footer />
-    </div>
+    </Layout>
   );
 }

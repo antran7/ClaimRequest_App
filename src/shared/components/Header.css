@@ -11,13 +11,13 @@
     align-items: center;
     font-size: 30px;
     font-weight: bold;
+    margin-left: 10px;
 }
 
 .layout-header-right {
     display: flex;
     align-items: center;
     width: 350px;
-    margin-right: 10px;
 }
 
 .header-right-item {

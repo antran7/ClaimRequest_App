@@ -38,14 +38,14 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
   const menuItems = [
     { text: "Home", icon: <HouseIcon />, path: "/" },
     {
-      text: "Profile",
+      text: "Dashboard",
       icon: <BadgeIcon />,
-      path: "/approval/dashboard",
+      path: "/dashboard",
     },
     {
       text: "My Requests",
       icon: <RequestPageIcon />,
-      path: "/approval/dashboard",
+      path: "/my-request",
     },
   ];
 

@@ -2,6 +2,7 @@ import { RouteObject } from "react-router-dom";
 import UserDashboard from "./pages/user-dashboard/UserDashboard";
 import PrivateRoute from "../../shared/routes/PrivateRoute";
 import { Role } from "../../shared/constants/roles";
+import Profile from "../common/pages/Profile";
 
 
 export const userRoutes: RouteObject[] = [

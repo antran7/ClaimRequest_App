@@ -4,6 +4,7 @@ import './Home.css';
 import { Box, Button } from "@mui/material";
 import EastIcon from '@mui/icons-material/East';
 import { useNavigate } from "react-router";
+import Footer from "../../../shared/components/Footer";
 
 const Home: React.FC = () => {
     const navigate = useNavigate();
@@ -226,6 +227,7 @@ const Home: React.FC = () => {
                     </div>
                 </div>
             </Layout>
+            <Footer />
         </>
     );
 };

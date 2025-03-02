@@ -36,7 +36,7 @@ function AdminDashboard() {
         <div className="content-dashboard">
           <h2>Welcome!</h2>
           <Grid container spacing={2} className="items-card">
-            <Grid item xs={3} onClick={() => navigate("/admin/manageuser")}>
+            <Grid item xs={3} onClick={() => navigate("/admin/managestaff")}>
               <div className="user-card">
                 <div className="user-card-left">
                   <p>Users</p>
