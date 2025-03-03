@@ -50,7 +50,7 @@ const Header = ({ toggleSidebar = () => {} }: HeaderProps) => {
         <Link to="/#" className="header-right-item">
           Services
         </Link>
-        <Link to="/#" className="header-right-item">
+        <Link to="/about" className="header-right-item">
           About
         </Link>
         <Link to="/Contact" className="header-right-item">

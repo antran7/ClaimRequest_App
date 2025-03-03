@@ -3,6 +3,7 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
 import BackButton from "../components/BackButton";
+import Search from "../../../shared/components/searchComponent/Search";
 import {
   Button,
   Typography,
@@ -24,18 +25,17 @@ import {
   TextareaAutosize,
 } from "@mui/material";
 import Layout from "../../../shared/layouts/Layout";
+import { CircularProgress } from '@mui/material';
 import Pagination from "@mui/material/Pagination";
 import Stack from "@mui/material/Stack";
 import { Delete as DeleteIcon, Visibility as VisibilityIcon } from "@mui/icons-material";
 import {
-  fetchProjects,
+  searchProject,
   addProject,
   deleteProject,
 } from "../services/projectService";
-import { fetchUser } from "../services/userService";
 import { toast } from "react-hot-toast";
-import { Project } from "../types/project";
-import { User } from "../types/user";
+import { Project, ProjectMember, User, ApiResponse } from "../types/projectInterface";
 
 const ProjectManagementPage: React.FC = () => {
   const navigate = useNavigate();
@@ -43,19 +43,32 @@ const ProjectManagementPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
   const itemPerPage = 10;
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchProjects()
-      .then(setProjects)
-      .catch(() => toast.error("Failed to fetch projects"));
-
-    fetchUser()
-      .then(setUsers)
-      .catch(() => toast.error("Failed to fetch users"));
-  }, []);
+    const fetchProjects = async () => {
+      setLoading(true);
+      try {
+        const response = await searchProject("");
+        if (response.success && response.data) {
+          setProjects(response.data.pageData);
+          setTotalPages(response.data.pageInfo.totalPages);
+        }
+      } catch (error) {
+        toast.error("Failed to fetch projects");
+        setProjects([]);
+        setTotalPages(1);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchProjects();
+  }, [page]);
 
   const validationSchema = Yup.object({
     project_name: Yup.string().required("Project name is required"),
@@ -66,7 +79,15 @@ const ProjectManagementPage: React.FC = () => {
     project_end_date: Yup.date()
       .required("End date is required")
       .min(Yup.ref("project_start_date"), "End date must be after start date"),
-    project_members: Yup.array().min(1, "At least one project member is required")
+    project_members: Yup.array().of(
+      Yup.object().shape({
+        user_id: Yup.string(),
+        project_role: Yup.string(),
+        employee_id: Yup.string(),
+        user_name: Yup.string(),
+        full_name: Yup.string(),
+      })
+    ).min(1, "At least one project member is required"),
   });
 
   const formik = useFormik({
@@ -85,7 +106,6 @@ const ProjectManagementPage: React.FC = () => {
     validationSchema,
     onSubmit: async (values) => {
       try {
-        // Format dates to match the expected API format
         const projectData = {
           ...values,
           project_start_date: new Date(values.project_start_date).toISOString(),
@@ -144,7 +164,7 @@ const ProjectManagementPage: React.FC = () => {
     if (selectedProjectId) {
       try {
         await deleteProject(selectedProjectId);
-        setProjects((prev) => prev.filter((p) => p.id !== selectedProjectId));
+        setProjects((prev) => prev.filter((p) => p._id !== selectedProjectId));
         toast.success("Project deleted successfully!");
       } catch {
         toast.error("Failed to delete project");
@@ -155,10 +175,18 @@ const ProjectManagementPage: React.FC = () => {
     }
   };
 
-  const paginatedProject = projects.slice(
-    (page - 1) * itemPerPage,
-    page * itemPerPage
-  );
+  const handleSearch = async (searchTerm: string) => {
+    try {
+      const response = await searchProject(searchTerm);
+      if (response.success && response.data) {
+        setProjects(response.data.pageData);
+        setTotalPages(response.data.pageInfo.totalPages);
+        setPage(1);
+      }
+    } catch (error) {
+      toast.error("Failed to search projects");
+    }
+  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -169,9 +197,10 @@ const ProjectManagementPage: React.FC = () => {
     <Layout>
       <div className="min-h-screen bg-gray-100">
         <div className="p-8">
+          <BackButton to="/admin/dashboard" />
           <div className="flex justify-between items-center mb-6">
-            <BackButton to="/admin/dashboard" />
-            <Typography variant="h5">Project Management</Typography>
+          <Typography variant="h5">Project Management</Typography>
+          <Search onSearch={handleSearch} />
             <button
               title="Add New"
               className="group cursor-pointer outline-none hover:rotate-90 duration-300"
@@ -195,67 +224,71 @@ const ProjectManagementPage: React.FC = () => {
           </div>
 
           <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow className="bg-gray-500">
-                  <TableCell>Project Name</TableCell>
-                  <TableCell>Project Code</TableCell>
-                  <TableCell>Department</TableCell>
-                  <TableCell>Start Date</TableCell>
-                  <TableCell>End Date</TableCell>
-                  <TableCell>Project Members</TableCell>
-                  <TableCell>Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {paginatedProject.map((project) => (
-                  <TableRow key={project.id}>
-                    <TableCell>{project.project_name}</TableCell>
-                    <TableCell>{project.project_code}</TableCell>
-                    <TableCell>{project.project_department}</TableCell>
-                    <TableCell>{formatDate(project.project_start_date)}</TableCell>
-                    <TableCell>{formatDate(project.project_end_date)}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        {project.project_members.map((member) => (
-                          <span key={member.user_id} className="mr-2">
-                            {member.project_role}
-                          </span>
-                        ))}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="contained"
-                        sx={{
-                          backgroundColor: "gray",
-                          color: "white",
-                          "&:hover": { backgroundColor: "darkgray" },
-                          mr: 1,
-                        }}
-                        startIcon={<VisibilityIcon />}
-                        onClick={() => handleViewProject(project.id)}
-                      >
-                        View
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        color="error"
-                        startIcon={<DeleteIcon />}
-                        onClick={() => handleOpenConfirmDialog(project.id)}
-                      >
-                        Delete
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+  <Table>
+    <TableHead>
+      <TableRow className="bg-gray-500">
+        <TableCell>Project Name</TableCell>
+        <TableCell>Project Code</TableCell>
+        <TableCell>Department</TableCell>
+        <TableCell>Start Date</TableCell>
+        <TableCell>End Date</TableCell>
+        <TableCell>Actions</TableCell>
+      </TableRow>
+    </TableHead>
+    <TableBody>
+      {loading ? (
+        <TableRow>
+          <TableCell colSpan={6} align="center">
+            <CircularProgress />
+          </TableCell>
+        </TableRow>
+      ) : projects.length === 0 ? (
+        <TableRow>
+          <TableCell colSpan={6} align="center">
+            No projects found
+          </TableCell>
+        </TableRow>
+      ) : (
+        projects.map((project) => (
+          <TableRow key={project._id}>
+            <TableCell>{project.project_name}</TableCell>
+            <TableCell>{project.project_code}</TableCell>
+            <TableCell>{project.project_department}</TableCell>
+            <TableCell>{formatDate(project.project_start_date)}</TableCell>
+            <TableCell>{formatDate(project.project_end_date)}</TableCell>
+            <TableCell>
+              <Button
+                variant="contained"
+                sx={{
+                  backgroundColor: "gray",
+                  color: "white",
+                  "&:hover": { backgroundColor: "darkgray" },
+                  mr: 1,
+                }}
+                startIcon={<VisibilityIcon />}
+                onClick={() => handleViewProject(project._id)}
+              >
+                View
+              </Button>
+              <Button
+                variant="outlined"
+                color="error"
+                startIcon={<DeleteIcon />}
+                onClick={() => handleOpenConfirmDialog(project._id)}
+              >
+                Delete
+              </Button>
+            </TableCell>
+          </TableRow>
+        ))
+      )}
+    </TableBody>
+  </Table>
+</TableContainer>
           <div className="w-1/3 ml-auto p-4">
             <Stack spacing={2}>
               <Pagination
-                count={Math.ceil(projects.length / itemPerPage)}
+                count={totalPages}
                 page={page}
                 onChange={(_, value) => setPage(value)}
                 variant="outlined"
