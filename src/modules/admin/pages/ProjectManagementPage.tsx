@@ -32,7 +32,7 @@ import {
   addProject,
   deleteProject,
 } from "../services/projectService";
-import { fetchUsers } from "../services/userService";
+import { fetchUser } from "../services/userService";
 import { toast } from "react-hot-toast";
 import { Project } from "../types/project";
 import { User } from "../types/user";
@@ -52,7 +52,7 @@ const ProjectManagementPage: React.FC = () => {
       .then(setProjects)
       .catch(() => toast.error("Failed to fetch projects"));
 
-    fetchUsers()
+    fetchUser()
       .then(setUsers)
       .catch(() => toast.error("Failed to fetch users"));
   }, []);
