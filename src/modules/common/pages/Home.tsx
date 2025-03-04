@@ -5,7 +5,7 @@ import { Box, Button } from "@mui/material";
 import EastIcon from '@mui/icons-material/East';
 import { useNavigate } from "react-router";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-import { Footer } from "antd/es/layout/layout";
+import Footer from "../../../shared/components/Footer";
 const Home: React.FC = () => {
     const navigate = useNavigate();
     const [isHovering, setIsHovering] = useState(false);
@@ -47,23 +47,22 @@ const Home: React.FC = () => {
         { name: "Sitecore", logo: "https://seeklogo.com/images/S/sitecore-logo-D5387ED3C7-seeklogo.com.png" }
     ];
 
- // Lottie configuration
- const lottieOptions = {
-    src: "https://lottie.host/cf3d618d-23bd-45f0-a5ac-6297e8c30f66/S14zCVEM98.lottie" , // Thay bằng URL của animation mới
-    loop: true,
-    autoplay: true,
-    rendererSettings: {
-      preserveAspectRatio: "xMidYMid slice",
-      progressiveLoad: true,
-    },
-    style: { width: "100%", height: "100%" },
+    // Lottie configuration
+    const lottieOptions = {
+        src: "https://lottie.host/cf3d618d-23bd-45f0-a5ac-6297e8c30f66/S14zCVEM98.lottie", // Thay bằng URL của animation mới
+        loop: true,
+        autoplay: true,
+        rendererSettings: {
+            preserveAspectRatio: "xMidYMid slice",
+            progressiveLoad: true,
+        },
+        style: { width: "100%", height: "100%" },
 
-    className: `w-full h-full transition-all duration-500 ${
-      isHovering
-        ? "scale-[180%] sm:scale-[160%] md:scale-[150%] lg:scale-[145%] rotate-2"
-        : "scale-[175%] sm:scale-[155%] md:scale-[145%] lg:scale-[140%]"
-    }`,
-  };
+        className: `w-full h-full transition-all duration-500 ${isHovering
+            ? "scale-[180%] sm:scale-[160%] md:scale-[150%] lg:scale-[145%] rotate-2"
+            : "scale-[175%] sm:scale-[155%] md:scale-[145%] lg:scale-[140%]"
+            }`,
+    };
 
     return (
         <>
@@ -80,17 +79,17 @@ const Home: React.FC = () => {
                         >
                             Contact Us
                         </Button>
-                         {/* 🎬 Right Column - Lottie Animation */}
-        <div
-          className="w-full lg:w-1/2 flex justify-center items-center order-1 lg:order-2 mt-10 sm:mt-16 md:mt-0"
-          onMouseEnter={() => setIsHovering(true)}
-          onMouseLeave={() => setIsHovering(false)}
-        >
-          <div className="relative top-15 w-[250px] sm:w-[300px] md:w-[400px] lg:w-[600px] xl:w-[700px]">
-  <DotLottieReact {...lottieOptions} />
-</div>
+                        {/* 🎬 Right Column - Lottie Animation */}
+                        <div
+                            className="w-full lg:w-1/2 flex justify-center items-center order-1 lg:order-2 mt-10 sm:mt-16 md:mt-0"
+                            onMouseEnter={() => setIsHovering(true)}
+                            onMouseLeave={() => setIsHovering(false)}
+                        >
+                            <div className="relative top-15 w-[250px] sm:w-[300px] md:w-[400px] lg:w-[600px] xl:w-[700px]">
+                                <DotLottieReact {...lottieOptions} />
+                            </div>
 
-        </div>
+                        </div>
 
                     </div>
                     <div className="homepage-intro">
@@ -115,7 +114,10 @@ const Home: React.FC = () => {
                         <div className="intro-aboutus">
                             <div className="aboutus-leftside">
                                 <h2>ABOUT US
-                                    <EastIcon style={{ fontSize: '50px', marginLeft: '20px' }} />
+                                    <EastIcon
+                                        className="aboutus-icon"
+                                        onClick={() => navigate("/about")}
+                                    />
                                 </h2>
                                 <p>
                                     Our platform is designed to streamline payroll processing and attendance management for FPT employees, ensuring accuracy,

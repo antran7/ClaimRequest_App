@@ -1,6 +1,6 @@
 import { useState } from "react";
 import "./Login.css";
-import { useAuth } from "../../../shared/hooks/useAuth";
+import { useAuth } from "../../../core/hooks/useAuth";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useForm } from "react-hook-form";
