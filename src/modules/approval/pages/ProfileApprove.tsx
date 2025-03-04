@@ -8,7 +8,7 @@ import {
   PhoneAndroid as PhoneAndroidIcon,
   Publish as PublishIcon,
 } from "@mui/icons-material";
-import "./Approver.css";
+import "./ProfileApprove.css";
 
 export default function Approver() {
   const [formData, setFormData] = useState({
