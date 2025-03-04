@@ -1,31 +1,27 @@
-import apiService from "../../../core/api/api"; // Import the shared API service
-import { User , PageInfo , SearchResponse} from "../types/user"; // Lùi một cấp để vào thư mục types
+
+import apiService from "../../../core/api/api";
+import { User, UserResponse} from "../types/user"; 
+
 
 
 export const searchUsers = async (
   searchCondition: object,
-  pageInfo: object
-): Promise<User[]> => {
+  pageInfo: { pageNum: number; pageSize: number }
+): Promise<UserResponse> => {
   try {
-    const response = await apiService.post<SearchResponse>("/users/search", {
+    const response = await apiService.post<UserResponse>("/users/search", {
       searchCondition,
-      pageInfo,
+      pageInfo, 
     });
 
-    console.log("API Response:", response.data); // ✅ Debug response
+    console.log("Full API Response:", response.data); // ✅ Debug response
 
-    // 🔹 Lấy danh sách user từ `pageData`
-    const users = response.data?.data?.pageData ?? [];
-
-    console.log("Parsed Users:", users); // ✅ Debug danh sách user
-    return users;
+    return response.data; // ✅ Return the full response (not just users)
   } catch (error) {
     console.error("Error fetching users:", error);
-    return []; // Tránh lỗi khi API thất bại
+    return { pageData: [], pageInfo: { pageNum: 1, pageSize: 10, totalItems: 0, totalPages: 1 } }; // ✅ Prevent errors
   }
 };
-
-
 
 export const createUser = async (userData: Partial<User> & { password: string }): Promise<User> => {
   const response = await apiService.post<User>("/users", userData); 

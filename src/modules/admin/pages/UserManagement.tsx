@@ -3,6 +3,7 @@ import { searchUsers, createUser, updateUser, changeUserStatus, fetchUser, delet
 import Layout from "../../../shared/layouts/Layout";
 import { Button, TableContainer, Table, TableHead, TableBody, TableRow, TableCell, TextField, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper } from "@mui/material";
 import { User } from "../types/user";
+import { Pagination } from "@mui/material";
 
 
 const UserManagement = () => {
@@ -10,6 +11,9 @@ const UserManagement = () => {
   const [loading, setLoading] = useState(false);
   const [popupOpen, setPopupOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [pageNum, setPageNum] = useState(1); //  Track current page
+  const [pageSize] = useState(5); //  Items per page
+  const [totalPages, setTotalPages] = useState(1); // Total pages from API
   const [form, setForm] = useState<{ email: string; user_name: string; role_code: string; password?: string }>({
     email: "",
     user_name: "",
@@ -25,24 +29,32 @@ const UserManagement = () => {
   useEffect(() => {
     fetchUsers();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [pageNum,searchTerm]);
 
 
   const fetchUsers = async () => {
     setLoading(true);
     try {
       const response = await searchUsers(
-        { email: searchTerm.trim() },
-        { pageNum: 1, pageSize: 10 }
-      );
-      setUsers(response);
+        { keyword: searchTerm.trim() }, 
+        { pageNum, pageSize }
+      )
+      console.log("Users type check:", Array.isArray(response.pageData)); // Should be true
+      console.log("Parsed Users:", response.pageData); //  Debug users
+      if (response?.pageData && response?.pageInfo) {
+        setUsers(response.pageData); //  Correctly setting users
+        setTotalPages(response.pageInfo.totalPages || 1); //  Fix pagination
+      } else {
+        console.error("Invalid API response structure:", response);
+        setUsers([]); // 🛠 Prevent crashes
+      }
     } catch (error) {
       console.error("Failed to fetch users", error);
+      setUsers([]); // 🛠 Prevent UI crash
     } finally {
       setLoading(false);
     }
   };
-
   const filteredUsers = users.filter((user) =>
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -75,7 +87,6 @@ const UserManagement = () => {
       console.error("Failed to save user", error);
     }
   };
-  
 
   
   const handleConfirmAction = async () => {
@@ -197,7 +208,8 @@ const UserManagement = () => {
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.role_code}</TableCell>
                   <TableCell>{user.user_name}</TableCell>
-                  <TableCell>{user.is_blocked ? "Yes" : "No"}</TableCell>
+                  <TableCell> <Button onClick={() => setConfirmDialog({ open: true, user, action: "block" })}>
+                        {user.is_blocked ? "Locked" : "Unlocked"} </Button></TableCell>
                   <TableCell>
                   <Button 
                         color="inherit" 
@@ -213,9 +225,6 @@ const UserManagement = () => {
                       >
                         Edit
                       </Button>
-                    <Button onClick={() => setConfirmDialog({ open: true, user, action: "block" })}>
-                      {user.is_blocked ? "Unblock" : "Block"}
-                    </Button>
                     <Button color="warning" onClick={() => setConfirmDialog({ open: true, user, action: "delete" })}>
                       Delete
                     </Button>
@@ -226,7 +235,12 @@ const UserManagement = () => {
           </Table>
         </TableContainer>
       </div>
-
+      <Pagination
+          count={totalPages} 
+          page={pageNum} 
+          onChange={(event, newPage) => setPageNum(newPage)} // Change page
+          color="primary"
+        />
       <Dialog open={confirmDialog.open} onClose={() => setConfirmDialog({ open: false, user: null, action: null })}>
         <DialogTitle>Confirm Action</DialogTitle>
         <DialogContent>
