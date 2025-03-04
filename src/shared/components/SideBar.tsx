@@ -22,7 +22,7 @@ import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import PaidIcon from "@mui/icons-material/Paid";
 import { useNavigate } from "react-router-dom";
 import { Role } from "../constants/roles";
-import { useAuth } from "../hooks/useAuth";
+import { useAuth } from "../../core/hooks/useAuth";
 
 interface SideBarProps {
   isOpen: boolean;
@@ -67,6 +67,9 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
       ],
     },
   ];
+  const usersItems = [
+    
+  ];
 
   const approvalItems = [
     {
@@ -76,9 +79,12 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
     },
   ];
 
-  const finaceItems = [{ text: "Paid Claims", icon: <PaidIcon />, path: "/#" }];
+  const finaceItems = [
+    { text: "Paid Claims", icon: <PaidIcon />, path: "/#" },
+  ];
 
   const handleNavigation = (path: string) => {
+    console.log(role);
     if (path === "/dashboard") {
       if (role === "user") {
         navigate("/user/dashboard");
@@ -162,6 +168,19 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
                 </ListItemButton>
               </ListItem>
             ))}
+
+          {role === Role.USER && (
+            <List>
+              {usersItems.map(({ text, icon, path }) => (
+                <ListItem key={text} disablePadding>
+                  <ListItemButton onClick={() => handleNavigation(path)}>
+                    <ListItemIcon>{icon}</ListItemIcon>
+                    <ListItemText primary={text} />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          )}
 
           {role === Role.FINANCE &&
             finaceItems.map(({ text, icon, path }) => (

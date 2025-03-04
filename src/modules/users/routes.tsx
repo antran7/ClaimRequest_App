@@ -1,8 +1,10 @@
 import { RouteObject } from "react-router-dom";
-import UserDashboard from "./pages/user-dashboard/UserDashboard";
+
 import PrivateRoute from "../../shared/routes/PrivateRoute";
 import { Role } from "../../shared/constants/roles";
-import Profile from "../common/pages/Profile";
+
+import UserDashboard from "./pages/user-dashboard/UserDashboard";
+import RequestPage from "./pages/request/RequestPage";
 
 
 export const userRoutes: RouteObject[] = [
@@ -22,6 +24,10 @@ export const userRoutes: RouteObject[] = [
                 path: "dashboard",
                 element: <UserDashboard />
             },
+            {
+                path: "my-requests",
+                element: <RequestPage/>
+            }
         ],
     },
 ];

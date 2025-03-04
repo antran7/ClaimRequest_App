@@ -5,6 +5,7 @@ import "./RequestPage.css";
 import moment from "moment";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
+import Layout from "../../../../shared/layouts/Layout";
 
 const API_REQUESTS = "https://67b5a06d07ba6e59083db637.mockapi.io/api/requests";
 const API_PROJECTS = "https://67aaae7465ab088ea7e73b54.mockapi.io/project";
@@ -245,6 +246,7 @@ const RequestPage = () => {
   };
 
   return (
+    <Layout>
     <div
       className={`request-container ${
         isAddModalVisible || isEditModalVisible ? "blur-background" : ""
@@ -507,7 +509,9 @@ const RequestPage = () => {
           </Button>
         </div>
       </Modal>
+      
     </div>
+    </Layout>
   );
 };
 

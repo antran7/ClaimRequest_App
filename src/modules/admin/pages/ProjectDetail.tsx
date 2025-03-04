@@ -51,7 +51,11 @@ const ProjectDetail = () => {
     return (
       <Layout>
         <div className="flex justify-center items-center h-screen">
-          <CircularProgress />
+          <div className="flex flex-row gap-2">
+            <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce"></div>
+            <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce [animation-delay:-.3s]"></div>
+            <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce [animation-delay:-.5s]"></div>
+          </div>
         </div>
       </Layout>
     );
@@ -153,35 +157,35 @@ const ProjectDetail = () => {
         </Card>
       </div>
       <Dialog
-          open={confirmDialogOpen}
-          onClose={() => setConfirmDialogOpen(false)}
-        >
-          <DialogTitle>Confirm Delete</DialogTitle>
-          <DialogContent>
-            <Typography>
-              Are you sure you want to delete this project?
-            </Typography>
-          </DialogContent>
-          <DialogActions>
-            <Button
-              onClick={() => setConfirmDialogOpen(false)}
-              sx={{ color: "gray" }}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleConfirmDelete}
-              sx={{
-                backgroundColor: "gray",
-                color: "white",
-                "&:hover": { backgroundColor: "darkgray" },
-              }}
-              variant="contained"
-            >
-              Confirm
-            </Button>
-          </DialogActions>
-        </Dialog>
+        open={confirmDialogOpen}
+        onClose={() => setConfirmDialogOpen(false)}
+      >
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete this project?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setConfirmDialogOpen(false)}
+            sx={{ color: "gray" }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmDelete}
+            sx={{
+              backgroundColor: "gray",
+              color: "white",
+              "&:hover": { backgroundColor: "darkgray" },
+            }}
+            variant="contained"
+          >
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Layout>
   );
 };
