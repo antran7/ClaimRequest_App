@@ -1,265 +1,269 @@
-import { useState, useEffect } from "react";
-import Modal from "./Modal";
-import "./UserManagement.css";
+import { useEffect, useState } from "react";
+import { searchUsers, createUser, updateUser, changeUserStatus, fetchUser, deleteUser } from "../services/userService";
 import Layout from "../../../shared/layouts/Layout";
+import { Button, Table, Input, Select } from "antd";
+import { User , PageInfo , SearchResponse} from "../types/user"; 
+import { message } from "antd";
 
-interface User {
-  id: number;
-  staffName: string;
-  email: string;
-  role_code: "A001" | "A002" | "A003" | "A004";
-  blocked: "Yes" | "No";
-  created_at: string;
-  updated_at: string;
-}
 
-const API_URL = "https://67b416e6392f4aa94fa93e19.mockapi.io/api/Request";
 
-export default function UserManagement() {
+const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
-  const [search, setSearch] = useState("");
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalContent, setModalContent] = useState<React.ReactNode | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [popupOpen, setPopupOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [form, setForm] = useState<{ email: string; user_name: string; role_code: string; password?: string }>({
+    email: "",
+    user_name: "",
+    role_code: "A001",
+    password: "",
+  });
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     fetchUsers();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+
   const fetchUsers = async () => {
+    setLoading(true);
     try {
-      const response = await fetch(API_URL);
-      if (!response.ok) throw new Error("Failed to fetch users");
-      const data = await response.json();
-      console.log("Fetched data:", data);
-      setUsers(
-        Array.isArray(data)
-          ? data.map((item) => ({
-            id: item.id,
-            staffName: item.staffName || "Unknown",
-            email: item.email || "",
-            password: item.password || "",
-            role: item.role || "Claimer",
-            jobRank: item.jobRank || "PM",
-            status: item.status || "Active",
-            created_at: item.created_at || new Date().toISOString(),
-            updated_at: item.updated_at || new Date().toISOString(),
-          }))
-          : []
+      const response = await searchUsers(
+        { email: searchTerm.trim() }, // ✅ Send search term
+        { pageNum: 1, pageSize: 10 }
       );
-    } catch {
-      showModal("Error", <p>Failed to fetch users.</p>);
+      setUsers(response); // ✅ Update users
+    } catch (error) {
+      console.error("Failed to fetch users", error);
+    } finally {
+      setLoading(false);
     }
   };
+  
 
+  // const fetchUsers = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const response = await searchUsers(
+  //       { email: searchTerm }, 
+  //       { pageNum: 1, pageSize: 10 }
+  //     );
+  //     console.log("API Response:", response); // ✅ Check what API returns
+  //     const data: User[] = response as User[];
+  //     setUsers(data);
+  //   } catch (error) {
+  //     console.error("Failed to fetch users", error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
-  const getCurrentTimestamp = () => new Date().toLocaleString();
-
-  const showModal = (
-    title: string,
-    content: React.ReactNode,
-    confirmAction?: () => void
-  ) => {
-    setModalContent(
-      <Modal
-        isOpen={true}
-        title={title}
-        content={content}
-        onClose={() => setModalOpen(false)}
-        onConfirm={confirmAction}
-      />
-    );
-    setModalOpen(true);
-  };
-
-  const addUser = () => {
-    let name = "";
-    let email = "";
-    let role_code: User["role_code"] = "A001";
-    let blocked: User["blocked"] = "No";
-
-    showModal(
-      "Add New User",
-      <div className="form-container">
-        <label>Name: <input placeholder="Name" onChange={(e) => (name = e.target.value)} /></label>
-        <label>Email: <input placeholder="Email" onChange={(e) => (email = e.target.value)} /></label>
-        <label>Role Code:
-          <select defaultValue={role_code} onChange={(e) => (role_code = e.target.value as User["role_code"])}>
-            {["A001", "A002", "A003", "A004"].map((code) => (
-              <option key={code} value={code}>{code}</option>
-            ))}
-          </select>
-        </label>
-        <label>Blocked:
-          <select defaultValue={blocked} onChange={(e) => (blocked = e.target.value as User["blocked"])}>
-            {["Yes", "No"].map((status) => (
-              <option key={status} value={status}>{status}</option>
-            ))}
-          </select>
-        </label>
-      </div>,
-      async () => {
-        if (!name || !email) return showModal("Error", <p>All fields are required.</p>);
-        try {
-          const timestamp = getCurrentTimestamp();
-          const response = await fetch(API_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              staffName: name,
-              email,
-              role_code,
-              blocked,
-              created_at: timestamp,
-              updated_at: timestamp
-            }),
-          });
-          if (!response.ok) throw new Error("Failed to add user");
-          await fetchUsers();
-          setModalOpen(false);
-        } catch {
-          showModal("Error", <p>Failed to add user.</p>);
-        }
-      }
-    );
-  };
-
-  const editUser = (user: User) => {
-    let updatedName = user.staffName;
-    let updatedEmail = user.email;
-    let updatedRoleCode = user.role_code;
-    let updatedBlocked = user.blocked;
-
-    showModal(
-      "Edit User",
-      <div className="form-container">
-        <label>Name: <input defaultValue={user.staffName} onChange={(e) => (updatedName = e.target.value)} /></label>
-        <label>Email: <input defaultValue={user.email} onChange={(e) => (updatedEmail = e.target.value)} /></label>
-        <label>Role Code:
-          <select defaultValue={user.role_code} onChange={(e) => (updatedRoleCode = e.target.value as User["role_code"])}>
-            {["A001", "A002", "A003", "A004"].map((code) => (
-              <option key={code} value={code}>{code}</option>
-            ))}
-          </select>
-        </label>
-        <label>Blocked:
-          <select defaultValue={user.blocked} onChange={(e) => (updatedBlocked = e.target.value as User["blocked"])}>
-            {["Yes", "No"].map((status) => (
-              <option key={status} value={status}>{status}</option>
-            ))}
-          </select>
-        </label>
-      </div>,
-      async () => {
-        if (!updatedName || !updatedEmail) return showModal("Error", <p>All fields are required.</p>);
-        try {
-          const timestamp = getCurrentTimestamp();
-          const response = await fetch(`${API_URL}/${user.id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              ...user,
-              staffName: updatedName,
-              email: updatedEmail,
-              role_code: updatedRoleCode,
-              blocked: updatedBlocked,
-              updated_at: timestamp
-            }),
-          });
-          if (!response.ok) throw new Error("Failed to update user");
-          await fetchUsers();
-          setModalOpen(false);
-        } catch {
-          showModal("Error", <p>Failed to update user.</p>);
-        }
-      }
-    );
-  };
-
-  const deleteUser = (id: number) => {
-    showModal("Confirm Delete", <p>Are you sure you want to delete this user?</p>, async () => {
-      try {
-        const response = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
-        if (!response.ok) throw new Error("Failed to delete user");
-        await fetchUsers();
-        setModalOpen(false);
-      } catch {
-        showModal("Error", <p>Failed to delete user.</p>);
-      }
-    });
-  };
-
-  const toggleLockStatus = async (user: User) => {
+  const loadUsers = async () => {
     try {
-      const newBlockedStatus = user.blocked === "Yes" ? "No" : "Yes";
-      const timestamp = getCurrentTimestamp();
-      const response = await fetch(`${API_URL}/${user.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...user, blocked: newBlockedStatus, updated_at: timestamp }),
-      });
-      if (!response.ok) throw new Error("Failed to change status");
-      await fetchUsers();
-    } catch {
-      showModal("Error", <p>Failed to change user status.</p>);
+      const usersData = await searchUsers({}, { page: 1, size: 10 }); // Adjust pagination as needed
+      setUsers(usersData);
+    } catch (error) {
+      console.error("Error loading users:", error);
     }
   };
+  
 
-  const filteredUsers = users.filter((user) =>
-    (user.staffName ?? "").toLowerCase().includes(search.toLowerCase())
-  );
+  // const handleSave = async () => {
+  //   try {
+  //     console.log("Form Data Before Sending:", form);
+  //     if (editingUser) {
+  //       await updateUser(editingUser._id, { email: form.email, user_name: form.user_name });
+  //       message.success("User updated successfully");
+  //     } else {
+  //       await createUser(form);
+  //       message.success("User created successfully");
+  //     }
+  
+  //     setPopupOpen(false);
+  //     loadUsers();  // ✅ Reload users after adding or editing
+  //   } catch (error) {
+  //     console.error("Failed to save user", error);
+  //     console.error("Server Response:", error.response?.data);
+  //   }
+  // };
+
+
+
+  const handleSave = async () => {
+    try {
+      console.log("Editing User:", editingUser); // Debugging
+  
+      if (editingUser && !editingUser._id) {
+        console.error("User ID is missing for edit.");
+        return;
+      }
+  
+      if (editingUser) {
+        // Editing existing user
+        await updateUser(editingUser._id, {
+          email: form.email,
+          user_name: form.user_name,
+          role_code: form.role_code,
+        });
+      } else {
+        // Creating new user
+        await createUser({
+          email: form.email,
+          user_name: form.user_name,
+          role_code: form.role_code,
+          password: form.password,
+        });
+      }
+  
+      setPopupOpen(false);
+      loadUsers();
+    } catch (error) {
+      console.error("Failed to save user", error);
+    }
+  };
+  
+
+  const handleBlockToggle = async (user: User) => {
+    try {
+      await changeUserStatus(user._id, !user.is_blocked);
+  
+      // ✅ Update the blocked status locally without re-fetching
+      setUsers((prevUsers) =>
+        prevUsers.map((u) =>
+          u._id === user._id ? { ...u, is_blocked: !user.is_blocked } : u
+        )
+      );
+    } catch (error) {
+      console.error("Failed to change user status", error);
+    }
+  };
+  
+
+  const handleDelete = async (userId: string) => {
+    try {
+      await deleteUser(userId);
+      fetchUsers(); // ✅ Refresh list
+    } catch (error) {
+      console.error("Failed to delete user", error);
+    }
+  };
+  
+  
 
   return (
     <Layout>
-      <div className="user-management-page">
-        <div className="user-management-container">
-          <h1>User Management</h1>
-          <div className="controls">
-            <button className="add-btn" onClick={addUser}>Add New User</button>
-            <input type="text" placeholder="Search user..." value={search} onChange={(e) => setSearch(e.target.value)} />
+      <div className="p-4">
+        <Input
+          placeholder="Search by email"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          onPressEnter={fetchUsers}
+        />
+        <Button
+  onClick={() => {
+    setEditingUser(null);
+    setForm({ email: "", user_name: "", role_code: "A001" }); // Reset form
+    setPopupOpen(true);
+  }}
+>
+  Add New User
+</Button>
+
+        <Table 
+          dataSource={users} 
+          rowKey="id" 
+          loading={loading} 
+          columns={[
+            { title: "Email", dataIndex: "email", key: "email" },
+            { title: "Username", dataIndex: "user_name", key: "user_name" },
+            { 
+              title: "Blocked", 
+              dataIndex: "is_blocked", 
+              key: "is_blocked",
+              render: (is_blocked) => (is_blocked ? "Yes" : "No")
+            },
+            {
+              title: "Actions",
+              key: "actions",
+              render: (_, user) => (
+                <>
+           <Button
+  onClick={async () => {
+    try {
+      console.log("Editing user:", user); // Debugging log
+      if (!user._id) {
+        console.error("User ID is missing for edit.");
+        return;
+      }
+
+      const userData = await fetchUser(user._id);
+
+      if (!userData) {
+        console.error("User data is null or undefined");
+        return;
+      }
+
+      setEditingUser({
+        _id: userData._id,  // Ensure _id is stored
+        email: userData.email ?? "",
+        user_name: userData.user_name ?? "",
+        role_code: userData.role_code ?? "A001",
+      });
+
+      setPopupOpen(true);
+    } catch (error) {
+      console.error("Failed to fetch user details", error);
+    }
+  }}
+>
+  Edit
+</Button>
+
+        <Button onClick={() => handleBlockToggle(user)}>
+                   {user.is_blocked ? "Unblock" : "Block"}
+        </Button>
+
+                  <Button danger onClick={() => handleDelete(user._id)}>Delete</Button>
+
+                </>
+              )
+            }
+          ]} 
+        />
+        {popupOpen && (
+          <div className="absolute top-10 left-1/2 transform -translate-x-1/2 bg-white p-4 shadow-lg rounded">
+            <Input 
+              value={form.email} 
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, email: e.target.value })} 
+              placeholder="Email" 
+            />
+            <Input 
+              value={form.user_name} 
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, user_name: e.target.value })} 
+              placeholder="Username" 
+            />
+            {!editingUser && (
+              <Input 
+                type="password" 
+                value={form.password ?? ""} 
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, password: e.target.value })} 
+                placeholder="Password" 
+              />
+            )}
+            <Select value={form.role_code} onChange={(val: string) => setForm({ ...form, role_code: val })}>
+              <Select.Option value="A001">Admin</Select.Option>
+              <Select.Option value="A002">User</Select.Option>
+              <Select.Option value="A003">Financer</Select.Option>
+              <Select.Option value="A004">Approver</Select.Option>
+            </Select>
+            <Button onClick={handleSave}>{editingUser ? "Update" : "Create"}</Button>
+            <Button onClick={() => setPopupOpen(false)}>Close</Button>
           </div>
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Role Code</th>
-                <th>Blocked</th>
-                <th>Created At</th>
-                <th>Updated At</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredUsers.length > 0 ? (
-                filteredUsers.map((user) => (
-                  <tr key={user.id}>
-                    <td>{user.id}</td>
-                    <td>{user.staffName}</td>
-                    <td>{user.email}</td>
-                    <td>{user.role_code}</td>
-                    <td>{user.blocked}</td>
-                    <td>{user.created_at}</td>
-                    <td>{user.updated_at}</td>
-                    <td className="action-buttons">
-                      <button className="edit-btn" onClick={() => editUser(user)}>Edit</button>
-                      <button className="delete-btn" onClick={() => deleteUser(user.id)}>Delete</button>
-                      <button className="lock-btn" onClick={() => toggleLockStatus(user)}>
-                        {user.blocked === "Yes" ? "Unlock" : "Lock"}
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={8} className="no-users">No users found.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-          {modalOpen && modalContent}
-        </div>
+        )}
       </div>
     </Layout>
   );
-}
+};
+
+export default UserManagement;

@@ -9,7 +9,7 @@ interface PrivateRouteProps {
 const PrivateRoute = ({ allowedRoles }: PrivateRouteProps) => {
   const { loading } = useAuth();
   const role = localStorage.getItem("userRole");
-  
+
   if (loading) {
     return <div>Loading...</div>;
   }

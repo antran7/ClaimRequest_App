@@ -23,8 +23,7 @@ const AppRoutes = () => {
           <Route path="/forgotpassword" element={<ForgotPassword />} />
           <Route path="/unauthorized" element={<Error />} />
           <Route path="/contact" element={<Contact />} />
-          <Route path="/about" element={<About/>} />
-
+          <Route path="/about" element={<About />} />
 
           {/* Import route từ các module */}
           {adminRoutes.map((route, index) => (
