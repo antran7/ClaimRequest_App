@@ -37,7 +37,16 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
 
   const menuItems = [
     { text: "Home", icon: <HouseIcon />, path: "/" },
-    { text: "Dashboard", icon: <BadgeIcon />, path: "/dashboard" },
+    {
+      text: "Dashboard",
+      icon: <BadgeIcon />,
+      path: "/dashboard",
+    },
+    {
+      text: "My Claims",
+      icon: <RequestPageIcon />,
+      path: "/my-requests",
+    },
   ];
 
   const adminItems = [
@@ -58,6 +67,10 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
       ],
     },
   ];
+  const usersItems = [
+    { text: "Profile", icon: <PeopleAltRoundedIcon />, path: "/user/profile" },
+    { text: "My Requests", icon: <RequestPageIcon />, path: "/user/my-requests" },
+  ];
 
   const approvalItems = [
     {
@@ -67,39 +80,10 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
     },
   ];
 
-  const usersItems = [
-    { text: "Profile", icon: <PeopleAltRoundedIcon />, path: "/user/profile" },
-    { text: "My Requests", icon: <RequestPageIcon />, path: "/user/my-requests" },
-  ];
-
-  const financeItems = [
-    { text: "Paid Claims", icon: <PaidIcon />, path: "/finance/claims" },
-  ];
+  const finaceItems = [{ text: "Paid Claims", icon: <PaidIcon />, path: "/#" }];
 
   const handleNavigation = (path: string) => {
-
-    switch (path) {
-      case "/dashboard":
-        switch (role) {
-          case Role.USER:
-            navigate("/user/dashboard");
-            break;
-          case Role.ADMIN:
-            navigate("/admin/dashboard");
-            break;
-          case Role.APPROVER:
-            navigate("/approval/dashboard");
-            break;
-          case Role.FINANCE:
-            navigate("/finance/claims");
-            break;
-          default:
-            navigate("/");
-        }
-        break;
-      default:
-        navigate(path);
-
+    console.log(role);
     if (path === "/dashboard") {
       if (role === "user") {
         navigate("/user/dashboard");
@@ -112,7 +96,6 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
       }
     } else {
       navigate(path);
-
     }
     toggleSidebar();
   };
@@ -122,12 +105,12 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
       try {
         await getUserInfo();
       } catch (error) {
-        console.error("Error fetching user info:", error);
+        console.error("Error:", error);
       }
     };
 
     fetchAuth();
-  }, [getUserInfo]); // Added dependency array
+  });
 
   return (
     <Drawer open={isOpen} onClose={toggleSidebar}>
@@ -144,19 +127,22 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
         </List>
         <Divider />
 
-        {/* Admin Section */}
-        {role === Role.ADMIN && (
-          <List>
-            {adminItems.map(({ text, icon, children }) => (
+        {/* Admin Management */}
+        <List>
+          {role === Role.ADMIN &&
+            adminItems.map(({ text, icon, children }) => (
               <Box key={text}>
                 <ListItem disablePadding>
-                  <ListItemButton onClick={() => setOpenManagement(!openManagement)}>
+                  <ListItemButton
+                    onClick={() => setOpenManagement(!openManagement)}
+                  >
                     <ListItemIcon>{icon}</ListItemIcon>
                     <ListItemText primary={text} />
                     {openManagement ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                   </ListItemButton>
                 </ListItem>
 
+                {/* Hiển thị danh sách con nếu openManagement === true */}
                 <Collapse in={openManagement} timeout="auto" unmountOnExit>
                   <List component="div" disablePadding>
                     {children.map(({ text, icon, path }) => (
@@ -171,13 +157,9 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
                 </Collapse>
               </Box>
             ))}
-          </List>
-        )}
 
-        {/* Approver Section */}
-        {role === Role.APPROVER && (
-          <List>
-            {approvalItems.map(({ text, icon, path }) => (
+          {role === Role.APPROVER &&
+            approvalItems.map(({ text, icon, path }) => (
               <ListItem key={text} disablePadding>
                 <ListItemButton onClick={() => handleNavigation(path)}>
                   <ListItemIcon>{icon}</ListItemIcon>
@@ -185,13 +167,23 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
                 </ListItemButton>
               </ListItem>
             ))}
-          </List>
-        )}
 
-        {/* User Section */}
-        {role === Role.USER && (
-          <List>
-            {usersItems.map(({ text, icon, path }) => (
+
+          {role === Role.USER && (
+            <List>
+              {usersItems.map(({ text, icon, path }) => (
+                <ListItem key={text} disablePadding>
+                  <ListItemButton onClick={() => handleNavigation(path)}>
+                    <ListItemIcon>{icon}</ListItemIcon>
+                    <ListItemText primary={text} />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          )}
+
+          {role === Role.FINANCE &&
+            finaceItems.map(({ text, icon, path }) => (
               <ListItem key={text} disablePadding>
                 <ListItemButton onClick={() => handleNavigation(path)}>
                   <ListItemIcon>{icon}</ListItemIcon>
@@ -199,25 +191,12 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
                 </ListItemButton>
               </ListItem>
             ))}
-          </List>
-        )}
-
-        {/* Finance Section */}
-        {role === Role.FINANCE && (
-          <List>
-            {financeItems.map(({ text, icon, path }) => (
-              <ListItem key={text} disablePadding>
-                <ListItemButton onClick={() => handleNavigation(path)}>
-                  <ListItemIcon>{icon}</ListItemIcon>
-                  <ListItemText primary={text} />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
-        )}
+        </List>
       </Box>
     </Drawer>
   );
 };
 
 export default SideBar;
+
+

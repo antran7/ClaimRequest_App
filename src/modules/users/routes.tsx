@@ -8,11 +8,6 @@ import User from "./pages/user-dashboard/User";
 import RequestPage from "./pages/request/RequestPage";
 
 
-
-import Profile from "../common/pages/Profile";
-
-
-
 export const userRoutes: RouteObject[] = [
     {
         path: "/user",
