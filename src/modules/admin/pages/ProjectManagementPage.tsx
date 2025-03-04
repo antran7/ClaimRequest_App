@@ -53,7 +53,7 @@ const ProjectManagementPage: React.FC = () => {
     const fetchProjects = async () => {
       setLoading(true);
       try {
-        const response = await searchProject("");
+        const response = await searchProject("", page);
         if (response.success && response.data) {
           setProjects(response.data.pageData);
           setTotalPages(response.data.pageInfo.totalPages);
@@ -176,8 +176,9 @@ const ProjectManagementPage: React.FC = () => {
   };
 
   const handleSearch = async (searchTerm: string) => {
+    setLoading(true);
     try {
-      const response = await searchProject(searchTerm);
+      const response = await searchProject(searchTerm, 1);
       if (response.success && response.data) {
         setProjects(response.data.pageData);
         setTotalPages(response.data.pageInfo.totalPages);
@@ -185,6 +186,8 @@ const ProjectManagementPage: React.FC = () => {
       }
     } catch (error) {
       toast.error("Failed to search projects");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -226,7 +229,7 @@ const ProjectManagementPage: React.FC = () => {
           <TableContainer>
   <Table>
     <TableHead>
-      <TableRow className="bg-gray-500">
+      <TableRow className="bg-gray-300">
         <TableCell>Project Name</TableCell>
         <TableCell>Project Code</TableCell>
         <TableCell>Department</TableCell>
@@ -239,7 +242,11 @@ const ProjectManagementPage: React.FC = () => {
       {loading ? (
         <TableRow>
           <TableCell colSpan={6} align="center">
-            <CircularProgress />
+          <div className="flex justify-center flex-row gap-2">
+            <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce"></div>
+            <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce [animation-delay:-.3s]"></div>
+            <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce [animation-delay:-.5s]"></div>
+          </div>
           </TableCell>
         </TableRow>
       ) : projects.length === 0 ? (
@@ -293,6 +300,7 @@ const ProjectManagementPage: React.FC = () => {
                 onChange={(_, value) => setPage(value)}
                 variant="outlined"
                 shape="rounded"
+
               />
             </Stack>
           </div>
