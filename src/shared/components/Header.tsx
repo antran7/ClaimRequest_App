@@ -99,7 +99,7 @@ const Header = ({ toggleSidebar = () => { } }: HeaderProps) => {
               onClose={handleClose}
               disableScrollLock={true} // Giữ thanh cuộn
             >
-              <MenuItem onClick={handleClose}>
+              <MenuItem onClick={() => navigate("/account/profile")}>
                 My Profile
               </MenuItem>
               <MenuItem onClick={handleClose}>

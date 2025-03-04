@@ -8,6 +8,7 @@ import Verify from "../auth/pages/Verify";
 import Error from "../auth/pages/Error";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import ProfilePage from "./pages/ProfilePage";
 
 export const commonRoutes: RouteObject[] = [
     {
@@ -47,7 +48,7 @@ export const commonRoutes: RouteObject[] = [
     },
 
     {
-        path: "/profile",
+        path: "/account",
         element: <PrivateRoute allowedRoles={
             [
                 Role.ADMIN,
@@ -56,7 +57,13 @@ export const commonRoutes: RouteObject[] = [
                 Role.USER,
             ]
         }
-        />
+        />,
+        children: [
+            {
+                path: "profile",
+                element: <ProfilePage />,
+            },
+        ],
 
-    }
-]
+    },
+];
