@@ -60,6 +60,7 @@ export default function UserDashboard() {
   };
 
   return (
+    <div>
     <Layout>
       <div className="dashboard-container">
         {/* Swiper Slider */}
@@ -107,11 +108,12 @@ export default function UserDashboard() {
         </div>
 
         {/* Bar Chart */}
-        <div className="bar-chart-container">
-          <p className="chart-title">Claim Request</p>
-          <Bar data={claimRequestData} />
-        </div>
+        <div className="bar-chart">
+                <p style={{ textAlign: "center", margin: "20px", fontSize: "20px", color: "#418c9f" }}>Claim Request</p>
+                  <Bar data={claimRequestData} />
+                </div>
       </div>
     </Layout>
+    </div>
   );
 }

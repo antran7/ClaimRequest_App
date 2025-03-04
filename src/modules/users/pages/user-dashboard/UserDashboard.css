@@ -8,19 +8,18 @@ html, body {
     background-color: #f8f9fa; /* Light background */
 }
 
-/* Main Container */
 .home {
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-height: 100vh; 
+    height: 50vh;
     padding: 20px;
     box-sizing: border-box; 
     overflow-y: auto; 
     width: 100%;
 }
 
-/* Widgets Container */
+
 .homeWidgets {
     display: flex;
     flex-wrap: wrap;
@@ -30,11 +29,11 @@ html, body {
     max-width: 1200px; /* Prevents excessive stretching */
 }
 
-/* Swiper Carousel */
+
 .swiper {
     width: 100%;
-    max-width: 1800px;
-    height: 700px;* Adjusted height */
+    max-width: 1400px;
+    height: 600px;* Adjusted height */
     margin: 20px auto;
     border-radius: 10px; 
     overflow: hidden; 
@@ -72,7 +71,12 @@ html, body {
     margin-bottom: 20px;
     border-radius: 10px;
 }
-
+.bar-chart{
+    width: 750px;
+    height: 500px;
+    margin-top: 30px;
+    box-shadow:1px 1px 2px 1px rgba(0, 0, 0, 0.2);
+  }
 
 
 /* Responsive Adjustments */
