@@ -1,6 +1,6 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { Role } from "../constants/roles";
-import { useAuth } from "../hooks/useAuth";
+import { useAuth } from "../../core/hooks/useAuth";
 
 interface PrivateRouteProps {
   allowedRoles: Role[];

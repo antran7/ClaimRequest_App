@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import Header from '../components/Header'
 import SideBar from '../components/SideBar';
+import Footer from '../components/Footer';
 
 type LayoutProps = {
     children: React.ReactNode;

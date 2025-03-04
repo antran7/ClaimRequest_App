@@ -1,4 +1,4 @@
-import apiService from "../../auth/services/api"; // Import the shared API service
+import apiService from "../../../core/api/api"; // Import the shared API service
 import { User , PageInfo , SearchResponse} from "../types/user"; // Lùi một cấp để vào thư mục types
 
 
