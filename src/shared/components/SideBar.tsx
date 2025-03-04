@@ -40,12 +40,12 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
     {
       text: "Dashboard",
       icon: <BadgeIcon />,
-      path: "/approval/dashboard",
+      path: "/dashboard",
     },
     {
       text: "My Claims",
       icon: <RequestPageIcon />,
-      path: "/approval/my-requests",
+      path: "/my-requests",
     },
   ];
 
@@ -72,21 +72,20 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
     {
       text: "Approve Claims",
       icon: <CheckBoxIcon />,
-      path: "/approval/claims",
+      path: "/approval/dashboard",
     },
   ];
 
   const finaceItems = [{ text: "Paid Claims", icon: <PaidIcon />, path: "/#" }];
 
   const handleNavigation = (path: string) => {
-    console.log(role);
     if (path === "/dashboard") {
       if (role === "user") {
         navigate("/user/dashboard");
       } else if (role === "admin") {
         navigate("/admin/dashboard");
       } else if (role === "approver") {
-        navigate("/approval/claims");
+        navigate("/approval/dashboard");
       } else {
         navigate("/finance/claims");
       }

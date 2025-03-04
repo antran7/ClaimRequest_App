@@ -6,22 +6,21 @@ import { userRoutes } from "../../modules/users/routes";
 import { adminRoutes } from "../../modules/admin/routes";
 import { financeRoutes } from "../../modules/finance/routes";
 import { approvalRoutes } from "../../modules/approval/routes";
-import { Toaster } from "react-hot-toast";
 import Home from "../../modules/common/pages/Home";
 import Contact from "../../modules/common/pages/Contact";
-
 import About from "../../modules/common/pages/About";
 import Verify from "../../modules/auth/pages/Verify";
+import ForgotPassword from "../../modules/auth/pages/ForgotPassword";
 
 const AppRoutes = () => {
   return (
     <AuthProvider>
       <Router>
-        <Toaster position="top-center" reverseOrder={false} />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/verify" element={<Verify />} />
+          <Route path="/forgotpassword" element={<ForgotPassword />} />
           <Route path="/unauthorized" element={<Error />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/about" element={<About />} />
