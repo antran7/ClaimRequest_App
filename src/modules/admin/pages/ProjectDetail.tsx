@@ -13,8 +13,9 @@ import {
   DialogContent,
   DialogTitle,
 } from "@mui/material";
+import { CircularProgress } from '@mui/material';
 import { fetchProjectById } from "../services/projectService";
-import { Project } from "../types/project";
+import { Project } from "../types/projectInterface";
 import Layout from "../../../shared/layouts/Layout";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useNavigate } from "react-router-dom";
@@ -27,39 +28,49 @@ const ProjectDetail = () => {
   const { projectId } = useParams();
   const [project, setProject] = useState<Project | null>(null);
   const navigate = useNavigate();
-    const [projects, setProjects] = useState<Project[]>([]);
-    const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-    const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 
   useEffect(() => {
     if (projectId) {
       fetchProjectById(projectId)
-        .then((data) => setProject(data))
-        .catch((err) => console.error("Error fetching project:", err));
+        .then((response) => {
+          if (response.success) {
+            setProject(response.data);
+          } else {
+            toast.error("Failed to fetch project details");
+          }
+        })
+        .catch((err) => {
+          console.error("Error fetching project:", err);
+          toast.error("Error loading project details");
+        });
     }
   }, [projectId]);
 
   if (!project) {
-    return <div className="text-center py-10">Loading...</div>;
+    return (
+      <Layout>
+        <div className="flex justify-center items-center h-screen">
+          <CircularProgress />
+        </div>
+      </Layout>
+    );
   }
 
-  const handleOpenConfirmDialog = (id: string) => {
-    setSelectedProjectId(id);
+  const handleOpenConfirmDialog = () => {
     setConfirmDialogOpen(true);
   };
 
   const handleConfirmDelete = async () => {
-    if (selectedProjectId) {
+    if (project?._id) {
       try {
-        await deleteProject(selectedProjectId);
-        setProjects((prev) => prev.filter((p) => p.id !== selectedProjectId));
+        await deleteProject(project._id);
         toast.success("Project deleted successfully!");
-        navigate("/admin/manageproject")
+        navigate("/admin/manageproject");
       } catch {
         toast.error("Failed to delete project");
       } finally {
         setConfirmDialogOpen(false);
-        setSelectedProjectId(null);
       }
     }
   };
@@ -76,36 +87,45 @@ const ProjectDetail = () => {
         <Card>
           <CardHeader
             title={project.project_name}
-            subheader={`Mã dự án: ${project.project_code}`}
+            subheader={`Project code: ${project.project_code}`}
           />
           <CardContent>
-            <p>
-              <strong>Phòng ban:</strong> {project.project_department}
+            <p className="mb-2">
+              <strong>Department:</strong> {project.project_department}
             </p>
-            <p>
-              <strong>Mô tả:</strong> {project.project_description}
+            <p className="mb-2">
+              <strong>Description:</strong> {project.project_description}
             </p>
-            <p>
-              <strong>Trạng thái:</strong> {project.project_status}
+            <p className="mb-2">
+              <strong>Status:</strong> {project.project_status}
             </p>
-            <p>
-              <strong>Ngày bắt đầu:</strong>{" "}
+            <p className="mb-2">
+              <strong>Start date:</strong>{" "}
               {new Date(project.project_start_date).toLocaleDateString()}
             </p>
-            <p>
-              <strong>Ngày kết thúc:</strong>{" "}
+            <p className="mb-2">
+              <strong>End date:</strong>{" "}
               {new Date(project.project_end_date).toLocaleDateString()}
             </p>
-            <h2 className="text-xl font-semibold mt-6">Thành viên dự án</h2>
-            <ul className="mt-2">
-              {project.project_members.map((member) => (
-                <li key={member.user_id} className="border-b py-2">
-                  <p className="font-medium">
-                    {member.user_name || "N/A"} - {member.project_role}
-                  </p>
-                </li>
-              ))}
-            </ul>
+            <div className="mt-6">
+              <h2 className="text-xl font-semibold mb-4">Member</h2>
+              <div className="grid gap-4">
+                {project.project_members && project.project_members.length > 0 ? (
+                  project.project_members.map((member) => (
+                    <div key={member.user_id} className="bg-gray-50 p-4 rounded-lg shadow-sm">
+                      <p className="font-medium text-gray-900">
+                        {member.full_name || member.user_name}
+                      </p>
+                      <p className="text-gray-600">
+                        Role: {member.project_role}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500">Không có thành viên trong dự án</p>
+                )}
+              </div>
+            </div>
           </CardContent>
           <CardActions>
             <Button
@@ -117,7 +137,7 @@ const ProjectDetail = () => {
                 mr: 1,
               }}
               startIcon={<EditIcon />}
-              // onClick={() => handleViewProject(project.id)}
+              onClick={() => navigate(`/admin/manageproject/edit/${project._id}`)}
             >
               Edit
             </Button>
@@ -125,7 +145,7 @@ const ProjectDetail = () => {
               variant="outlined"
               color="error"
               startIcon={<DeleteIcon />}
-              onClick={() => handleOpenConfirmDialog(project.id)}
+              onClick={handleOpenConfirmDialog}
             >
               Delete
             </Button>
