@@ -42,11 +42,6 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
       icon: <BadgeIcon />,
       path: "/dashboard",
     },
-    {
-      text: "My Claims",
-      icon: <RequestPageIcon />,
-      path: "/my-requests",
-    },
   ];
 
   const adminItems = [
@@ -69,10 +64,19 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
   ];
   const usersItems = [
     { text: "Profile", icon: <PeopleAltRoundedIcon />, path: "/user/profile" },
-    { text: "My Requests", icon: <RequestPageIcon />, path: "/user/my-requests" },
+    {
+      text: "My Requests",
+      icon: <RequestPageIcon />,
+      path: "/user/my-requests",
+    },
   ];
 
   const approvalItems = [
+    {
+      text: "My Claims",
+      icon: <RequestPageIcon />,
+      path: "/approval/my-requests",
+    },
     {
       text: "Approve Claims",
       icon: <CheckBoxIcon />,
@@ -80,7 +84,14 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
     },
   ];
 
-  const finaceItems = [{ text: "Paid Claims", icon: <PaidIcon />, path: "/#" }];
+  const finaceItems = [
+    {
+      text: "My Claims",
+      icon: <RequestPageIcon />,
+      path: "/finance/my-requests",
+    },
+    { text: "Paid Claims", icon: <PaidIcon />, path: "/#" },
+  ];
 
   const handleNavigation = (path: string) => {
     console.log(role);
@@ -168,7 +179,6 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
               </ListItem>
             ))}
 
-
           {role === Role.USER && (
             <List>
               {usersItems.map(({ text, icon, path }) => (
@@ -198,5 +208,3 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
 };
 
 export default SideBar;
-
-

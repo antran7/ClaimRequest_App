@@ -15,6 +15,7 @@ import {
 import { Search, Download, AttachMoney } from "@mui/icons-material";
 import axios from "axios";
 import "./PaidPage.css";
+import Layout from "../../../shared/layouts/Layout";
 
 interface ClaimRequest {
   id: number;
@@ -94,86 +95,88 @@ const PaidPage = () => {
   );
 
   return (
-    <div className="paid-page">
-      <div className="page-header">
-        <div className="header-top">
-          <Typography variant="h4" className="page-title">
-            Finance Claims Management
-          </Typography>
+    <Layout>
+      <div className="paid-page">
+        <div className="page-header">
+          <div className="header-top">
+            <Typography variant="h4" className="page-title">
+              Finance Claims Management
+            </Typography>
+          </div>
+          <TextField
+            placeholder="Search claims..."
+            variant="outlined"
+            onChange={(e) => setSearchText(e.target.value)}
+            className="search-input"
+            InputProps={{
+              startAdornment: <Search />,
+            }}
+          />
         </div>
-        <TextField
-          placeholder="Search claims..."
-          variant="outlined"
-          onChange={(e) => setSearchText(e.target.value)}
-          className="search-input"
-          InputProps={{
-            startAdornment: <Search />,
-          }}
-        />
-      </div>
-      <div className="table-container">
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Employee Name</TableCell>
-                <TableCell>Project</TableCell>
-                <TableCell>Amount ($)</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Submitted Date</TableCell>
-                <TableCell>Approved Date</TableCell>
-                <TableCell>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredData.map((record) => (
-                <TableRow key={record.id}>
-                  <TableCell>{record.id}</TableCell>
-                  <TableCell>{record.employeeName}</TableCell>
-                  <TableCell>{record.projectName}</TableCell>
-                  <TableCell className="amount-cell">
-                    ${record.amount.toFixed(2)}
-                  </TableCell>
-                  <TableCell>
-                    <span
-                      className={`status-tag ${
-                        record.status === "PAID" ? "paid" : "approved"
-                      }`}
-                    >
-                      {record.status}
-                    </span>
-                  </TableCell>
-                  <TableCell>{record.submittedDate}</TableCell>
-                  <TableCell>{record.approvedDate}</TableCell>
-                  <TableCell>
-                    <Tooltip title="Mark as Paid">
-                      <span>
-                        <IconButton
-                          color="primary"
-                          onClick={() => handlePaid(record)}
-                          disabled={record.status === "PAID"}
-                        >
-                          <AttachMoney />
-                        </IconButton>
-                      </span>
-                    </Tooltip>
-                    <Tooltip title="Download">
-                      <IconButton
-                        color="default"
-                        onClick={() => handleDownload(record)}
-                      >
-                        <Download />
-                      </IconButton>
-                    </Tooltip>
-                  </TableCell>
+        <div className="table-container">
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>ID</TableCell>
+                  <TableCell>Employee Name</TableCell>
+                  <TableCell>Project</TableCell>
+                  <TableCell>Amount ($)</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell>Submitted Date</TableCell>
+                  <TableCell>Approved Date</TableCell>
+                  <TableCell>Actions</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+              <TableBody>
+                {filteredData.map((record) => (
+                  <TableRow key={record.id}>
+                    <TableCell>{record.id}</TableCell>
+                    <TableCell>{record.employeeName}</TableCell>
+                    <TableCell>{record.projectName}</TableCell>
+                    <TableCell className="amount-cell">
+                      ${record.amount.toFixed(2)}
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className={`status-tag ${
+                          record.status === "PAID" ? "paid" : "approved"
+                        }`}
+                      >
+                        {record.status}
+                      </span>
+                    </TableCell>
+                    <TableCell>{record.submittedDate}</TableCell>
+                    <TableCell>{record.approvedDate}</TableCell>
+                    <TableCell>
+                      <Tooltip title="Mark as Paid">
+                        <span>
+                          <IconButton
+                            color="primary"
+                            onClick={() => handlePaid(record)}
+                            disabled={record.status === "PAID"}
+                          >
+                            <AttachMoney />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                      <Tooltip title="Download">
+                        <IconButton
+                          color="default"
+                          onClick={() => handleDownload(record)}
+                        >
+                          <Download />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </div>
       </div>
-    </div>
+    </Layout>
   );
 };
 
