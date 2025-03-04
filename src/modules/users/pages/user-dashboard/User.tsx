@@ -9,6 +9,7 @@ import {
   Publish as PublishIcon,
 } from "@mui/icons-material";
 import "./User.css";
+import Layout from "../../../../shared/layouts/Layout";
 
 export default function User() {
   const [formData, setFormData] = useState({
@@ -101,6 +102,7 @@ export default function User() {
     }
   };
   return (
+    <Layout>
     <div className="user">
       <div className="userTitleContainer">
         <h1 className="userTitle">Profile User</h1>
@@ -205,6 +207,8 @@ export default function User() {
           </form>
         </div>
       </div>
+      
     </div>
+    </Layout>
   );
 }
