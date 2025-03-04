@@ -6,7 +6,7 @@ const Search = ({ onSearch }) => {
   const handleChange = (e) => {
     const value = e.target.value;
     setSearchTerm(value);
-    onSearch(value); // Gọi hàm xử lý tìm kiếm ngay lập tức
+    onSearch(value); 
   };
 
   return (
@@ -17,7 +17,7 @@ const Search = ({ onSearch }) => {
         name="search"
         type="search"
         value={searchTerm}
-        onChange={handleChange} // Xử lý khi nhập
+        onChange={handleChange} 
       />
       <svg
         className="size-6 absolute top-3 right-3 text-gray-500"
