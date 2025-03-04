@@ -1,10 +1,32 @@
 import { useEffect, useState } from "react";
-import { searchUsers, createUser, updateUser, changeUserStatus, fetchUser, deleteUser } from "../services/userService";
+import {
+  searchUsers,
+  createUser,
+  updateUser,
+  changeUserStatus,
+  fetchUser,
+  deleteUser,
+} from "../services/userService";
 import Layout from "../../../shared/layouts/Layout";
-import { Button, TableContainer, Table, TableHead, TableBody, TableRow, TableCell, TextField, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper } from "@mui/material";
+import {
+  Button,
+  TableContainer,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  TextField,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Paper,
+} from "@mui/material";
 import { User } from "../types/user";
 import { Pagination } from "@mui/material";
-
+import Waves from "./Waves.tsx";
 
 const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -14,31 +36,39 @@ const UserManagement = () => {
   const [pageNum, setPageNum] = useState(1); //  Track current page
   const [pageSize] = useState(5); //  Items per page
   const [totalPages, setTotalPages] = useState(1); // Total pages from API
-  const [form, setForm] = useState<{ email: string; user_name: string; role_code: string; password?: string }>({
+  const [form, setForm] = useState<{
+    email: string;
+    user_name: string;
+    role_code: string;
+    password?: string;
+  }>({
     email: "",
     user_name: "",
     role_code: "A001",
     password: "",
   });
   const [searchTerm, setSearchTerm] = useState("");
-  const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; user: User | null; action: "delete" | "block" | null }>({
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    user: User | null;
+    action: "delete" | "block" | null;
+  }>({
     open: false,
     user: null,
     action: null,
   });
   useEffect(() => {
     fetchUsers();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageNum,searchTerm]);
-
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageNum, searchTerm]);
 
   const fetchUsers = async () => {
     setLoading(true);
     try {
       const response = await searchUsers(
-        { keyword: searchTerm.trim() }, 
+        { keyword: searchTerm.trim() },
         { pageNum, pageSize }
-      )
+      );
       console.log("Users type check:", Array.isArray(response.pageData)); // Should be true
       console.log("Parsed Users:", response.pageData); //  Debug users
       if (response?.pageData && response?.pageInfo) {
@@ -55,13 +85,12 @@ const UserManagement = () => {
       setLoading(false);
     }
   };
-  const filteredUsers = users.filter((user) =>
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.role_code.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredUsers = users.filter(
+    (user) =>
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.role_code.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-
 
   const handleSave = async () => {
     try {
@@ -88,15 +117,19 @@ const UserManagement = () => {
     }
   };
 
-  
   const handleConfirmAction = async () => {
     if (!confirmDialog.user || !confirmDialog.action) return;
     try {
       if (confirmDialog.action === "block") {
-        await changeUserStatus(confirmDialog.user._id, !confirmDialog.user.is_blocked);
+        await changeUserStatus(
+          confirmDialog.user._id,
+          !confirmDialog.user.is_blocked
+        );
         setUsers((prevUsers) =>
           prevUsers.map((u) =>
-            u._id === confirmDialog.user!._id ? { ...u, is_blocked: !confirmDialog.user!.is_blocked } : u
+            u._id === confirmDialog.user!._id
+              ? { ...u, is_blocked: !confirmDialog.user!.is_blocked }
+              : u
           )
         );
       } else if (confirmDialog.action === "delete") {
@@ -109,87 +142,97 @@ const UserManagement = () => {
       setConfirmDialog({ open: false, user: null, action: null });
     }
   };
-  
 
   return (
     <Layout>
       <div className="p-4">
-      <TextField
-        label="Search by Username or RoleCode"
-        variant="outlined"
-        fullWidth
-        margin="dense"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
+        <TextField
+          label="Search by Username or RoleCode"
+          variant="outlined"
+          fullWidth
+          margin="dense"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
         <Dialog open={popupOpen} onClose={() => setPopupOpen(false)}>
-  <DialogTitle>{editingUser ? "Edit User" : "Add New User"}</DialogTitle>
-  <DialogContent>
-    {/* Email Field */}
-    <TextField
-      label="Email"
-      fullWidth
-      margin="dense"
-      value={form.email}
-      onChange={(e) => setForm({ ...form, email: e.target.value })}
-    />
+          <DialogTitle>
+            {editingUser ? "Edit User" : "Add New User"}
+          </DialogTitle>
+          <DialogContent>
+            {/* Email Field */}
+            <TextField
+              label="Email"
+              fullWidth
+              margin="dense"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+            />
 
-    {/* Username Field */}
-    <TextField
-      label="Username"
-      fullWidth
-      margin="dense"
-      value={form.user_name}
-      onChange={(e) => setForm({ ...form, user_name: e.target.value })}
-    />
+            {/* Username Field */}
+            <TextField
+              label="Username"
+              fullWidth
+              margin="dense"
+              value={form.user_name}
+              onChange={(e) => setForm({ ...form, user_name: e.target.value })}
+            />
 
-    {/* Role Dropdown */}
-    <TextField
-      select
-      label="Role"
-      fullWidth
-      margin="dense"
-      value={form.role_code}
-      onChange={(e) => setForm({ ...form, role_code: e.target.value })}
-      SelectProps={{ native: true }}
-    >
-      <option value="A001">A001</option>
-      <option value="A002">A002</option>
-      <option value="A003">A003</option>
-      <option value="A004">A004</option>
-    </TextField>
+            {/* Role Dropdown */}
+            <TextField
+              select
+              label="Role"
+              fullWidth
+              margin="dense"
+              value={form.role_code}
+              onChange={(e) => setForm({ ...form, role_code: e.target.value })}
+              SelectProps={{ native: true }}
+            >
+              <option value="A001">A001</option>
+              <option value="A002">A002</option>
+              <option value="A003">A003</option>
+              <option value="A004">A004</option>
+            </TextField>
 
-    {/* Password Field (ONLY for Adding New User) */}
-    {!editingUser && (
-      <TextField
-        label="Password"
-        fullWidth
-        margin="dense"
-        type="password"
-        value={form.password}
-        onChange={(e) => setForm({ ...form, password: e.target.value })}
-      />
-    )}
-  </DialogContent>
+            {/* Password Field (ONLY for Adding New User) */}
+            {!editingUser && (
+              <TextField
+                label="Password"
+                fullWidth
+                margin="dense"
+                type="password"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+              />
+            )}
+          </DialogContent>
 
-  <DialogActions>
-    <Button onClick={() => setPopupOpen(false)} color="error">Cancel</Button>
-    <Button onClick={handleSave} color="primary">Save</Button>
-  </DialogActions>
-</Dialog>
+          <DialogActions>
+            <Button onClick={() => setPopupOpen(false)} color="error">
+              Cancel
+            </Button>
+            <Button onClick={handleSave} color="primary">
+              Save
+            </Button>
+          </DialogActions>
+        </Dialog>
 
-<Button 
-  variant="contained" 
-  color="primary" 
-  onClick={() => {
-    setEditingUser(null); // Reset editing state
-    setForm({ email: "", user_name: "", role_code: "A001", password: "" }); // Reset form
-    setPopupOpen(true); // Open popup
-  }}
-  style={{ marginBottom: "16px" }}
->
-  Add New User
-</Button>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => {
+            setEditingUser(null); // Reset editing state
+            setForm({
+              email: "",
+              user_name: "",
+              role_code: "A001",
+              password: "",
+            }); // Reset form
+            setPopupOpen(true); // Open popup
+          }}
+          style={{ marginBottom: "16px" }}
+        >
+          Add New User
+        </Button>
 
         <TableContainer component={Paper} className="mt-4">
           <Table>
@@ -208,24 +251,37 @@ const UserManagement = () => {
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.role_code}</TableCell>
                   <TableCell>{user.user_name}</TableCell>
-                  <TableCell> <Button onClick={() => setConfirmDialog({ open: true, user, action: "block" })}>
-                        {user.is_blocked ? "Locked" : "Unlocked"} </Button></TableCell>
                   <TableCell>
-                  <Button 
-                        color="inherit" 
-                        onClick={() => {
-                          setEditingUser(user); // Set user being edited
-                          setForm({ 
-                            email: user.email, 
-                            user_name: user.user_name, 
-                            role_code: user.role_code,
-                          });
-                          setPopupOpen(true); // Open popup
-                        }}
-                      >
-                        Edit
-                      </Button>
-                    <Button color="warning" onClick={() => setConfirmDialog({ open: true, user, action: "delete" })}>
+                    {" "}
+                    <Button
+                      onClick={() =>
+                        setConfirmDialog({ open: true, user, action: "block" })
+                      }
+                    >
+                      {user.is_blocked ? "Locked" : "Unlocked"}{" "}
+                    </Button>
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      color="inherit"
+                      onClick={() => {
+                        setEditingUser(user); // Set user being edited
+                        setForm({
+                          email: user.email,
+                          user_name: user.user_name,
+                          role_code: user.role_code,
+                        });
+                        setPopupOpen(true); // Open popup
+                      }}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      color="warning"
+                      onClick={() =>
+                        setConfirmDialog({ open: true, user, action: "delete" })
+                      }
+                    >
                       Delete
                     </Button>
                   </TableCell>
@@ -236,20 +292,36 @@ const UserManagement = () => {
         </TableContainer>
       </div>
       <Pagination
-          count={totalPages} 
-          page={pageNum} 
-          onChange={(event, newPage) => setPageNum(newPage)} // Change page
-          color="primary"
-        />
-      <Dialog open={confirmDialog.open} onClose={() => setConfirmDialog({ open: false, user: null, action: null })}>
+        count={totalPages}
+        page={pageNum}
+        onChange={(event, newPage) => setPageNum(newPage)} // Change page
+        color="primary"
+      />
+      <Dialog
+        open={confirmDialog.open}
+        onClose={() =>
+          setConfirmDialog({ open: false, user: null, action: null })
+        }
+      >
         <DialogTitle>Confirm Action</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to {confirmDialog.action === "delete" ? "delete" : confirmDialog.user?.is_blocked ? "unblock" : "block"} this user?
+            Are you sure you want to{" "}
+            {confirmDialog.action === "delete"
+              ? "delete"
+              : confirmDialog.user?.is_blocked
+              ? "unblock"
+              : "block"}{" "}
+            this user?
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmDialog({ open: false, user: null, action: null })} color="error">
+          <Button
+            onClick={() =>
+              setConfirmDialog({ open: false, user: null, action: null })
+            }
+            color="error"
+          >
             Cancel
           </Button>
           <Button onClick={handleConfirmAction} color="success">
@@ -257,9 +329,21 @@ const UserManagement = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      {/* <Waves
+        lineColor="#fff"
+        backgroundColor="rgba(175, 96, 96, 0.2)"
+        waveSpeedX={0.02}
+        waveSpeedY={0.01}
+        waveAmpX={40}
+        waveAmpY={20}
+        friction={0.9}
+        tension={0.01}
+        maxCursorMove={120}
+        xGap={12}
+        yGap={36}
+      /> */}
     </Layout>
   );
 };
 
 export default UserManagement;
-
