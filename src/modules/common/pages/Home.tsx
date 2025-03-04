@@ -3,7 +3,7 @@ import Layout from "../../../shared/layouts/Layout";
 import './Home.css';
 import { Box, Button } from "@mui/material";
 import EastIcon from '@mui/icons-material/East';
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import Footer from "../../../shared/components/Footer";
 const Home: React.FC = () => {
