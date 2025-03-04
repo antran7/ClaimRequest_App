@@ -64,7 +64,7 @@ export const deleteProject = async (id: string): Promise<void> => {
 
 export const fetchProjectById = async (projectId: string): Promise<Project> => {
   try {
-    const response = await fetch(`${API_URL}/${projectId}`, {
+    const response = await fetch(`${API_URL}/projects/${projectId}`, {
       headers: getHeaders(),
     });
 

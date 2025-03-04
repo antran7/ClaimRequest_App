@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
 import { searchUsers, createUser, updateUser, changeUserStatus, fetchUser, deleteUser } from "../services/userService";
 import Layout from "../../../shared/layouts/Layout";
-import { Button, Table, Input, Select } from "antd";
-import { User , PageInfo , SearchResponse} from "../types/user"; 
-import { message } from "antd";  
-
+import { Button, TableContainer, Table, TableHead, TableBody, TableRow, TableCell, TextField, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper } from "@mui/material";
+import { User } from "../types/user";
 
 
 const UserManagement = () => {
@@ -19,7 +17,11 @@ const UserManagement = () => {
     password: "",
   });
   const [searchTerm, setSearchTerm] = useState("");
-
+  const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; user: User | null; action: "delete" | "block" | null }>({
+    open: false,
+    user: null,
+    action: null,
+  });
   useEffect(() => {
     fetchUsers();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -30,240 +32,220 @@ const UserManagement = () => {
     setLoading(true);
     try {
       const response = await searchUsers(
-        { email: searchTerm.trim() }, // ✅ Send search term
+        { email: searchTerm.trim() },
         { pageNum: 1, pageSize: 10 }
       );
-      setUsers(response); // ✅ Update users
+      setUsers(response);
     } catch (error) {
       console.error("Failed to fetch users", error);
     } finally {
       setLoading(false);
     }
   };
-  
 
-  // const fetchUsers = async () => {
-  //   setLoading(true);
-  //   try {
-  //     const response = await searchUsers(
-  //       { email: searchTerm }, 
-  //       { pageNum: 1, pageSize: 10 }
-  //     );
-  //     console.log("API Response:", response); // ✅ Check what API returns
-  //     const data: User[] = response as User[];
-  //     setUsers(data);
-  //   } catch (error) {
-  //     console.error("Failed to fetch users", error);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-  const loadUsers = async () => {
-    try {
-      const usersData = await searchUsers({}, { page: 1, size: 10 }); // Adjust pagination as needed
-      setUsers(usersData);
-    } catch (error) {
-      console.error("Error loading users:", error);
-    }
-  };
-  
-
-  // const handleSave = async () => {
-  //   try {
-  //     console.log("Form Data Before Sending:", form);
-  //     if (editingUser) {
-  //       await updateUser(editingUser._id, { email: form.email, user_name: form.user_name });
-  //       message.success("User updated successfully");
-  //     } else {
-  //       await createUser(form);
-  //       message.success("User created successfully");
-  //     }
-  
-  //     setPopupOpen(false);
-  //     loadUsers();  // ✅ Reload users after adding or editing
-  //   } catch (error) {
-  //     console.error("Failed to save user", error);
-  //     console.error("Server Response:", error.response?.data);
-  //   }
-  // };
+  const filteredUsers = users.filter((user) =>
+    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.role_code.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
 
 
   const handleSave = async () => {
     try {
-      console.log("Editing User:", editingUser); // Debugging
-  
-      if (editingUser && !editingUser._id) {
-        console.error("User ID is missing for edit.");
-        return;
-      }
-  
       if (editingUser) {
-        // Editing existing user
+        // Updating an existing user
         await updateUser(editingUser._id, {
           email: form.email,
           user_name: form.user_name,
           role_code: form.role_code,
         });
       } else {
-        // Creating new user
+        // Creating a new user
         await createUser({
           email: form.email,
           user_name: form.user_name,
           role_code: form.role_code,
-          password: form.password,
+          password: form.password, // Password required for new users
         });
       }
-  
-      setPopupOpen(false);
-      loadUsers();
+      setPopupOpen(false); // Close popup after saving
+      fetchUsers(); // Refresh the user list
     } catch (error) {
       console.error("Failed to save user", error);
     }
   };
   
 
-  const handleBlockToggle = async (user: User) => {
-    try {
-      await changeUserStatus(user._id, !user.is_blocked);
   
-      // ✅ Update the blocked status locally without re-fetching
-      setUsers((prevUsers) =>
-        prevUsers.map((u) =>
-          u._id === user._id ? { ...u, is_blocked: !user.is_blocked } : u
-        )
-      );
+  const handleConfirmAction = async () => {
+    if (!confirmDialog.user || !confirmDialog.action) return;
+    try {
+      if (confirmDialog.action === "block") {
+        await changeUserStatus(confirmDialog.user._id, !confirmDialog.user.is_blocked);
+        setUsers((prevUsers) =>
+          prevUsers.map((u) =>
+            u._id === confirmDialog.user!._id ? { ...u, is_blocked: !confirmDialog.user!.is_blocked } : u
+          )
+        );
+      } else if (confirmDialog.action === "delete") {
+        await deleteUser(confirmDialog.user._id);
+        fetchUsers();
+      }
     } catch (error) {
-      console.error("Failed to change user status", error);
+      console.error(`Failed to ${confirmDialog.action} user`, error);
+    } finally {
+      setConfirmDialog({ open: false, user: null, action: null });
     }
   };
-  
-
-  const handleDelete = async (userId: string) => {
-    try {
-      await deleteUser(userId);
-      fetchUsers(); // ✅ Refresh list
-    } catch (error) {
-      console.error("Failed to delete user", error);
-    }
-  };
-  
   
 
   return (
     <Layout>
       <div className="p-4">
-        <Input
-          placeholder="Search by email"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          onPressEnter={fetchUsers}
-        />
-        <Button
+      <TextField
+        label="Search by Username or RoleCode"
+        variant="outlined"
+        fullWidth
+        margin="dense"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+      />
+        <Dialog open={popupOpen} onClose={() => setPopupOpen(false)}>
+  <DialogTitle>{editingUser ? "Edit User" : "Add New User"}</DialogTitle>
+  <DialogContent>
+    {/* Email Field */}
+    <TextField
+      label="Email"
+      fullWidth
+      margin="dense"
+      value={form.email}
+      onChange={(e) => setForm({ ...form, email: e.target.value })}
+    />
+
+    {/* Username Field */}
+    <TextField
+      label="Username"
+      fullWidth
+      margin="dense"
+      value={form.user_name}
+      onChange={(e) => setForm({ ...form, user_name: e.target.value })}
+    />
+
+    {/* Role Dropdown */}
+    <TextField
+      select
+      label="Role"
+      fullWidth
+      margin="dense"
+      value={form.role_code}
+      onChange={(e) => setForm({ ...form, role_code: e.target.value })}
+      SelectProps={{ native: true }}
+    >
+      <option value="A001">A001</option>
+      <option value="A002">A002</option>
+      <option value="A003">A003</option>
+      <option value="A004">A004</option>
+    </TextField>
+
+    {/* Password Field (ONLY for Adding New User) */}
+    {!editingUser && (
+      <TextField
+        label="Password"
+        fullWidth
+        margin="dense"
+        type="password"
+        value={form.password}
+        onChange={(e) => setForm({ ...form, password: e.target.value })}
+      />
+    )}
+  </DialogContent>
+
+  <DialogActions>
+    <Button onClick={() => setPopupOpen(false)} color="error">Cancel</Button>
+    <Button onClick={handleSave} color="primary">Save</Button>
+  </DialogActions>
+</Dialog>
+
+<Button 
+  variant="contained" 
+  color="primary" 
   onClick={() => {
-    setEditingUser(null);
-    setForm({ email: "", user_name: "", role_code: "A001" }); // Reset form
-    setPopupOpen(true);
+    setEditingUser(null); // Reset editing state
+    setForm({ email: "", user_name: "", role_code: "A001", password: "" }); // Reset form
+    setPopupOpen(true); // Open popup
   }}
+  style={{ marginBottom: "16px" }}
 >
   Add New User
 </Button>
 
-        <Table 
-          dataSource={users} 
-          rowKey="id" 
-          loading={loading} 
-          columns={[
-            { title: "Email", dataIndex: "email", key: "email" },
-            { title: "Username", dataIndex: "user_name", key: "user_name" },
-            { 
-              title: "Blocked", 
-              dataIndex: "is_blocked", 
-              key: "is_blocked",
-              render: (is_blocked) => (is_blocked ? "Yes" : "No")
-            },
-            {
-              title: "Actions",
-              key: "actions",
-              render: (_, user) => (
-                <>
-           <Button
-  onClick={async () => {
-    try {
-      console.log("Editing user:", user); // Debugging log
-      if (!user._id) {
-        console.error("User ID is missing for edit.");
-        return;
-      }
-
-      const userData = await fetchUser(user._id);
-
-      if (!userData) {
-        console.error("User data is null or undefined");
-        return;
-      }
-
-      setEditingUser({
-        _id: userData._id,  // Ensure _id is stored
-        email: userData.email ?? "",
-        user_name: userData.user_name ?? "",
-        role_code: userData.role_code ?? "A001",
-      });
-
-      setPopupOpen(true);
-    } catch (error) {
-      console.error("Failed to fetch user details", error);
-    }
-  }}
->
-  Edit
-</Button>
-
-        <Button onClick={() => handleBlockToggle(user)}>
-                   {user.is_blocked ? "Unblock" : "Block"}
-        </Button>
-
-                  <Button danger onClick={() => handleDelete(user._id)}>Delete</Button>
-
-                </>
-              )
-            }
-          ]} 
-        />
-        {popupOpen && (
-          <div className="absolute top-10 left-1/2 transform -translate-x-1/2 bg-white p-4 shadow-lg rounded">
-            <Input 
-              value={form.email} 
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, email: e.target.value })} 
-              placeholder="Email" 
-            />
-            <Input 
-              value={form.user_name} 
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, user_name: e.target.value })} 
-              placeholder="Username" 
-            />
-            {!editingUser && (
-              <Input 
-                type="password" 
-                value={form.password ?? ""} 
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, password: e.target.value })} 
-                placeholder="Password" 
-              />
-            )}
-            <Select value={form.role_code} onChange={(val: string) => setForm({ ...form, role_code: val })}>
-              <Select.Option value="A001">Admin</Select.Option>
-              <Select.Option value="A002">User</Select.Option>
-              <Select.Option value="A003">Financer</Select.Option>
-              <Select.Option value="A004">Approver</Select.Option>
-            </Select>
-            <Button onClick={handleSave}>{editingUser ? "Update" : "Create"}</Button>
-            <Button onClick={() => setPopupOpen(false)}>Close</Button>
-          </div>
-        )}
+        <TableContainer component={Paper} className="mt-4">
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Email</TableCell>
+                <TableCell>Role</TableCell>
+                <TableCell>Username</TableCell>
+                <TableCell>Blocked</TableCell>
+                <TableCell>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredUsers.map((user) => (
+                <TableRow key={user._id}>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.role_code}</TableCell>
+                  <TableCell>{user.user_name}</TableCell>
+                  <TableCell>{user.is_blocked ? "Yes" : "No"}</TableCell>
+                  <TableCell>
+                  <Button 
+                        color="inherit" 
+                        onClick={() => {
+                          setEditingUser(user); // Set user being edited
+                          setForm({ 
+                            email: user.email, 
+                            user_name: user.user_name, 
+                            role_code: user.role_code,
+                          });
+                          setPopupOpen(true); // Open popup
+                        }}
+                      >
+                        Edit
+                      </Button>
+                    <Button onClick={() => setConfirmDialog({ open: true, user, action: "block" })}>
+                      {user.is_blocked ? "Unblock" : "Block"}
+                    </Button>
+                    <Button color="warning" onClick={() => setConfirmDialog({ open: true, user, action: "delete" })}>
+                      Delete
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
       </div>
+
+      <Dialog open={confirmDialog.open} onClose={() => setConfirmDialog({ open: false, user: null, action: null })}>
+        <DialogTitle>Confirm Action</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to {confirmDialog.action === "delete" ? "delete" : confirmDialog.user?.is_blocked ? "unblock" : "block"} this user?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmDialog({ open: false, user: null, action: null })} color="error">
+            Cancel
+          </Button>
+          <Button onClick={handleConfirmAction} color="success">
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Layout>
   );
 };
 
 export default UserManagement;
+
