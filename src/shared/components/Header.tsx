@@ -5,7 +5,7 @@ import { Role } from "../constants/roles";
 import MenuIcon from "@mui/icons-material/Menu";
 import IconButton from "@mui/material/IconButton";
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import { useAuth } from "../hooks/useAuth";
+import { useAuth } from "../../core/hooks/useAuth";
 import { Menu, MenuItem } from "@mui/material";
 
 interface HeaderProps {
@@ -55,7 +55,7 @@ const Header = ({ toggleSidebar = () => { } }: HeaderProps) => {
             <MenuIcon style={{ fontSize: '30px' }} />
           </IconButton>
         )}
-        <p>Claim Request</p>
+        <p>Claim Management</p>
       </div>
 
       <div className="layout-header-right">
@@ -99,7 +99,7 @@ const Header = ({ toggleSidebar = () => { } }: HeaderProps) => {
               onClose={handleClose}
               disableScrollLock={true} // Giữ thanh cuộn
             >
-              <MenuItem onClick={handleClose}>
+              <MenuItem onClick={() => navigate("/account/profile")}>
                 My Profile
               </MenuItem>
               <MenuItem onClick={handleClose}>

@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import {
   CalendarToday as CalendarTodayIcon,
   LocationSearching as LocationSearchingIcon,
@@ -8,9 +7,10 @@ import {
   PhoneAndroid as PhoneAndroidIcon,
   Publish as PublishIcon,
 } from "@mui/icons-material";
-import "./User.css";
+import "./ProfilePage.css";
+import Layout from "../../../shared/layouts/Layout";
 
-export default function User() {
+export default function ProfilePage() {
   const [formData, setFormData] = useState({
     staffName: "",
     fullName: "",
@@ -101,6 +101,7 @@ export default function User() {
     }
   };
   return (
+    <Layout>
     <div className="user">
       <div className="userTitleContainer">
         <h1 className="userTitle">Profile User</h1>
@@ -205,6 +206,8 @@ export default function User() {
           </form>
         </div>
       </div>
+      
     </div>
+    </Layout>
   );
 }

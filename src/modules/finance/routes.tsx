@@ -10,8 +10,8 @@ export const financeRoutes: RouteObject[] = [
     children: [
       {
         path: "claims",
-        element: <PaidPage />
-      }
+        element: <PaidPage />,
+      },
     ],
   },
 ];

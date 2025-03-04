@@ -1,7 +1,6 @@
 import { createContext, ReactNode, useState, useEffect, useContext } from "react";
-import { Role } from "../constants/roles";
-import apiService from "../../modules/auth/services/api";
-import { userData } from "../../modules/users/pages/user-dashboard/dumyData";
+import { Role } from "../../shared/constants/roles";
+import apiService from "../api/api";
 
 interface UserData {
   "_id": string,
