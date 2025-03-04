@@ -1,9 +1,3 @@
-// export type User = {
-//     id: string;
-//     url: string;
-//     name: string;
-//     projectId: string[];
-//   };
 
 export interface User {
   _id: string; // ✅ Đúng với API response
@@ -25,10 +19,7 @@ export interface PageInfo {
   totalPages: number;
 }
 
-export interface SearchResponse {
-  success: boolean;
-  data: {
-    pageData: User[]; // ✅ Chỉnh đúng theo API response
-    pageInfo: PageInfo;
-  };
+export interface UserResponse {
+  pageData: User[];
+  pageInfo: PageInfo;
 }
