@@ -1,4 +1,4 @@
-import { Project } from "../types/project";
+import { Project } from "../types/projectInterface";
 
 const API_URL = "https://management-claim-request.vercel.app/api";
 
@@ -78,7 +78,7 @@ export const fetchProjectById = async (projectId: string): Promise<Project> => {
   }
 };
 
-export const searchProject = async (searchTerm: string = ""): Promise<ApiResponse> => {
+export const searchProject = async (searchTerm: string = "", pageNum: number = 1): Promise<ApiResponse> => {
   try {
     const bodyData = {
       searchCondition: {
@@ -89,7 +89,7 @@ export const searchProject = async (searchTerm: string = ""): Promise<ApiRespons
         user_id: "",
       },
       pageInfo: {
-        pageNum: 1,
+        pageNum: pageNum,
         pageSize: 10,
       },
     };

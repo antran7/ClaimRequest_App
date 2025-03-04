@@ -1,5 +1,7 @@
-import apiService from "../../auth/services/api"; 
+
+import apiService from "../../../core/api/api";
 import { User, UserResponse} from "../types/user"; 
+
 
 
 export const searchUsers = async (
