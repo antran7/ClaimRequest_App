@@ -85,7 +85,13 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
 
   const handleNavigation = (path: string) => {
     console.log(role);
-    if (path === "/dashboard") {
+    if (path === "/my-requests") {
+      if (role === "user") {
+        navigate("/user/my-requests");
+      } else {
+        navigate(path);
+      }
+    } else if (path === "/dashboard") {
       if (role === "user") {
         navigate("/user/dashboard");
       } else if (role === "admin") {
