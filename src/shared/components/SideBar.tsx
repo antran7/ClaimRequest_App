@@ -77,27 +77,19 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
   ];
 
   const handleNavigation = (path: string) => {
-    switch (path) {
-      case "/dashboard":
-        switch (role) {
-          case Role.USER:
-            navigate("/user/dashboard");
-            break;
-          case Role.ADMIN:
-            navigate("/admin/dashboard");
-            break;
-          case Role.APPROVER:
-            navigate("/approval/dashboard");
-            break;
-          case Role.FINANCE:
-            navigate("/finance/claims");
-            break;
-          default:
-            navigate("/");
-        }
-        break;
-      default:
-        navigate(path);
+    console.log(role);
+    if (path === "/dashboard") {
+      if (role === "user") {
+        navigate("/user/dashboard");
+      } else if (role === "admin") {
+        navigate("/admin/dashboard");
+      } else if (role === "approver") {
+        navigate("/approval/dashboard");
+      } else {
+        navigate("/finance/claims");
+      }
+    } else {
+      navigate(path);
     }
     toggleSidebar();
   };
