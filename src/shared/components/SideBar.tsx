@@ -68,7 +68,7 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
     },
   ];
   const usersItems = [
-    
+
   ];
 
   const approvalItems = [
@@ -84,19 +84,23 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
   ];
 
   const handleNavigation = (path: string) => {
-    console.log(role);
-    if (path === "/dashboard") {
-      if (role === "user") {
-        navigate("/user/dashboard");
-      } else if (role === "admin") {
-        navigate("/admin/dashboard");
-      } else if (role === "approver") {
-        navigate("/approval/dashboard");
-      } else {
-        navigate("/finance/claims");
-      }
+    console.log(path);
+    if (path === "/my-requests") {
+      navigate("/user/my-requests");
     } else {
-      navigate(path);
+      if (path === "/dashboard") {
+        if (role === "user") {
+          navigate("/user/dashboard");
+        } else if (role === "admin") {
+          navigate("/admin/dashboard");
+        } else if (role === "approver") {
+          navigate("/approval/dashboard");
+        } else {
+          navigate("/finance/claims");
+        }
+      } else {
+        navigate(path);
+      }
     }
     toggleSidebar();
   };

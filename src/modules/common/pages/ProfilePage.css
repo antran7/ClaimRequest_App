@@ -1,158 +1,70 @@
-.user {
-  flex: 4;
-  padding: 20px;
+.profile-page-title {
+  h2 {
+    font-size: 30px;
+  }
+  small {
+    color: #696969;
+  }
 }
 
-.userTitleContainer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.userAddButton {
-  width: 80px;
-  border: none;
-  padding: 5px;
-  background-color: teal;
-  border-radius: 5px;
-  cursor: pointer;
-  color: white;
-  font-size: 16px;
-}
-
-.userContainer {
-  display: flex;
-  margin-top: 20px;
-}
-
-.userShow {
-  flex: 1;
-  padding: 20px;
-  -webkit-box-shadow: 0px 0px 15px -10px rgba(0, 0, 0, 0.75);
-  box-shadow: 0px 0px 15px -10px rgba(0, 0, 0, 0.75);
-}
-
-.userUpdate {
-  flex: 2;
-  padding: 20px;
-  -webkit-box-shadow: 0px 0px 15px -10px rgba(0, 0, 0, 0.75);
-  box-shadow: 0px 0px 15px -10px rgba(0, 0, 0, 0.75);
-  margin-left: 20px;
-}
-
-.userShowTop {
-  display: flex;
-  align-items: center;
-}
-
-.userShowImg {
-  width: 70px;
-  height: 70px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.userShowTopTitle {
+/* .profile-page-title,
+.profile-page-board {
+  position: relative;
+  overflow: hidden;
+} */
+.profile-page-info {
   display: flex;
   flex-direction: column;
-  margin-left: 20px;
+  align-items: center;
 }
 
-.userShowUsername {
-  font-weight: 600;
+.profile-page-board {
+  display: flex;
+  width: 80%;
+  height: 80%;
+  background: #cccccc44;
 }
 
-.userShowUserTitle {
-  font-weight: 300;
+.profile-page-left img {
+  width: 400px;
 }
 
-.userShowBottom{
-    margin-top: 20px;
+.profile-page-board::before {
+  content: '';
+  background: linear-gradient(to bottom, #DB27D2, #F89904);
+  width: 300px;
+  height: 300px;
+  border-radius: 30px;
+  bottom: -90px;
+  left: 45%;
+  position: absolute;
+  transform: rotate(-30deg);
+  overflow: hidden;
 }
 
-.userShowTitle {
-  font-size: 14px;
-  font-weight: 600;
-  color: rgb(175, 170, 170);
+.profile-page-board::after {
+  content: '';
+  background: linear-gradient(to top, #DB27D2, #F89904);
+  width: 520px;
+  height: 520px;
+  border-radius: 30px;
+  bottom: -90px;
+  right: -15%;
+  position: absolute;
+  transform: rotate(-30deg);
+  overflow: hidden;
 }
 
-.userShowInfo{
-    display: flex;
-    align-items: center;
-    margin: 20px 0px;
-    color: #444;
+.profile-page-title::before {
+  content: '';
+  background: linear-gradient(to bottom, #F488B5, #DB27D2);
+  width: 200px;
+  height: 200px;
+  border-radius: 30px;
+  top: 50%;
+  right: -15%;
+  position: absolute;
+  transform: rotate(-30deg);
+  overflow: hidden;
 }
 
-.userShowIcon{
-    font-size: 16px !important;
-}
-
-.userShowInfoTitle{
-    margin-left: 10px;
-}
-
-.userUpdateTitle{
-    font-size: 24px;
-    font-weight: 600;
-}
-
-.userUpdateForm{
-    display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
-}
-
-.userUpdateItem{
-    display: flex;
-    flex-direction: column;
-    margin-top: 10px;
-}
-
-.userUpdateItem>label{
-    margin-bottom: 5px;
-    font-size: 14px;
-}
-.userUpdateInput{
-    border: none;
-    width: 250px;
-    height: 30px;
-    border-bottom: 1px solid gray;
-}
-.userUpdateRight{
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
-.userUpdateUpload{
-    display: flex;
-    align-items: center;
-}
-.userUpdateImg{
-    width: 200px;
-    height: 200px;
-    border-radius: 10px;
-    object-fit: cover;
-    margin-right: 20px;
-}
-.userUpdateIcon{
-    cursor: pointer;
-}
-.userUpdateButton{
-    border-radius: 10px;
-    border: none;
-    padding: 5px;
-    cursor: pointer;
-    background-color: #484F68;
-    color: white;
-    font-weight: 600;
-    width: 100px;
-    height: 50px;
-  }
-.error {
-  color: red;
-  font-size: 12px;
-  margin-top: 5px;
-}
-.userUpdateInput.error {
-  border-bottom: 2px solid red;
-}
