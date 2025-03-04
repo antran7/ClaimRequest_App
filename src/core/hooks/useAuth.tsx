@@ -2,6 +2,8 @@ import { createContext, ReactNode, useState, useEffect, useContext } from "react
 import { Role } from "../../shared/constants/roles";
 import apiService from "../api/api";
 
+// Tạo kiểu dữ liệu trả về
+// Có các trường giống với phần data mà api response trả về
 interface UserData {
   "_id": string,
     "email": string,
@@ -48,6 +50,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email: email,
         password: password
       }
+      // Sau mỗi lệnh CRUD (get,post,put,delete) mn nhớ thêm kiểu dữ liệu trả về
+      // đặt trong cặp ngoặc -> <kieu_du_lieu>
+      // nếu api ko trả dữ liệu về thì ko cần thêm
       const response = await apiService.post<{ token: string }>('/auth', loginData);
       if (response.success) {
         localStorage.setItem("token", response.data.token);
