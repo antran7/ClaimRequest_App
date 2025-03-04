@@ -67,6 +67,10 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
       ],
     },
   ];
+  const usersItems = [
+    { text: "Profile", icon: <PeopleAltRoundedIcon />, path: "/user/profile" },
+    { text: "My Requests", icon: <RequestPageIcon />, path: "/user/my-requests" },
+  ];
 
   const approvalItems = [
     {
@@ -79,6 +83,7 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
   const finaceItems = [{ text: "Paid Claims", icon: <PaidIcon />, path: "/#" }];
 
   const handleNavigation = (path: string) => {
+    console.log(role);
     if (path === "/dashboard") {
       if (role === "user") {
         navigate("/user/dashboard");
@@ -163,6 +168,20 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
               </ListItem>
             ))}
 
+
+          {role === Role.USER && (
+            <List>
+              {usersItems.map(({ text, icon, path }) => (
+                <ListItem key={text} disablePadding>
+                  <ListItemButton onClick={() => handleNavigation(path)}>
+                    <ListItemIcon>{icon}</ListItemIcon>
+                    <ListItemText primary={text} />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          )}
+
           {role === Role.FINANCE &&
             finaceItems.map(({ text, icon, path }) => (
               <ListItem key={text} disablePadding>
@@ -179,3 +198,5 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
 };
 
 export default SideBar;
+
+
