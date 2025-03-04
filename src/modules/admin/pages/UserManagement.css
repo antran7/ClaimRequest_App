@@ -49,13 +49,13 @@ h1 {
   transform: scale(1.05);
 }
 
-input[type="text"] {
+/* input[type="text"] {
   width: 100%;
   padding: 10px;
   margin-bottom: 15px;
   border: 1px solid #ccc;
   border-radius: 6px;
-}
+} */
 
 .controls {
   display: flex;

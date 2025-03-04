@@ -6,32 +6,25 @@ import { userRoutes } from "../../modules/users/routes";
 import { adminRoutes } from "../../modules/admin/routes";
 import { financeRoutes } from "../../modules/finance/routes";
 import { approvalRoutes } from "../../modules/approval/routes";
-import { Toaster } from "react-hot-toast";
 import Home from "../../modules/common/pages/Home";
 import Contact from "../../modules/common/pages/Contact";
-import Approver from "../../modules/approval/pages/Approver";
-import RequestPage from "../../modules/approval/pages/RequestPage";
 import About from "../../modules/common/pages/About";
 import Verify from "../../modules/auth/pages/Verify";
+import ForgotPassword from "../../modules/auth/pages/ForgotPassword";
 
 const AppRoutes = () => {
   return (
     <AuthProvider>
       <Router>
-        <Toaster position="top-center" reverseOrder={false} />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/verify" element={<Verify />} />
+          <Route path="/forgotpassword" element={<ForgotPassword />} />
           <Route path="/unauthorized" element={<Error />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/about" element={<About/>} />
-          {/* <Route path="/approval/dashboard" element={<ApprovalDashboard />}>
-            <Route path="home" element={<ApprovalPage />} />
-            <Route path="profile" element={<Approver />} />
-            <Route path="request" element={<RequestPage />} />
-            <Route path="history" element={<div>History Content</div>} />
-          </Route> */}
+
 
           {/* Import route từ các module */}
           {adminRoutes.map((route, index) => (

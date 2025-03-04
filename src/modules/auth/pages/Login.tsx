@@ -1,46 +1,47 @@
 import { useState } from "react";
 import "./Login.css";
-import { Role } from "../../../shared/constants/roles";
 import { useAuth } from "../../../shared/hooks/useAuth";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { useForm } from "react-hook-form";
+import { TextField, Checkbox, FormControlLabel, Button } from "@mui/material";
 
+interface LoginFormInputs {
+  email: string;
+  password: string;
+  remember: boolean;
+}
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login, forgotPawssword } = useAuth();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(false);
+  const { login } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormInputs>();
+
+  const onSubmit = async (data: LoginFormInputs) => {
+    if (isLoading) return;
+    setIsLoading(true);
     try {
-      await login(email, password);
+      await login(data.email, data.password);
       navigate("/");
-      toast.success('Login successfully!');
-    } catch (error) {
-      toast.error("Thông tin đăng nhập không chính xác!", {
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        theme: "light",
+      toast("Login successfully.", {
+        icon: "🔥",
+        style: { background: "#333", color: "#ccc" },
       });
+    } catch (error) {
+      toast(error.toString(), {
+        icon: "❌",
+        style: { background: "#333", color: "#ccc" },
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
-
-  const handleForgotPassword = async () => {
-    try {
-      await forgotPawssword();
-      toast.success('Please check your email to get new password!');
-    } catch(error) {
-      console.error('Error:',error);
-      toast.error("This didn't work.");
-    }
-  }
 
   return (
     <div className="login-page">
@@ -48,7 +49,6 @@ const Login = () => {
         <div className="login-home-container">
           <Link to="/" className="login-home-link">HOME</Link>
         </div>
-
         <img
           src="https://tailwindui.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600"
           alt="#"
@@ -57,38 +57,37 @@ const Login = () => {
           className="login-logo"
         />
         <h1 className="login-title">Sign in to your account</h1>
-        <form className="login-form" onSubmit={handleSubmit}>
-          <label>Email address</label>
-          <input
+        <form className="login-form" onSubmit={handleSubmit(onSubmit)}>
+          <TextField
+            label="Email address"
             type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
+            fullWidth
+            margin="normal"
+            {...register("email", { required: "Email is required", pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: "Invalid email format" } })}
+            error={!!errors.email}
+            helperText={errors.email?.message}
           />
-          <label>Password</label>
-          <input
+          <TextField
+            label="Password"
             type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
+            fullWidth
+            margin="normal"
+            {...register("password", { required: "Password is required", minLength: { value: 6, message: "Password must be at least 6 characters" } })}
+            error={!!errors.password}
+            helperText={errors.password?.message}
           />
           <div className="login-options">
-            <label className="login-checkbox">
-              <input
-                type="checkbox"
-                checked={remember}
-                onChange={(e) => setRemember(e.target.checked)}
-              />
-              Remember me
-            </label>
-            <div
-              className="forgot-password"
-              onClick={handleForgotPassword}
-            >
+            <FormControlLabel
+              control={<Checkbox {...register("remember")} color="primary" />}
+              label="Remember me"
+            />
+            <div className="forgot-password" onClick={() => navigate("/forgotpassword")}>
               Forgot password?
             </div>
           </div>
-          <button type="submit" className="login-submit">Sign in</button>
+          <Button type="submit" variant="contained" fullWidth disabled={isLoading} className="login-submit">
+            Sign in
+          </Button>
         </form>
       </div>
       <div className="login-right">
@@ -98,4 +97,4 @@ const Login = () => {
   );
 };
 
-export default Login; 
+export default Login;
