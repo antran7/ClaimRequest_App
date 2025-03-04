@@ -3,7 +3,7 @@ import { searchUsers, createUser, updateUser, changeUserStatus, fetchUser, delet
 import Layout from "../../../shared/layouts/Layout";
 import { Button, Table, Input, Select } from "antd";
 import { User , PageInfo , SearchResponse} from "../types/user"; 
-import { message } from "antd";  
+import { message } from "antd";
 
 
 

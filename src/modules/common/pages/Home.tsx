@@ -5,6 +5,7 @@ import { Box, Button } from "@mui/material";
 import EastIcon from '@mui/icons-material/East';
 import { useNavigate } from "react-router";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { Footer } from "antd/es/layout/layout";
 const Home: React.FC = () => {
     const navigate = useNavigate();
     const [isHovering, setIsHovering] = useState(false);
@@ -254,6 +255,7 @@ const Home: React.FC = () => {
                     </div>
                 </div>
             </Layout>
+            <Footer />
         </>
     );
 };

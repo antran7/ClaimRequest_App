@@ -1,20 +1,31 @@
 import { Link, useNavigate } from "react-router-dom";
 import "./Header.css";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Role } from "../constants/roles";
 import MenuIcon from "@mui/icons-material/Menu";
 import IconButton from "@mui/material/IconButton";
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import { useAuth } from "../hooks/useAuth";
+import { Menu, MenuItem } from "@mui/material";
 
 interface HeaderProps {
   toggleSidebar?: () => void;
 }
 
-const Header = ({ toggleSidebar = () => {} }: HeaderProps) => {
+const Header = ({ toggleSidebar = () => { } }: HeaderProps) => {
   const navigate = useNavigate();
+  const [anchorEl, setAnchorEl] = React.useState(null);
   const { logout } = useAuth();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const token = localStorage.getItem("token") as Role | null;
+
+  const handleMenu = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
 
   const handleLogOut = () => {
     logout();
@@ -35,14 +46,15 @@ const Header = ({ toggleSidebar = () => {} }: HeaderProps) => {
     <div className="layout-header">
 
       <div className="layout-header-left">
-        <IconButton
-          onClick={toggleSidebar}
-          color="inherit"
-          style={{ marginRight: '10px' }}
-        >
-          <div> <MenuIcon style={{ fontSize: '30px' }}/> </div>
-
-        </IconButton>
+        {isLoggedIn && (
+          <IconButton
+            onClick={toggleSidebar}
+            color="inherit"
+            style={{ marginRight: '10px' }}
+          >
+            <MenuIcon style={{ fontSize: '30px' }} />
+          </IconButton>
+        )}
         <p>Claim Request</p>
       </div>
 
@@ -61,9 +73,42 @@ const Header = ({ toggleSidebar = () => {} }: HeaderProps) => {
             Log In
           </Link>
         ) : (
-          <button onClick={handleLogOut} className="header-right-item">
-            Log Out
-          </button>
+          <div>
+            <IconButton
+              size="large"
+              aria-label="account of current user"
+              aria-controls="menu-appbar"
+              aria-haspopup="true"
+              onClick={handleMenu}
+            >
+              <AccountCircleIcon />
+            </IconButton>
+            <Menu
+              id="menu-appbar"
+              anchorEl={anchorEl}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'right',
+              }}
+              keepMounted
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+              open={Boolean(anchorEl)}
+              onClose={handleClose}
+              disableScrollLock={true} // Giữ thanh cuộn
+            >
+              <MenuItem onClick={handleClose}>
+                My Profile
+              </MenuItem>
+              <MenuItem onClick={handleClose}>
+                <button onClick={handleLogOut}>
+                  Log Out
+                </button>
+              </MenuItem>
+            </Menu>
+          </div>
         )}
       </div>
     </div>

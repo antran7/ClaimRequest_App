@@ -1,18 +1,29 @@
 import { createContext, ReactNode, useState, useEffect, useContext } from "react";
 import { Role } from "../constants/roles";
 import apiService from "../../modules/auth/services/api";
+import { userData } from "../../modules/users/pages/user-dashboard/dumyData";
 
-interface User {
-  email: string;
-  password: string;
-  role: string;
+interface UserData {
+  "_id": string,
+    "email": string,
+    "user_name": string,
+    "role_code": string,
+    "is_verified": boolean,
+    "verification_token": string,
+    "verification_token_expires": string,
+    "token_version": number,
+    "is_blocked": boolean,
+    "created_at": string,
+    "updated_at": string,
+    "is_deleted": boolean,
+    "__v": number
 }
 
 interface AuthContextType {
-  user: User | null;
+  user: UserData | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  forgotPawssword: () => void;
+  forgotPassword: (email: string) => Promise<void>;
   getUserInfo: () => void;
   loading: boolean;
 }
@@ -21,7 +32,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   login: async () => Promise.resolve(),
   logout: () => { },
-  forgotPawssword: () => { },
+  forgotPassword: () => Promise.resolve(),
   getUserInfo: () => { },
   loading: true,
 });
@@ -29,21 +40,31 @@ const AuthContext = createContext<AuthContextType>({
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<void> => {
     try {
       const loginData = {
         email: email,
         password: password
       }
-      const response = await apiService.post('/auth', loginData);
-      if (response) {
-        localStorage.setItem("token", response.data.data.token);
+      const response = await apiService.post<{ token: string }>('/auth', loginData);
+      if (response.success) {
+        localStorage.setItem("token", response.data.token);
         localStorage.setItem("userEmail", email);
-      } else {
-        throw new Error('Thông tin đăng nhập không chính xác');
+      }
+    } catch (error) {
+      console.error("Error: ", error);
+      throw error;
+    }
+  };
+
+  const logout = async (): Promise<void> => {
+    try {
+      const response = await apiService.post<null>('/auth/logout');
+      if (response) {
+        localStorage.clear();
       }
     } catch (error) {
       console.error('Error:', error);
@@ -51,27 +72,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const logout = async () => {
+  const forgotPassword = async (email: string): Promise<void> => {
     try {
-      const response = await apiService.post('/auth/logout');
-      if (response) {
-        localStorage.removeItem("userRole");
-        localStorage.removeItem("token");
-      } else {
-        throw new Error("Log out that bai!");
-      }
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
-
-  const forgotPawssword = async () => {
-    try {
-      const email: string = localStorage.getItem("userEmail");
       const sendData = {
         email: email,
       }
-      const response = await apiService.put('/auth/forgot-password', sendData);
+      const response = await apiService.put<null>('/auth/forgot-password', sendData);
     } catch (error) {
       console.error('Error:', error);
     }
@@ -79,9 +85,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const getUserInfo = async () => {
     try {
-      const response = await apiService.get('/auth');
+      const response = await apiService.get<UserData>('/auth');
       if (response) {
-        const role = response.data.data.role_code;
+        // localStorage.setItem("userData", response.data);
+        // setUser(response.data);
+        const role = response.data.role_code;
         switch (role) {
           case "A001":
             localStorage.setItem("userRole", Role.ADMIN);
@@ -112,7 +120,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [user]);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, forgotPawssword, getUserInfo, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, forgotPassword, getUserInfo, loading }}>
       {children}
     </AuthContext.Provider>
   );

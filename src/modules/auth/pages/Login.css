@@ -31,19 +31,12 @@
     flex-direction: column;
 }
 
-.login-form label {
-    font-weight: 500;
-    margin-bottom: 5px;
-    font-size: 16px;
-}
-
-.login-form input {
-    width: 100%;
-    padding: 6px 10px;
-    margin-bottom: 15px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-}
+.login-form .MuiOutlinedInput-input {
+    padding: 12px !important;
+    line-height: 1.5 !important;
+    display: flex;
+    align-items: center;
+}   
 
 .login-options {
     display: flex;
