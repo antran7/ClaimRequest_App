@@ -13,22 +13,33 @@ import {
   DialogContent,
   DialogTitle,
 } from "@mui/material";
-import { CircularProgress } from '@mui/material';
 import { fetchProjectById } from "../services/projectService";
-import { Project } from "../types/projectInterface";
+import { Project, User } from "../types/projectInterface";
 import Layout from "../../../shared/layouts/Layout";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
+import { deleteProject } from "../services/projectService";
+import { updateProject } from "../services/projectService";
+import { useFormik } from "formik";
+import * as Yup from "yup";
 import {
-  deleteProject,
-} from "../services/projectService";
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+} from "@mui/material";
+import { searchUsers } from "../services/userService";
 
 const ProjectDetail = () => {
   const { projectId } = useParams();
   const [project, setProject] = useState<Project | null>(null);
   const navigate = useNavigate();
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
 
   useEffect(() => {
     if (projectId) {
@@ -46,6 +57,119 @@ const ProjectDetail = () => {
         });
     }
   }, [projectId]);
+
+  const validationSchema = Yup.object({
+    project_name: Yup.string().required("Project name is required"),
+    project_code: Yup.string().required("Project code is required"),
+    project_department: Yup.string().required("Department is required"),
+    project_description: Yup.string().required("Description is required"),
+    project_start_date: Yup.date().required("Start date is required"),
+    project_end_date: Yup.date()
+      .required("End date is required")
+      .min(Yup.ref("project_start_date"), "End date must be after start date"),
+  });
+
+  const formik = useFormik({
+    initialValues: {
+      project_name: project?.project_name || "",
+      project_code: project?.project_code || "",
+      project_department: project?.project_department || "",
+      project_description: project?.project_description || "",
+      project_start_date: project?.project_start_date
+        ? project.project_start_date.split("T")[0]
+        : "",
+      project_end_date: project?.project_end_date
+        ? project.project_end_date.split("T")[0]
+        : "",
+      project_members: project?.project_members || [],
+    },
+    validationSchema,
+    onSubmit: async (values) => {
+      try {
+        setLoading(true);
+        await updateProject({
+          _id: project?._id!,
+          ...values,
+          project_members: values.project_members, // Use the updated members
+          project_status: project?.project_status || "ACTIVE",
+        });
+        toast.success("Project updated successfully!");
+        setEditDialogOpen(false);
+        if (projectId) {
+          const response = await fetchProjectById(projectId);
+          if (response.success) {
+            setProject(response.data);
+          }
+        }
+      } catch (error) {
+        toast.error("Failed to update project");
+      } finally {
+        setLoading(false);
+      }
+    },
+  });
+
+  const handleOpenEditDialog = () => {
+    fetchUsers();  
+    formik.resetForm({  
+      values: {
+        project_name: project?.project_name || "",
+        project_code: project?.project_code || "",
+        project_department: project?.project_department || "",
+        project_description: project?.project_description || "",
+        project_start_date: project?.project_start_date?.split("T")[0] || "",
+        project_end_date: project?.project_end_date?.split("T")[0] || "",
+        project_members: project?.project_members || [],
+      },
+    });
+    setEditDialogOpen(true); 
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const response = await searchUsers(
+        { keyword: "" },
+        { pageNum: 1, pageSize: 100 }
+      );
+      if (response?.pageData) {
+        setUsers(response.pageData);
+      }
+    } catch (error) {
+      console.error("Failed to fetch users:", error);
+      toast.error("Failed to load users");
+    }
+  };
+
+  const handleAddMember = () => {
+    formik.setFieldValue("project_members", [
+      ...formik.values.project_members,
+      { user_id: "", project_role: "" },
+    ]);
+  };
+
+  const handleRemoveMember = (index: number) => {
+    const updatedMembers = [...formik.values.project_members];
+    updatedMembers.splice(index, 1);
+    formik.setFieldValue("project_members", updatedMembers);
+  };
+
+  const handleMemberChange = (index: number, field: string, value: string) => {
+    const updatedMembers = [...formik.values.project_members];
+    if (field === "user_id") {
+      const selectedUser = users.find((user) => user._id === value);
+      if (selectedUser) {
+        updatedMembers[index] = {
+          ...updatedMembers[index],
+          _id: selectedUser._id,
+          user_name: selectedUser.user_name,
+          email: selectedUser.email,
+        };
+      }
+    } else {
+      updatedMembers[index] = { ...updatedMembers[index], [field]: value };
+    }
+    formik.setFieldValue("project_members", updatedMembers);
+  };
 
   if (!project) {
     return (
@@ -88,37 +212,45 @@ const ProjectDetail = () => {
         <ArrowBackIcon />
       </button>
       <div className="max-w-4xl mx-auto p-6">
-        <Card>
+        <Card className="shadow-lg rounded-xl overflow-hidden">
           <CardHeader
             title={project.project_name}
             subheader={`Project code: ${project.project_code}`}
+            className="bg-gray-100 px-6 py-4"
           />
-          <CardContent>
-            <p className="mb-2">
-              <strong>Department:</strong> {project.project_department}
-            </p>
-            <p className="mb-2">
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <p>
+                <strong>Department:</strong> {project.project_department}
+              </p>
+              <p>
+                <strong>Status:</strong> {project.project_status}
+              </p>
+              <p>
+                <strong>Start date:</strong>{" "}
+                {new Date(project.project_start_date).toLocaleDateString()}
+              </p>
+              <p>
+                <strong>End date:</strong>{" "}
+                {new Date(project.project_end_date).toLocaleDateString()}
+              </p>
+            </div>
+            <p className="mt-4">
               <strong>Description:</strong> {project.project_description}
             </p>
-            <p className="mb-2">
-              <strong>Status:</strong> {project.project_status}
-            </p>
-            <p className="mb-2">
-              <strong>Start date:</strong>{" "}
-              {new Date(project.project_start_date).toLocaleDateString()}
-            </p>
-            <p className="mb-2">
-              <strong>End date:</strong>{" "}
-              {new Date(project.project_end_date).toLocaleDateString()}
-            </p>
+
             <div className="mt-6">
-              <h2 className="text-xl font-semibold mb-4">Member</h2>
-              <div className="grid gap-4">
-                {project.project_members && project.project_members.length > 0 ? (
+              <h2 className="text-xl font-semibold mb-4">Members</h2>
+              <div className="grid sm:grid-cols-2 gap-4">
+                {project.project_members &&
+                project.project_members.length > 0 ? (
                   project.project_members.map((member) => (
-                    <div key={member.user_id} className="bg-gray-50 p-4 rounded-lg shadow-sm">
+                    <div
+                      key={member._id}
+                      className="bg-gray-50 p-4 rounded-lg shadow-sm border"
+                    >
                       <p className="font-medium text-gray-900">
-                        {member.full_name || member.user_name}
+                        {member.user_name}
                       </p>
                       <p className="text-gray-600">
                         Role: {member.project_role}
@@ -126,22 +258,24 @@ const ProjectDetail = () => {
                     </div>
                   ))
                 ) : (
-                  <p className="text-gray-500">Không có thành viên trong dự án</p>
+                  <p className="text-gray-500">
+                    Không có thành viên trong dự án
+                  </p>
                 )}
               </div>
             </div>
           </CardContent>
-          <CardActions>
+
+          <CardActions className="p-6 flex justify-end gap-3">
             <Button
               variant="contained"
               sx={{
                 backgroundColor: "gray",
                 color: "white",
                 "&:hover": { backgroundColor: "darkgray" },
-                mr: 1,
               }}
               startIcon={<EditIcon />}
-              onClick={() => navigate(`/admin/manageproject/edit/${project._id}`)}
+              onClick={handleOpenEditDialog}
             >
               Edit
             </Button>
@@ -162,9 +296,7 @@ const ProjectDetail = () => {
       >
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
-          <Typography>
-            Are you sure you want to delete this project?
-          </Typography>
+          <Typography>Are you sure you want to delete this project?</Typography>
         </DialogContent>
         <DialogActions>
           <Button
@@ -185,6 +317,228 @@ const ProjectDetail = () => {
             Confirm
           </Button>
         </DialogActions>
+      </Dialog>
+      <Dialog
+        open={editDialogOpen}
+        onClose={() => setEditDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Edit Project</DialogTitle>
+        <form onSubmit={formik.handleSubmit}>
+          <DialogContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <TextField
+                fullWidth
+                name="project_name"
+                label="Project Name"
+                value={formik.values.project_name}
+                onChange={formik.handleChange}
+                error={
+                  formik.touched.project_name &&
+                  Boolean(formik.errors.project_name)
+                }
+                helperText={
+                  formik.touched.project_name && formik.errors.project_name
+                }
+              />
+              <TextField
+                fullWidth
+                name="project_code"
+                label="Project Code"
+                value={formik.values.project_code}
+                onChange={formik.handleChange}
+                error={
+                  formik.touched.project_code &&
+                  Boolean(formik.errors.project_code)
+                }
+                helperText={
+                  formik.touched.project_code && formik.errors.project_code
+                }
+              />
+              <TextField
+                fullWidth
+                name="project_department"
+                label="Department"
+                value={formik.values.project_department}
+                onChange={formik.handleChange}
+                error={
+                  formik.touched.project_department &&
+                  Boolean(formik.errors.project_department)
+                }
+                helperText={
+                  formik.touched.project_department &&
+                  formik.errors.project_department
+                }
+              />
+              <TextField
+                fullWidth
+                name="project_description"
+                label="Description"
+                multiline
+                rows={4}
+                value={formik.values.project_description}
+                onChange={formik.handleChange}
+                error={
+                  formik.touched.project_description &&
+                  Boolean(formik.errors.project_description)
+                }
+                helperText={
+                  formik.touched.project_description &&
+                  formik.errors.project_description
+                }
+              />
+              <TextField
+                fullWidth
+                type="date"
+                name="project_start_date"
+                label="Start Date"
+                value={formik.values.project_start_date}
+                onChange={formik.handleChange}
+                error={
+                  formik.touched.project_start_date &&
+                  Boolean(formik.errors.project_start_date)
+                }
+                helperText={
+                  formik.touched.project_start_date &&
+                  formik.errors.project_start_date
+                }
+                InputLabelProps={{ shrink: true }}
+              />
+              <TextField
+                fullWidth
+                type="date"
+                name="project_end_date"
+                label="End Date"
+                value={formik.values.project_end_date}
+                onChange={formik.handleChange}
+                error={
+                  formik.touched.project_end_date &&
+                  Boolean(formik.errors.project_end_date)
+                }
+                helperText={
+                  formik.touched.project_end_date &&
+                  formik.errors.project_end_date
+                }
+                InputLabelProps={{ shrink: true }}
+              />
+            </div>
+            <div className="mt-6">
+              <div className="flex justify-between items-center mb-2">
+                <Typography variant="h6">Project Members</Typography>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={handleAddMember}
+                >
+                  Add Member
+                </Button>
+              </div>
+
+              {formik.values.project_members.map((member, index) => (
+                <div key={index} className="grid grid-cols-3 gap-4 mb-4">
+                  <FormControl fullWidth>
+                    <InputLabel id={`user-select-label-${index}`}>
+                      User
+                    </InputLabel>
+                    <Select
+                      labelId={`user-select-label-${index}`}
+                      value={member._id || ""}
+                      label="User"
+                      onChange={(e) =>
+                        handleMemberChange(index, "user_id", e.target.value)
+                      }
+                    >
+                      {users.map((user) => (
+                        <MenuItem key={user._id} value={user._id}>
+                          {user.user_name} ({user.email})
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+
+                  <FormControl fullWidth>
+                    <InputLabel>Role</InputLabel>
+                    <Select
+                      value={member.project_role || ""}
+                      label="Role"
+                      onChange={(e) =>
+                        handleMemberChange(
+                          index,
+                          "project_role",
+                          e.target.value
+                        )
+                      }
+                    >
+                      <MenuItem value="Project Manager">
+                        Project Manager
+                      </MenuItem>
+                      <MenuItem value="Technical Leader">
+                        Technical Leader
+                      </MenuItem>
+                      <MenuItem value="Developer">Developer</MenuItem>
+                      <MenuItem value="Tester">Tester</MenuItem>
+                      <MenuItem value="Business Analytics">
+                        Business Analytics
+                      </MenuItem>
+                      <MenuItem value="Technical Consultant">
+                        Technical Consultant
+                      </MenuItem>
+                      <MenuItem value="Quality Analytics">
+                        Quality Analytics
+                      </MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  <Button
+                    color="error"
+                    onClick={() => handleRemoveMember(index)}
+                    disabled={formik.values.project_members.length <= 1}
+                  >
+                    Remove
+                  </Button>
+                </div>
+              ))}
+
+              {formik.touched.project_members &&
+                typeof formik.errors.project_members === "string" && (
+                  <Typography color="error">
+                    {formik.errors.project_members}
+                  </Typography>
+                )}
+            </div>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={() => setEditDialogOpen(false)}
+              sx={{ color: "gray" }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={loading}
+              sx={{
+                backgroundColor: "gray",
+                color: "white",
+                "&:hover": { backgroundColor: "darkgray" },
+              }}
+            >
+              {loading ? (
+                <>
+                  <div className="flex justify-center flex-row gap-2">
+                    <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce"></div>
+                    <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce [animation-delay:-.3s]"></div>
+                    <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce [animation-delay:-.5s]"></div>
+                  </div>
+                </>
+              ) : (
+                "Save Changes"
+              )}
+            </Button>
+          </DialogActions>
+        </form>
       </Dialog>
     </Layout>
   );

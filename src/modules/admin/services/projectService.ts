@@ -32,7 +32,7 @@ export const addProject = async (project: Partial<Project>): Promise<Project> =>
 
 export const updateProject = async (project: Project): Promise<Project> => {
   try {
-    const response = await fetch(`${API_URL}/projects/${project.id}`, {
+    const response = await fetch(`${API_URL}/projects/${project._id}`, {
       method: "PUT",
       headers: getHeaders(),
       body: JSON.stringify(project),
