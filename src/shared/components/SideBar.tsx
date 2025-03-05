@@ -67,44 +67,43 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
       ],
     },
   ];
-  const usersItems = [
-
-  ];
+  const usersItems = [];
 
   const approvalItems = [
     {
       text: "Approve Claims",
       icon: <CheckBoxIcon />,
-      path: "/approval/dashboard",
+      path: "/approval/claims",
     },
   ];
 
-  const finaceItems = [
-    { text: "Paid Claims", icon: <PaidIcon />, path: "/#" },
-  ];
+  const finaceItems = [{ text: "Paid Claims", icon: <PaidIcon />, path: "/#" }];
 
   const handleNavigation = (path: string) => {
-    console.log(path);
-    if (path === "/my-requests") {
-      navigate("/user/my-requests");
-    } else {
-      if (path === "/dashboard") {
-        if (role === "user") {
-          navigate("/user/dashboard");
-        } else if (role === "admin") {
-          navigate("/admin/dashboard");
-        } else if (role === "approver") {
-          navigate("/approval/dashboard");
-        } else {
-          navigate("/finance/claims");
-        }
+    console.log(role);
+    if (path === "/dashboard") {
+      if (role === "user") {
+        navigate("/user/dashboard");
+      } else if (role === "admin") {
+        navigate("/admin/dashboard");
+      } else if (role === "approver") {
+        navigate("/approval/dashboard");
       } else {
-        navigate(path);
+        navigate("/finance/claims");
+      }
+    } else if (path === "/my-requests") {
+      if (role === "user") {
+        navigate("/user/my-requests");
+      } else if (role === "admin") {
+        navigate("/admin/my-requests");
+      } else if (role === "approver") {
+        navigate("/approval/my-requests");
+      } else {
+        navigate("/finance/my-requests");
       }
     }
     toggleSidebar();
   };
-
   useEffect(() => {
     const fetchAuth = async () => {
       try {
