@@ -102,6 +102,7 @@ const RequestPage = () => {
   const [userEmail, setUserEmail] = useState<string>("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteRequestId, setDeleteRequestId] = useState<number | null>(null);
+  const [dateError, setDateError] = useState<string | null>(null);
 
   const {
     control,
@@ -153,8 +154,23 @@ const RequestPage = () => {
     fetchRequests();
   }, [userEmail]);
 
+  const checkDateOverlap = (startDate: moment.Moment, endDate: moment.Moment) => {
+    return requests.some(
+      (req) =>
+        moment(startDate).isBetween(req.startDate, req.endDate, "day", "[]") ||
+        moment(endDate).isBetween(req.startDate, req.endDate, "day", "[]") ||
+        moment(req.startDate).isBetween(startDate, endDate, "day", "[]") ||
+        moment(req.endDate).isBetween(startDate, endDate, "day", "[]")
+    );
+  };
+
   const handleAddModalOk = async (data: IFormInput) => {
     if (!userEmail) return;
+
+    if (data.startDate && data.endDate && checkDateOverlap(data.startDate, data.endDate)) {
+      setDateError("The selected date range overlaps with an existing claim.");
+      return;
+    }
 
     try {
       const newRequest = {
@@ -174,6 +190,7 @@ const RequestPage = () => {
       setRequests([...requests, response.data]);
       setIsAddModalVisible(false);
       reset();
+      setDateError(null);
     } catch (error) {
       console.error("Error adding request:", error);
     }
@@ -181,6 +198,11 @@ const RequestPage = () => {
 
   const handleEditModalOk = async (data: IFormInput) => {
     if (!currentRequest) return;
+
+    if (data.startDate && data.endDate && checkDateOverlap(data.startDate, data.endDate)) {
+      setDateError("The selected date range overlaps with an existing claim.");
+      return;
+    }
 
     try {
       const updatedRequest: Request = {
@@ -434,6 +456,7 @@ const RequestPage = () => {
                   />
                 )}
               />
+              {dateError && <p className="error-message">{dateError}</p>}
               <Button type="submit" variant="contained" color="primary">
                 Add
               </Button>
@@ -521,6 +544,7 @@ const RequestPage = () => {
                   />
                 )}
               />
+              {dateError && <p className="error-message">{dateError}</p>}
               <Button type="submit" variant="contained" color="primary">
                 Save
               </Button>
