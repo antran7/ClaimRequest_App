@@ -21,6 +21,10 @@ import Layout from "../../../shared/layouts/Layout";
 
 const API_REQUESTS = "https://67245b0d493fac3cf24dfc59.mockapi.io/api/approver";
 
+const convertToLocalTime = (utcDate: string) => {
+  return moment.utc(utcDate).utcOffset(7).format("YYYY-MM-DD");
+};
+
 interface Request {
   id: number;
   name: string;
@@ -63,7 +67,7 @@ const schema = yup
         function (value) {
           const { endDate } = this.parent;
           if (!endDate || !value) return true;
-          return moment(value).isSameOrBefore(moment(endDate), "day");
+          return moment(value).isBefore(moment(endDate), "day");
         }
       ),
     endDate: yup
@@ -77,7 +81,7 @@ const schema = yup
       .test("endDate", "End Date must be after Start Date", function (value) {
         const { startDate } = this.parent;
         if (!startDate || !value) return true;
-        return moment(startDate).isSameOrBefore(moment(value), "day");
+        return moment(startDate).isBefore(moment(value), "day");
       }),
     totalTimes: yup
       .number()
@@ -300,8 +304,8 @@ const RequestPage = () => {
                       >
                         {req.status}
                       </td>
-                      <td>{req.startDate}</td>
-                      <td>{req.endDate}</td>
+                      <td>{convertToLocalTime(req.startDate)}</td>
+                      <td>{convertToLocalTime(req.endDate)}</td>
                       <td>{req.totalTimes}</td>
                       <td
                         className={
