@@ -56,7 +56,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const response = await apiService.post<{ token: string }>('/auth', loginData);
       if (response.success) {
         localStorage.setItem("token", response.data.token);
-        localStorage.setItem("userEmail", email);
       }
     } catch (error) {
       console.error("Error: ", error);
@@ -84,6 +83,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const response = await apiService.put<null>('/auth/forgot-password', sendData);
     } catch (error) {
       console.error('Error:', error);
+      throw error;
     }
   }
 
@@ -91,37 +91,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const response = await apiService.get<UserData>('/auth');
       if (response) {
-        // localStorage.setItem("userData", response.data);
-        // setUser(response.data);
-        const role = response.data.role_code;
-        switch (role) {
-          case "A001":
-            localStorage.setItem("userRole", Role.ADMIN);
-            break;
-          case "A002":
-            localStorage.setItem("userRole", Role.FINANCE);
-            break;
-          case "A003":
-            localStorage.setItem("userRole", Role.APPROVER);
-            break;
-          case "A004":
-            localStorage.setItem("userRole", Role.USER);
-            break;
-        }
+        setUser(response.data);
       }
     } catch (error) {
       console.error('Error:', error);
+      throw error;
     }
   }
 
   useEffect(() => {
-    const savedRole = localStorage.getItem("userRole") as Role | null;
-    const savedEmail = localStorage.getItem("userEmail");
-    if (savedRole && savedEmail) {
-      setUser(user);
-    }
-    setLoading(false);
-  }, [user]);
+    const fetchUser = async () => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        await getUserInfo(); // Lấy lại thông tin user từ API
+      }
+      setLoading(false); // Đánh dấu là đã tải xong
+    };
+  
+    fetchUser();
+  }, []);
 
   return (
     <AuthContext.Provider value={{ user, login, logout, forgotPassword, getUserInfo, loading }}>
