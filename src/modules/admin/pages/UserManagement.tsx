@@ -157,6 +157,7 @@ const UserManagement = () => {
     {/* Email Field */}
     Email
     <TextField
+      type="email"
       
       fullWidth
       margin="dense"
@@ -197,7 +198,7 @@ const UserManagement = () => {
     Password
     {!editingUser && (
       <TextField
-        
+       
         fullWidth
         margin="dense"
         type="password"
