@@ -87,8 +87,8 @@
 }
 
 .status-draft-approval {
-  color: #f59e0b;
-  font-weight: 600;
+  color: #a59c9ce0;
+  font-weight: bold;
 }
 
 .status-pending-approval {
@@ -183,7 +183,7 @@
 }
 
 .reason-draft-approval {
-  color: #3b82f6;
+  color: #a59c9ce0;
   font-weight: 600;
 }
 
