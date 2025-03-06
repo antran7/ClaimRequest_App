@@ -31,12 +31,10 @@ const Login = () => {
       navigate("/");
       toast("Login successfully.", {
         icon: "🔥",
-        style: { background: "#333", color: "#ccc" },
       });
     } catch (error) {
       toast(error.toString(), {
         icon: "❌",
-        style: { background: "#333", color: "#ccc" },
       });
     } finally {
       setIsLoading(false);

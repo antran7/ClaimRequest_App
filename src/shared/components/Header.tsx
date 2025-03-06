@@ -55,7 +55,9 @@ const Header = ({ toggleSidebar = () => { } }: HeaderProps) => {
             <MenuIcon style={{ fontSize: '30px' }} />
           </IconButton>
         )}
-        <p>Claim Management</p>
+        <h1 className="animate__animated animate__fadeIn animate__infinite">
+          Claim Management
+        </h1>
       </div>
 
       <div className="layout-header-right">

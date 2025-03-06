@@ -31,8 +31,9 @@ interface SideBarProps {
 
 const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
   const navigate = useNavigate();
-  const { user, getUserInfo } = useAuth();
+  const { getUserInfo } = useAuth();
   const [openManagement, setOpenManagement] = useState(false);
+  const user = JSON.parse(localStorage.getItem("userData") || "{}");
 
   const menuItems = [
     { text: "Home", icon: <HouseIcon />, path: "/" },
@@ -79,7 +80,7 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
 
   const handleNavigation = (path: string) => {
     if (path === "/my-requests") {
-      navigate("user/my-requests");
+      navigate("/user/my-requests");
     } else {
       if (path === "/dashboard") {
         if (user?.role_code === "A004") {

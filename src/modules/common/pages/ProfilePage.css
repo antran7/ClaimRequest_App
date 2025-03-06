@@ -68,6 +68,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    box-shadow: 0px 10px 13px 3px rgba(0, 0, 0, 0.1);
 
     .profile-avatar {
       width: 250px;
@@ -99,7 +100,7 @@
       align-items: center;
       row-gap: 20px;
       width: 80%;
-      margin: auto;
+      margin: 50px auto 25px;
 
       input {
         outline: none;
@@ -152,6 +153,7 @@
   .profile-right-top-panel {
     grid-area: date;
     margin: 40px 40px 0 0;
+    box-shadow: 0px 10px 13px 3px rgba(0,0,0,0.1);
 
     .create-update-title {
       display: flex;
@@ -201,6 +203,7 @@
   .profile-right-bottom-panel {
     grid-area: groups;
     margin: 0 40px 40px 0;
+    box-shadow: 0px 10px 13px 3px rgba(0,0,0,0.1);
 
     .my-projects-title {
       display: flex;

@@ -1,13 +1,22 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { Role } from "../constants/roles";
 import { useAuth } from "../../core/hooks/useAuth";
+import { useEffect, useState } from "react";
 
 interface PrivateRouteProps {
   allowedRoles: Role[];
 }
 
 const PrivateRoute = ({ allowedRoles }: PrivateRouteProps) => {
-  const { user, loading } = useAuth();
+  const user = JSON.parse(localStorage.getItem("userData") || "{}");
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      setLoading(false);
+    }
+  })
   
   if (loading) {
     return <div>Loading...</div>;
