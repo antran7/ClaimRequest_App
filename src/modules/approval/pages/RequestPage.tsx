@@ -21,6 +21,10 @@ import Layout from "../../../shared/layouts/Layout";
 
 const API_REQUESTS = "https://67245b0d493fac3cf24dfc59.mockapi.io/api/approver";
 
+const convertToLocalTime = (utcDate: string) => {
+  return moment.utc(utcDate).utcOffset(7).format("YYYY-MM-DD");
+};
+
 interface Request {
   id: number;
   name: string;
@@ -63,7 +67,7 @@ const schema = yup
         function (value) {
           const { endDate } = this.parent;
           if (!endDate || !value) return true;
-          return moment(value).isSameOrBefore(moment(endDate), "day");
+          return moment(value).isBefore(moment(endDate), "day");
         }
       ),
     endDate: yup
@@ -77,7 +81,7 @@ const schema = yup
       .test("endDate", "End Date must be after Start Date", function (value) {
         const { startDate } = this.parent;
         if (!startDate || !value) return true;
-        return moment(startDate).isSameOrBefore(moment(value), "day");
+        return moment(startDate).isBefore(moment(value), "day");
       }),
     totalTimes: yup
       .number()
@@ -98,6 +102,7 @@ const RequestPage = () => {
   const [userEmail, setUserEmail] = useState<string>("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteRequestId, setDeleteRequestId] = useState<number | null>(null);
+  const [dateError, setDateError] = useState<string | null>(null);
 
   const {
     control,
@@ -149,8 +154,30 @@ const RequestPage = () => {
     fetchRequests();
   }, [userEmail]);
 
+  const checkDateOverlap = (
+    startDate: moment.Moment,
+    endDate: moment.Moment
+  ) => {
+    return requests.some(
+      (req) =>
+        moment(startDate).isBetween(req.startDate, req.endDate, "day", "[]") ||
+        moment(endDate).isBetween(req.startDate, req.endDate, "day", "[]") ||
+        moment(req.startDate).isBetween(startDate, endDate, "day", "[]") ||
+        moment(req.endDate).isBetween(startDate, endDate, "day", "[]")
+    );
+  };
+
   const handleAddModalOk = async (data: IFormInput) => {
     if (!userEmail) return;
+
+    if (
+      data.startDate &&
+      data.endDate &&
+      checkDateOverlap(data.startDate, data.endDate)
+    ) {
+      setDateError("The selected date range overlaps with an existing claim.");
+      return;
+    }
 
     try {
       const newRequest = {
@@ -170,6 +197,7 @@ const RequestPage = () => {
       setRequests([...requests, response.data]);
       setIsAddModalVisible(false);
       reset();
+      setDateError(null);
     } catch (error) {
       console.error("Error adding request:", error);
     }
@@ -177,6 +205,15 @@ const RequestPage = () => {
 
   const handleEditModalOk = async (data: IFormInput) => {
     if (!currentRequest) return;
+
+    if (
+      data.startDate &&
+      data.endDate &&
+      checkDateOverlap(data.startDate, data.endDate)
+    ) {
+      setDateError("The selected date range overlaps with an existing claim.");
+      return;
+    }
 
     try {
       const updatedRequest: Request = {
@@ -300,8 +337,8 @@ const RequestPage = () => {
                       >
                         {req.status}
                       </td>
-                      <td>{req.startDate}</td>
-                      <td>{req.endDate}</td>
+                      <td>{convertToLocalTime(req.startDate)}</td>
+                      <td>{convertToLocalTime(req.endDate)}</td>
                       <td>{req.totalTimes}</td>
                       <td
                         className={
@@ -430,6 +467,7 @@ const RequestPage = () => {
                   />
                 )}
               />
+              {dateError && <p className="error-message">{dateError}</p>}
               <Button type="submit" variant="contained" color="primary">
                 Add
               </Button>
@@ -517,6 +555,7 @@ const RequestPage = () => {
                   />
                 )}
               />
+              {dateError && <p className="error-message">{dateError}</p>}
               <Button type="submit" variant="contained" color="primary">
                 Save
               </Button>
