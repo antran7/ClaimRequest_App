@@ -1,7 +1,16 @@
 import { useEffect, useState } from "react";
-import { searchUsers, createUser, updateUser, changeUserStatus, fetchUser, deleteUser } from "../services/userService";
+import { toast } from "react-hot-toast";
+import {
+  searchUsers,
+  createUser,
+  updateUser,
+  changeUserStatus,
+  fetchUser,
+  deleteUser,
+  changeUserRole,
+} from "../services/userService";
 import Layout from "../../../shared/layouts/Layout";
-import { Button, TableContainer, Table, TableHead, TableBody, TableRow, TableCell, TextField, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, Typography
+import { Button, TableContainer, Table, TableHead, TableBody, TableRow, TableCell, TextField, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, Typography, MenuItem
 
  } from "@mui/material";
 import { User } from "../types/user";
@@ -23,64 +32,76 @@ const UserManagement = () => {
   const [pageNum, setPageNum] = useState(1); //  Track current page
   const [pageSize] = useState(5); //  Items per page
   const [totalPages, setTotalPages] = useState(1); // Total pages from API
-  const [form, setForm] = useState<{ email: string; user_name: string; role_code: string; password?: string }>({
+  const [form, setForm] = useState<{
+    email: string;
+    user_name: string;
+    role_code: string;
+    password?: string;
+  }>({
     email: "",
     user_name: "",
     role_code: "A001",
     password: "",
   });
   const [searchTerm, setSearchTerm] = useState("");
-  const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; user: User | null; action: "delete" | "block" | null }>({
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    user: User | null;
+    action: "delete" | "block" | null;
+  }>({
     open: false,
     user: null,
     action: null,
   });
   useEffect(() => {
     fetchUsers();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageNum,searchTerm]);
-
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageNum, searchTerm]);
 
   const fetchUsers = async () => {
     setLoading(true);
     try {
       const response = await searchUsers(
-        { keyword: searchTerm.trim() }, 
+        { keyword: searchTerm.trim() },
         { pageNum, pageSize }
-      )
+      );
       console.log("Users type check:", Array.isArray(response.pageData)); // Should be true
       console.log("Parsed Users:", response.pageData); //  Debug users
       if (response?.pageData && response?.pageInfo) {
         setUsers(response.pageData); //  Correctly setting users
         setTotalPages(response.pageInfo.totalPages || 1); //  Fix pagination
       } else {
-        console.error("Invalid API response structure:", response);
+        toast.error("Invalid API response structure:", response);
         setUsers([]); // 🛠 Prevent crashes
       }
     } catch (error) {
-      console.error("Failed to fetch users", error);
+      toast.error("Failed to fetch users", error);
       setUsers([]); // 🛠 Prevent UI crash
     } finally {
       setLoading(false);
     }
   };
-  const filteredUsers = users.filter((user) =>
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.role_code.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredUsers = users.filter(
+    (user) =>
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.role_code.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-
 
   const handleSave = async () => {
     try {
       if (editingUser) {
+        // Check if role changed
+        if (editingUser.role_code !== form.role_code) {
+          await changeUserRole(editingUser._id, form.role_code);
+        }
+  
         // Updating an existing user
         await updateUser(editingUser._id, {
           email: form.email,
           user_name: form.user_name,
-          role_code: form.role_code,
         });
+  
       } else {
         // Creating a new user
         await createUser({
@@ -90,22 +111,28 @@ const UserManagement = () => {
           password: form.password, // Password required for new users
         });
       }
+  
       setPopupOpen(false); // Close popup after saving
       fetchUsers(); // Refresh the user list
     } catch (error) {
-      console.error("Failed to save user", error);
+      toast.error("Failed to save user", error);
     }
   };
 
-  
+
   const handleConfirmAction = async () => {
     if (!confirmDialog.user || !confirmDialog.action) return;
     try {
       if (confirmDialog.action === "block") {
-        await changeUserStatus(confirmDialog.user._id, !confirmDialog.user.is_blocked);
+        await changeUserStatus(
+          confirmDialog.user._id,
+          !confirmDialog.user.is_blocked
+        );
         setUsers((prevUsers) =>
           prevUsers.map((u) =>
-            u._id === confirmDialog.user!._id ? { ...u, is_blocked: !confirmDialog.user!.is_blocked } : u
+            u._id === confirmDialog.user!._id
+              ? { ...u, is_blocked: !confirmDialog.user!.is_blocked }
+              : u
           )
         );
       } else if (confirmDialog.action === "delete") {
@@ -113,12 +140,11 @@ const UserManagement = () => {
         fetchUsers();
       }
     } catch (error) {
-      console.error(`Failed to ${confirmDialog.action} user`, error);
+      toast.error(`Failed to ${confirmDialog.action} user`, error);
     } finally {
       setConfirmDialog({ open: false, user: null, action: null });
     }
   };
-  
 
   return (
     <Layout>
@@ -181,22 +207,22 @@ const UserManagement = () => {
     Role
     <TextField
       select
-      
       fullWidth
       margin="dense"
       value={form.role_code}
       onChange={(e) => setForm({ ...form, role_code: e.target.value })}
       sx={{ backgroundColor: "#E3F2FD", borderRadius: "6px" }}
     >
-      <option value="A001">A001</option>
-      <option value="A002">A002</option>
-      <option value="A003">A003</option>
-      <option value="A004">A004</option>
+      <MenuItem value="A001">A001</MenuItem>
+      <MenuItem value="A002">A002</MenuItem>
+      <MenuItem value="A003">A003</MenuItem>
+      <MenuItem value="A004">A004</MenuItem>
     </TextField>
 
     {/* Password Field (ONLY for Adding New User) */}
-    Password
+    <span style={{ visibility: editingUser ? "hidden" : "visible" }}>Password</span>
     {!editingUser && (
+      
       <TextField
        
         fullWidth
@@ -209,11 +235,15 @@ const UserManagement = () => {
     )}
   </DialogContent>
 
-  <DialogActions>
-    <Button onClick={() => setPopupOpen(false)} color="error">Cancel</Button>
-    <Button onClick={handleSave} color="primary">Save</Button>
-  </DialogActions>
-</Dialog>
+          <DialogActions>
+            <Button onClick={() => setPopupOpen(false)} color="error">
+              Cancel
+            </Button>
+            <Button onClick={handleSave} color="primary">
+              Save
+            </Button>
+          </DialogActions>
+        </Dialog>
 
 <Button 
   variant="contained" 
@@ -319,20 +349,36 @@ const UserManagement = () => {
         </TableContainer>
       </div>
       <Pagination
-          count={totalPages} 
-          page={pageNum} 
-          onChange={(event, newPage) => setPageNum(newPage)} // Change page
-          color="primary"
-        />
-      <Dialog open={confirmDialog.open} onClose={() => setConfirmDialog({ open: false, user: null, action: null })}>
+        count={totalPages}
+        page={pageNum}
+        onChange={(event, newPage) => setPageNum(newPage)} // Change page
+        color="primary"
+      />
+      <Dialog
+        open={confirmDialog.open}
+        onClose={() =>
+          setConfirmDialog({ open: false, user: null, action: null })
+        }
+      >
         <DialogTitle>Confirm Action</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to {confirmDialog.action === "delete" ? "delete" : confirmDialog.user?.is_blocked ? "unblock" : "block"} this user?
+            Are you sure you want to{" "}
+            {confirmDialog.action === "delete"
+              ? "delete"
+              : confirmDialog.user?.is_blocked
+              ? "unblock"
+              : "block"}{" "}
+            this user?
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmDialog({ open: false, user: null, action: null })} color="error">
+          <Button
+            onClick={() =>
+              setConfirmDialog({ open: false, user: null, action: null })
+            }
+            color="error"
+          >
             Cancel
           </Button>
           <Button onClick={handleConfirmAction} color="success">
@@ -340,9 +386,21 @@ const UserManagement = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      {/* <Waves
+        lineColor="#fff"
+        backgroundColor="rgba(175, 96, 96, 0.2)"
+        waveSpeedX={0.02}
+        waveSpeedY={0.01}
+        waveAmpX={40}
+        waveAmpY={20}
+        friction={0.9}
+        tension={0.01}
+        maxCursorMove={120}
+        xGap={12}
+        yGap={36}
+      /> */}
     </Layout>
   );
 };
 
 export default UserManagement;
-
