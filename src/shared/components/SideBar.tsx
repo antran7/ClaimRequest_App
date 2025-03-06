@@ -77,7 +77,7 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
 
   const finaceItems = [{ text: "Paid Claims", icon: <PaidIcon />, path: "/#" }];
 
-  const handleNavigation = (path: string) => {
+const handleNavigation = (path: string) => {
     if (path === "/my-requests") {
       navigate("/user/my-requests");
     } else {
