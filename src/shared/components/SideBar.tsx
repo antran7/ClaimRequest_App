@@ -31,8 +31,7 @@ interface SideBarProps {
 
 const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
   const navigate = useNavigate();
-  const { getUserInfo } = useAuth();
-  const role = localStorage.getItem("userRole");
+  const { user, getUserInfo } = useAuth();
   const [openManagement, setOpenManagement] = useState(false);
 
   const menuItems = [
@@ -67,9 +66,6 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
       ],
     },
   ];
-  const usersItems = [
-
-  ];
 
   const approvalItems = [
     {
@@ -84,16 +80,15 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
   ];
 
   const handleNavigation = (path: string) => {
-    console.log(path);
     if (path === "/my-requests") {
-      navigate("/user/my-requests");
+      navigate("user/my-requests");
     } else {
       if (path === "/dashboard") {
-        if (role === "user") {
+        if (user?.role_code === "A004") {
           navigate("/user/dashboard");
-        } else if (role === "admin") {
+        } else if (user?.role_code === "A001") {
           navigate("/admin/dashboard");
-        } else if (role === "approver") {
+        } else if (user?.role_code === "A003") {
           navigate("/approval/dashboard");
         } else {
           navigate("/finance/claims");
@@ -134,7 +129,7 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
 
         {/* Admin Management */}
         <List>
-          {role === Role.ADMIN &&
+          {user?.role_code === Role.ADMIN &&
             adminItems.map(({ text, icon, children }) => (
               <Box key={text}>
                 <ListItem disablePadding>
@@ -163,7 +158,7 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
               </Box>
             ))}
 
-          {role === Role.APPROVER &&
+          {user?.role_code === Role.APPROVER &&
             approvalItems.map(({ text, icon, path }) => (
               <ListItem key={text} disablePadding>
                 <ListItemButton onClick={() => handleNavigation(path)}>
@@ -173,20 +168,7 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
               </ListItem>
             ))}
 
-          {role === Role.USER && (
-            <List>
-              {usersItems.map(({ text, icon, path }) => (
-                <ListItem key={text} disablePadding>
-                  <ListItemButton onClick={() => handleNavigation(path)}>
-                    <ListItemIcon>{icon}</ListItemIcon>
-                    <ListItemText primary={text} />
-                  </ListItemButton>
-                </ListItem>
-              ))}
-            </List>
-          )}
-
-          {role === Role.FINANCE &&
+          {user?.role_code === Role.FINANCE &&
             finaceItems.map(({ text, icon, path }) => (
               <ListItem key={text} disablePadding>
                 <ListItemButton onClick={() => handleNavigation(path)}>

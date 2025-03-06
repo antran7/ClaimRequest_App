@@ -19,12 +19,11 @@ export const commonRoutes: RouteObject[] = [
     {
         path: "/login",
         element: <Login />,
-        children: [
-            {
-                path: "forgotpassword",
-                element: <ForgotPassword />,
-            }
-        ]
+    },
+
+    {
+        path: "/forgotpassword",
+        element: <ForgotPassword />,
     },
 
     {
