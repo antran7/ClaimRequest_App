@@ -1,48 +1,41 @@
 import { createContext, ReactNode, useState, useEffect, useContext } from "react";
-import { Role } from "../../shared/constants/roles";
 import apiService from "../api/api";
 
 // Tạo kiểu dữ liệu trả về
 // Có các trường giống với phần data mà api response trả về
 interface UserData {
   "_id": string,
-    "email": string,
-    "user_name": string,
-    "role_code": string,
-    "is_verified": boolean,
-    "verification_token": string,
-    "verification_token_expires": string,
-    "token_version": number,
-    "is_blocked": boolean,
-    "created_at": string,
-    "updated_at": string,
-    "is_deleted": boolean,
-    "__v": number
+  "email": string,
+  "user_name": string,
+  "role_code": string,
+  "is_verified": boolean,
+  "verification_token": string,
+  "verification_token_expires": string,
+  "token_version": number,
+  "is_blocked": boolean,
+  "created_at": string,
+  "updated_at": string,
+  "is_deleted": boolean,
+  "__v": number
 }
 
 interface AuthContextType {
-  user: UserData | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   forgotPassword: (email: string) => Promise<void>;
   getUserInfo: () => void;
-  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
-  user: null,
   login: async () => Promise.resolve(),
   logout: () => { },
   forgotPassword: () => Promise.resolve(),
   getUserInfo: () => { },
-  loading: true,
 });
 
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<UserData | null>(null);
-  const [loading, setLoading] = useState(true);
 
   const login = async (email: string, password: string): Promise<void> => {
     try {
@@ -91,7 +84,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const response = await apiService.get<UserData>('/auth');
       if (response) {
-        setUser(response.data);
+        localStorage.setItem("userData", JSON.stringify(response.data));
       }
     } catch (error) {
       console.error('Error:', error);
@@ -99,21 +92,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const token = localStorage.getItem("token");
-      if (token) {
-        await getUserInfo();
-      }
-      setLoading(false); 
-    };
-  
-    fetchUser();
-    console.log(user);
-  }, []);
-
   return (
-    <AuthContext.Provider value={{ user, login, logout, forgotPassword, getUserInfo, loading }}>
+    <AuthContext.Provider value={{ login, logout, forgotPassword, getUserInfo }}>
       {children}
     </AuthContext.Provider>
   );

@@ -23,12 +23,10 @@ const ForgotPassword = () => {
             await forgotPassword(data.email);
             toast.success("Please check your email to get a new password!", {
                 icon: "🔥",
-                style: { background: "#333", color: "#ccc" },
             });
         } catch (error) {
             toast(error.toString(), {
                 icon: "❌",
-                style: { background: "#333", color: "#000" },
             });
         }
     };

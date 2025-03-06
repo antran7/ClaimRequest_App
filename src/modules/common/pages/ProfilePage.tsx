@@ -4,7 +4,6 @@ import './ProfilePage.css'
 import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined';
 import { useForm } from 'react-hook-form';
 import { Avatar, Switch } from '@mui/material';
-import { useAuth } from '../../../core/hooks/useAuth';
 import { updateInfo, updatePassword } from '../services/userApi';
 import toast from 'react-hot-toast';
 
@@ -16,7 +15,7 @@ type FormData = {
 };
 
 const ProfilePage = () => {
-  const { user } = useAuth();
+  const user = JSON.parse(localStorage.getItem("userData") || "{}");
   const [isLoading, setIsLoading] = useState(false);
   const [isPasswordMode, setIsPasswordMode] = useState(false);
 
@@ -55,13 +54,11 @@ const ProfilePage = () => {
       }
       toast("Update successfully.", {
         icon: "✅",
-        style: { background: "#333", color: "#ccc" },
       });
       reset();
     } catch (error) {
       toast(error.toString(), {
         icon: "❌",
-        style: { background: "#333", color: "#ccc" },
       });
     } finally {
       setIsLoading(false);
@@ -148,7 +145,7 @@ const ProfilePage = () => {
                 <Switch
                   checked={isPasswordMode}
                   onChange={handleSwitchChange}
-                  color="primary"
+                  color="secondary"
                 />
                 <span>Update Password</span>
               </div>
