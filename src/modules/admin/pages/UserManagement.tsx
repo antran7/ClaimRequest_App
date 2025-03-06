@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
 import {
   searchUsers,
   createUser,
@@ -75,11 +76,11 @@ const UserManagement = () => {
         setUsers(response.pageData); //  Correctly setting users
         setTotalPages(response.pageInfo.totalPages || 1); //  Fix pagination
       } else {
-        console.error("Invalid API response structure:", response);
+        toast.error("Invalid API response structure:", response);
         setUsers([]); // 🛠 Prevent crashes
       }
     } catch (error) {
-      console.error("Failed to fetch users", error);
+      toast.error("Failed to fetch users", error);
       setUsers([]); // 🛠 Prevent UI crash
     } finally {
       setLoading(false);
@@ -101,6 +102,18 @@ const UserManagement = () => {
           user_name: form.user_name,
           role_code: form.role_code,
         });
+        console.log("Updating user with:", updatedUser); // Debugging
+
+        const response = await updateUser(editingUser._id, updatedUser);
+        console.log("Update response:", response); // Debug API response
+
+        setUsers((prevUsers) =>
+          prevUsers.map((user) =>
+            user._id === editingUser._id
+              ? { ...user, email: form.email, user_name: form.user_name, role_code: form.role_code }
+              : user
+          )
+        );
       } else {
         // Creating a new user
         await createUser({
@@ -113,7 +126,7 @@ const UserManagement = () => {
       setPopupOpen(false); // Close popup after saving
       fetchUsers(); // Refresh the user list
     } catch (error) {
-      console.error("Failed to save user", error);
+      toast.error("Failed to save user", error);
     }
   };
 
@@ -137,7 +150,7 @@ const UserManagement = () => {
         fetchUsers();
       }
     } catch (error) {
-      console.error(`Failed to ${confirmDialog.action} user`, error);
+      toast.error(`Failed to ${confirmDialog.action} user`, error);
     } finally {
       setConfirmDialog({ open: false, user: null, action: null });
     }
