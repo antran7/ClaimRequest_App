@@ -7,6 +7,7 @@ import {
   changeUserStatus,
   fetchUser,
   deleteUser,
+  changeUserRole,
 } from "../services/userService";
 import Layout from "../../../shared/layouts/Layout";
 import { Button, TableContainer, Table, TableHead, TableBody, TableRow, TableCell, TextField, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, Typography
@@ -90,24 +91,17 @@ const UserManagement = () => {
   const handleSave = async () => {
     try {
       if (editingUser) {
+        // Check if role changed
+        if (editingUser.role_code !== form.role_code) {
+          await changeUserRole(editingUser._id, form.role_code);
+        }
+  
         // Updating an existing user
         await updateUser(editingUser._id, {
           email: form.email,
           user_name: form.user_name,
-          role_code: form.role_code,
         });
-        console.log("Updating user with:", updatedUser); // Debugging
-
-        const response = await updateUser(editingUser._id, updatedUser);
-        console.log("Update response:", response); // Debug API response
-
-        setUsers((prevUsers) =>
-          prevUsers.map((user) =>
-            user._id === editingUser._id
-              ? { ...user, email: form.email, user_name: form.user_name, role_code: form.role_code }
-              : user
-          )
-        );
+  
       } else {
         // Creating a new user
         await createUser({
@@ -117,12 +111,14 @@ const UserManagement = () => {
           password: form.password, // Password required for new users
         });
       }
+  
       setPopupOpen(false); // Close popup after saving
       fetchUsers(); // Refresh the user list
     } catch (error) {
       toast.error("Failed to save user", error);
     }
   };
+
 
   const handleConfirmAction = async () => {
     if (!confirmDialog.user || !confirmDialog.action) return;

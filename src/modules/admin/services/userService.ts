@@ -58,3 +58,17 @@ export const fetchUser = async (userId: string): Promise<User> => {
     throw error;
   }
 };
+
+export const changeUserRole = async (userId : string, roleCode : string) => {
+  try {
+    const response = await apiService.put("/users/change-role", {
+      user_id: userId,
+      role_code: roleCode,
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Failed to update role:", error);
+    return false;
+  }
+};
