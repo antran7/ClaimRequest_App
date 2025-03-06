@@ -110,8 +110,8 @@ const ProjectDetail = () => {
   });
 
   const handleOpenEditDialog = () => {
-    fetchUsers();  
-    formik.resetForm({  
+    fetchUsers();
+    formik.resetForm({
       values: {
         project_name: project?.project_name || "",
         project_code: project?.project_code || "",
@@ -122,7 +122,7 @@ const ProjectDetail = () => {
         project_members: project?.project_members || [],
       },
     });
-    setEditDialogOpen(true); 
+    setEditDialogOpen(true);
   };
 
   const fetchUsers = async () => {
@@ -143,7 +143,13 @@ const ProjectDetail = () => {
   const handleAddMember = () => {
     formik.setFieldValue("project_members", [
       ...formik.values.project_members,
-      { user_id: "", project_role: "" },
+      {
+        _id: "",
+        user_id: "",
+        user_name: "",
+        email: "",
+        project_role: ""
+      },
     ]);
   };
 
@@ -156,17 +162,20 @@ const ProjectDetail = () => {
   const handleMemberChange = (index: number, field: string, value: string) => {
     const updatedMembers = [...formik.values.project_members];
     if (field === "user_id") {
-      const selectedUser = users.find((user) => user._id === value);
-      if (selectedUser) {
-        updatedMembers[index] = {
-          ...updatedMembers[index],
-          _id: selectedUser._id,
-          user_name: selectedUser.user_name,
-          email: selectedUser.email,
-        };
-      }
+      const selectedUser = users.find(user => user._id === value);
+      updatedMembers[index] = {
+        ...updatedMembers[index],
+        _id: value,
+        user_id: value, // Thêm user_id
+        user_name: selectedUser?.user_name,
+        email: selectedUser?.email,
+        project_role: updatedMembers[index].project_role || ""
+      };
     } else {
-      updatedMembers[index] = { ...updatedMembers[index], [field]: value };
+      updatedMembers[index] = {
+        ...updatedMembers[index],
+        [field]: value
+      };
     }
     formik.setFieldValue("project_members", updatedMembers);
   };
@@ -243,7 +252,7 @@ const ProjectDetail = () => {
               <h2 className="text-xl font-semibold mb-4">Members</h2>
               <div className="grid sm:grid-cols-2 gap-4">
                 {project.project_members &&
-                project.project_members.length > 0 ? (
+                  project.project_members.length > 0 ? (
                   project.project_members.map((member) => (
                     <div
                       key={member._id}
@@ -426,31 +435,48 @@ const ProjectDetail = () => {
             <div className="mt-6">
               <div className="flex justify-between items-center mb-2">
                 <Typography variant="h6">Project Members</Typography>
-                <Button
+                {/* <Button
                   variant="outlined"
                   color="primary"
-                  onClick={handleAddMember}
+
                 >
                   Add Member
-                </Button>
+                </Button> */}
+                <div
+                  className="group relative flex size-10 items-center justify-center gap-1 rounded-lg border border-black"
+                  onClick={handleAddMember}
+                >
+                  <div
+                    className="size-1 rounded-full bg-black duration-300 group-hover:opacity-0"
+                  ></div>
+                  <div
+                    className="relative size-1 origin-center rounded-full bg-black duration-300 before:absolute before:left-1 before:h-1 before:origin-center before:rounded-full before:bg-black before:delay-300 before:duration-300 after:absolute after:left-1 after:h-1 after:origin-center after:rounded-full after:bg-black after:delay-300 after:duration-300 group-hover:w-6 group-hover:before:w-3.5 group-hover:before:-rotate-90 group-hover:after:w-3.5 group-hover:after:rotate-90"
+                  ></div>
+
+                  <div
+                    className="size-1 rounded-full bg-black duration-300 group-hover:opacity-0"
+                  ></div>
+                </div>
               </div>
 
               {formik.values.project_members.map((member, index) => (
                 <div key={index} className="grid grid-cols-3 gap-4 mb-4">
                   <FormControl fullWidth>
-                    <InputLabel id={`user-select-label-${index}`}>
-                      User
-                    </InputLabel>
+                    <InputLabel id={`user-select-label-${index}`}>User</InputLabel>
                     <Select
                       labelId={`user-select-label-${index}`}
-                      value={member._id || ""}
+                      value={member.user_id || member._id || ""} // Thêm member.user_id
                       label="User"
-                      onChange={(e) =>
-                        handleMemberChange(index, "user_id", e.target.value)
-                      }
+                      onChange={(e) => handleMemberChange(index, "user_id", e.target.value)}
+                      displayEmpty
                     >
+                      <MenuItem value="" disabled>Select User</MenuItem>
                       {users.map((user) => (
-                        <MenuItem key={user._id} value={user._id}>
+                        <MenuItem
+                          key={user._id}
+                          value={user._id}
+                          selected={member.user_id === user._id || member._id === user._id}
+                        >
                           {user.user_name} ({user.email})
                         </MenuItem>
                       ))}
