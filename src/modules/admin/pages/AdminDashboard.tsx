@@ -6,18 +6,54 @@ import { Grid } from "@mui/material";
 
 import { useNavigate } from "react-router-dom";
 import Layout from "../../../shared/layouts/Layout";
+import { useEffect, useState } from "react";
+import { User } from "../types/user";
+import { searchUsers } from "../services/userService";
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
 function AdminDashboard() {
   const navigate = useNavigate();
-
+  const [pageNum, setPageNum] = useState(1); //  Track current page
+  const [pageSize] = useState(100); //  Items per page
+  const [totalPages, setTotalPages] = useState(1); // Total pages from API
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [count, setCount] = useState(0);
+  const fetchUsers = async () => {
+    // Fetch total user count
+    setLoading(true);
+    try {
+      const response = await searchUsers({}, { pageNum, pageSize });
+      setCount(response.pageInfo.totalItems);
+      if (response?.pageData && response?.pageInfo) {
+        setUsers(response.pageData); //  Correctly setting users
+        setTotalPages(response.pageInfo.totalPages || 1); //  Fix pagination
+      } else {
+        console.error("Invalid API response structure:", response);
+        setUsers([]); // 🛠 Prevent crashes
+      }
+    } catch (error) {
+      console.error("Failed to fetch user count", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    fetchUsers();
+  }, [pageNum, searchTerm]);
   const data = {
     labels: ["Admin", "Approval", "Finance", "User"],
     datasets: [
       {
         label: "# of Votes",
-        data: [12, 19, 3, 3],
+        data: [
+          users.filter((user) => user.role_code === "A001").length,
+          users.filter((user) => user.role_code === "A003").length,
+          users.filter((user) => user.role_code === "A002").length,
+          users.filter((user) => user.role_code === "A004").length,
+        ],
         backgroundColor: [
           "rgba(255, 99, 132, 0.2)",
           "rgba(54, 162, 235, 0.2)",
@@ -32,12 +68,12 @@ function AdminDashboard() {
     datasets: [
       {
         label: "Claim Requests",
-        data: [40, 25, 10, 30], 
+        data: [40, 25, 10, 30],
         backgroundColor: [
-          "rgba(255, 99, 132, 0.7)", 
-          "rgba(54, 162, 235, 0.7)", 
-          "rgba(255, 206, 86, 0.7)", 
-          "rgba(36, 250, 118, 0.7)", 
+          "rgba(255, 99, 132, 0.7)",
+          "rgba(54, 162, 235, 0.7)",
+          "rgba(255, 206, 86, 0.7)",
+          "rgba(36, 250, 118, 0.7)",
         ],
       },
     ],
@@ -54,7 +90,7 @@ function AdminDashboard() {
                 <div className="user-card">
                   <div className="user-card-left">
                     <p>Users</p>
-                    <p>20</p>
+                    <p>{count}</p>
                   </div>
                   <div className="user-card-right">
                     <AccountCircleOutlined style={{ fontSize: "50px" }} />
@@ -104,7 +140,9 @@ function AdminDashboard() {
               </Grid>
               <Grid item xs={6}>
                 <div className="bar-chart">
-                <p style={{ textAlign: "center", margin: "20px", fontSize: "20px", color: "#418c9f" }}>Claim Request</p>
+                  <p style={{ textAlign: "center", margin: "20px", fontSize: "20px", color: "#418c9f" }}>
+                    Claim Request
+                  </p>
                   <Bar data={claimRequestData} />
                 </div>
               </Grid>
