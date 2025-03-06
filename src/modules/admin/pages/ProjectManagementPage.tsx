@@ -1,9 +1,10 @@
+//Import từ React Router hoặc các hook liên quan
 import React, { useEffect, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
-import BackButton from "../components/BackButton";
-import Search from "../../../shared/components/searchComponent/Search";
+import { toast } from "react-hot-toast";
+//Import từ thư viện bên ngoài
 import {
   Button,
   Typography,
@@ -22,20 +23,30 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  TextareaAutosize,
+  Pagination,
+  Stack,
 } from "@mui/material";
+import {
+  Delete as DeleteIcon,
+  Visibility as VisibilityIcon,
+} from "@mui/icons-material";
+//Import các component dùng chung
 import Layout from "../../../shared/layouts/Layout";
-import { CircularProgress } from '@mui/material';
-import Pagination from "@mui/material/Pagination";
-import Stack from "@mui/material/Stack";
-import { Delete as DeleteIcon, Visibility as VisibilityIcon } from "@mui/icons-material";
+import BackButton from "../components/BackButton";
+import Search from "../../../shared/components/searchComponent/Search";
+import { searchUsers } from "../services/userService";
+//Import service, interface, and types
 import {
   searchProject,
   addProject,
   deleteProject,
 } from "../services/projectService";
-import { toast } from "react-hot-toast";
-import { Project, ProjectMember, User, ApiResponse } from "../types/projectInterface";
+import {
+  Project,
+  ProjectMember,
+  User,
+  ApiResponse,
+} from "../types/projectInterface";
 
 const ProjectManagementPage: React.FC = () => {
   const navigate = useNavigate();
@@ -47,7 +58,9 @@ const ProjectManagementPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const itemPerPage = 10;
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -66,9 +79,24 @@ const ProjectManagementPage: React.FC = () => {
         setLoading(false);
       }
     };
-  
+
     fetchProjects();
   }, [page]);
+
+  const fetchUsers = async () => {
+    try {
+      const response = await searchUsers(
+        { keyword: "" },
+        { pageNum: 1, pageSize: 100 } // Fetch all users
+      );
+      if (response?.pageData) {
+        setUsers(response.pageData);
+      }
+    } catch (error) {
+      console.error("Failed to fetch users:", error);
+      toast.error("Failed to load users");
+    }
+  };
 
   const validationSchema = Yup.object({
     project_name: Yup.string().required("Project name is required"),
@@ -79,15 +107,17 @@ const ProjectManagementPage: React.FC = () => {
     project_end_date: Yup.date()
       .required("End date is required")
       .min(Yup.ref("project_start_date"), "End date must be after start date"),
-    project_members: Yup.array().of(
-      Yup.object().shape({
-        user_id: Yup.string(),
-        project_role: Yup.string(),
-        employee_id: Yup.string(),
-        user_name: Yup.string(),
-        full_name: Yup.string(),
-      })
-    ).min(1, "At least one project member is required"),
+    project_members: Yup.array()
+      .of(
+        Yup.object().shape({
+          user_id: Yup.string(),
+          project_role: Yup.string(),
+          employee_id: Yup.string(),
+          user_name: Yup.string(),
+          full_name: Yup.string(),
+        })
+      )
+      .min(1, "At least one project member is required"),
   });
 
   const formik = useFormik({
@@ -96,12 +126,14 @@ const ProjectManagementPage: React.FC = () => {
       project_code: "",
       project_department: "",
       project_description: "",
-      project_start_date: new Date().toISOString().split('T')[0],
-      project_end_date: new Date().toISOString().split('T')[0],
-      project_members: [{
-        user_id: "",
-        project_role: ""
-      }]
+      project_start_date: new Date().toISOString().split("T")[0],
+      project_end_date: new Date().toISOString().split("T")[0],
+      project_members: [
+        {
+          user_id: "",
+          project_role: "",
+        },
+      ],
     },
     validationSchema,
     onSubmit: async (values) => {
@@ -111,12 +143,19 @@ const ProjectManagementPage: React.FC = () => {
           project_start_date: new Date(values.project_start_date).toISOString(),
           project_end_date: new Date(values.project_end_date).toISOString(),
         };
-
-        const newProject = await addProject(projectData);
-        setProjects((prev) => [...prev, newProject]);
+  
+        await addProject(projectData);
         toast.success("Project added successfully!");
+        
+        const response = await searchProject("", 1); 
+        if (response.success && response.data) {
+          setProjects(response.data.pageData);
+          setTotalPages(response.data.pageInfo.totalPages);
+          setPage(1); 
+        }
+  
         handleCloseDialog();
-      } catch {
+      } catch (error) {
         toast.error("Failed to save project");
       }
     },
@@ -125,7 +164,7 @@ const ProjectManagementPage: React.FC = () => {
   const handleAddMember = () => {
     formik.setFieldValue("project_members", [
       ...formik.values.project_members,
-      { user_id: "", project_role: "" }
+      { user_id: "", project_role: "" },
     ]);
   };
 
@@ -143,6 +182,7 @@ const ProjectManagementPage: React.FC = () => {
 
   const handleOpenDialog = () => {
     formik.resetForm();
+    fetchUsers();
     setOpenDialog(true);
   };
 
@@ -202,8 +242,8 @@ const ProjectManagementPage: React.FC = () => {
         <div className="p-8">
           <BackButton to="/admin/dashboard" />
           <div className="flex justify-between items-center mb-6">
-          <Typography variant="h5">Project Management</Typography>
-          <Search onSearch={handleSearch} />
+            <Typography variant="h5">Project Management</Typography>
+            <Search onSearch={handleSearch} />
             <button
               title="Add New"
               className="group cursor-pointer outline-none hover:rotate-90 duration-300"
@@ -227,71 +267,75 @@ const ProjectManagementPage: React.FC = () => {
           </div>
 
           <TableContainer>
-  <Table>
-    <TableHead>
-      <TableRow className="bg-gray-300">
-        <TableCell>Project Name</TableCell>
-        <TableCell>Project Code</TableCell>
-        <TableCell>Department</TableCell>
-        <TableCell>Start Date</TableCell>
-        <TableCell>End Date</TableCell>
-        <TableCell>Actions</TableCell>
-      </TableRow>
-    </TableHead>
-    <TableBody>
-      {loading ? (
-        <TableRow>
-          <TableCell colSpan={6} align="center">
-          <div className="flex justify-center flex-row gap-2">
-            <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce"></div>
-            <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce [animation-delay:-.3s]"></div>
-            <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce [animation-delay:-.5s]"></div>
-          </div>
-          </TableCell>
-        </TableRow>
-      ) : projects.length === 0 ? (
-        <TableRow>
-          <TableCell colSpan={6} align="center">
-            No projects found
-          </TableCell>
-        </TableRow>
-      ) : (
-        projects.map((project) => (
-          <TableRow key={project._id}>
-            <TableCell>{project.project_name}</TableCell>
-            <TableCell>{project.project_code}</TableCell>
-            <TableCell>{project.project_department}</TableCell>
-            <TableCell>{formatDate(project.project_start_date)}</TableCell>
-            <TableCell>{formatDate(project.project_end_date)}</TableCell>
-            <TableCell>
-              <Button
-                variant="contained"
-                sx={{
-                  backgroundColor: "gray",
-                  color: "white",
-                  "&:hover": { backgroundColor: "darkgray" },
-                  mr: 1,
-                }}
-                startIcon={<VisibilityIcon />}
-                onClick={() => handleViewProject(project._id)}
-              >
-                View
-              </Button>
-              <Button
-                variant="outlined"
-                color="error"
-                startIcon={<DeleteIcon />}
-                onClick={() => handleOpenConfirmDialog(project._id)}
-              >
-                Delete
-              </Button>
-            </TableCell>
-          </TableRow>
-        ))
-      )}
-    </TableBody>
-  </Table>
-</TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow className="bg-gray-300">
+                  <TableCell>Project Name</TableCell>
+                  <TableCell>Project Code</TableCell>
+                  <TableCell>Department</TableCell>
+                  <TableCell>Start Date</TableCell>
+                  <TableCell>End Date</TableCell>
+                  <TableCell>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} align="center">
+                      <div className="flex justify-center flex-row gap-2">
+                        <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce"></div>
+                        <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce [animation-delay:-.3s]"></div>
+                        <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce [animation-delay:-.5s]"></div>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : projects.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} align="center">
+                      No projects found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  projects.map((project) => (
+                    <TableRow key={project._id}>
+                      <TableCell>{project.project_name}</TableCell>
+                      <TableCell>{project.project_code}</TableCell>
+                      <TableCell>{project.project_department}</TableCell>
+                      <TableCell>
+                        {formatDate(project.project_start_date)}
+                      </TableCell>
+                      <TableCell>
+                        {formatDate(project.project_end_date)}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="contained"
+                          sx={{
+                            backgroundColor: "gray",
+                            color: "white",
+                            "&:hover": { backgroundColor: "darkgray" },
+                            mr: 1,
+                          }}
+                          startIcon={<VisibilityIcon />}
+                          onClick={() => handleViewProject(project._id)}
+                        >
+                          View
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          startIcon={<DeleteIcon />}
+                          onClick={() => handleOpenConfirmDialog(project._id)}
+                        >
+                          Delete
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
           <div className="w-1/3 ml-auto p-4">
             <Stack spacing={2}>
               <Pagination
@@ -300,38 +344,58 @@ const ProjectManagementPage: React.FC = () => {
                 onChange={(_, value) => setPage(value)}
                 variant="outlined"
                 shape="rounded"
-
               />
             </Stack>
           </div>
         </div>
 
-        <Dialog open={openDialog} onClose={handleCloseDialog} fullWidth maxWidth="md">
-          <DialogTitle className="bg-gray-500">Add Project</DialogTitle>
+        <Dialog
+          open={openDialog}
+          onClose={handleCloseDialog}
+          fullWidth
+          maxWidth="md"
+        >
+          <DialogTitle className="bg-gray-300">Add Project</DialogTitle>
           <DialogContent>
             <div className="grid grid-cols-2 gap-4 mt-4">
               <TextField
                 fullWidth
                 label="Project Name"
                 {...formik.getFieldProps("project_name")}
-                error={formik.touched.project_name && Boolean(formik.errors.project_name)}
-                helperText={formik.touched.project_name && formik.errors.project_name}
+                error={
+                  formik.touched.project_name &&
+                  Boolean(formik.errors.project_name)
+                }
+                helperText={
+                  formik.touched.project_name && formik.errors.project_name
+                }
               />
 
               <TextField
                 fullWidth
                 label="Project Code"
                 {...formik.getFieldProps("project_code")}
-                error={formik.touched.project_code && Boolean(formik.errors.project_code)}
-                helperText={formik.touched.project_code && formik.errors.project_code}
+                error={
+                  formik.touched.project_code &&
+                  Boolean(formik.errors.project_code)
+                }
+                helperText={
+                  formik.touched.project_code && formik.errors.project_code
+                }
               />
 
               <TextField
                 fullWidth
                 label="Department"
                 {...formik.getFieldProps("project_department")}
-                error={formik.touched.project_department && Boolean(formik.errors.project_department)}
-                helperText={formik.touched.project_department && formik.errors.project_department}
+                error={
+                  formik.touched.project_department &&
+                  Boolean(formik.errors.project_department)
+                }
+                helperText={
+                  formik.touched.project_department &&
+                  formik.errors.project_department
+                }
               />
 
               <TextField
@@ -340,8 +404,14 @@ const ProjectManagementPage: React.FC = () => {
                 multiline
                 rows={4}
                 {...formik.getFieldProps("project_description")}
-                error={formik.touched.project_description && Boolean(formik.errors.project_description)}
-                helperText={formik.touched.project_description && formik.errors.project_description}
+                error={
+                  formik.touched.project_description &&
+                  Boolean(formik.errors.project_description)
+                }
+                helperText={
+                  formik.touched.project_description &&
+                  formik.errors.project_description
+                }
               />
 
               <TextField
@@ -350,8 +420,14 @@ const ProjectManagementPage: React.FC = () => {
                 type="date"
                 InputLabelProps={{ shrink: true }}
                 {...formik.getFieldProps("project_start_date")}
-                error={formik.touched.project_start_date && Boolean(formik.errors.project_start_date)}
-                helperText={formik.touched.project_start_date && formik.errors.project_start_date}
+                error={
+                  formik.touched.project_start_date &&
+                  Boolean(formik.errors.project_start_date)
+                }
+                helperText={
+                  formik.touched.project_start_date &&
+                  formik.errors.project_start_date
+                }
               />
 
               <TextField
@@ -360,50 +436,86 @@ const ProjectManagementPage: React.FC = () => {
                 type="date"
                 InputLabelProps={{ shrink: true }}
                 {...formik.getFieldProps("project_end_date")}
-                error={formik.touched.project_end_date && Boolean(formik.errors.project_end_date)}
-                helperText={formik.touched.project_end_date && formik.errors.project_end_date}
+                error={
+                  formik.touched.project_end_date &&
+                  Boolean(formik.errors.project_end_date)
+                }
+                helperText={
+                  formik.touched.project_end_date &&
+                  formik.errors.project_end_date
+                }
               />
             </div>
 
             <div className="mt-6">
               <div className="flex justify-between items-center mb-2">
                 <Typography variant="h6">Project Members</Typography>
-                <Button 
-                  variant="outlined" 
-                  color="primary" 
+                <Button
+                  variant="outlined"
+                  color="primary"
                   onClick={handleAddMember}
                 >
                   Add Member
                 </Button>
               </div>
-              
+
               {formik.values.project_members.map((member, index) => (
                 <div key={index} className="grid grid-cols-3 gap-4 mb-4">
                   <FormControl fullWidth>
-                    <InputLabel id={`user-select-label-${index}`}>User</InputLabel>
+                    <InputLabel id={`user-select-label-${index}`}>
+                      User
+                    </InputLabel>
                     <Select
                       labelId={`user-select-label-${index}`}
                       value={member.user_id}
                       label="User"
-                      onChange={(e) => handleMemberChange(index, "user_id", e.target.value)}
+                      onChange={(e) =>
+                        handleMemberChange(index, "user_id", e.target.value)
+                      }
                     >
                       {users.map((user) => (
-                        <MenuItem key={user.id} value={user.id}>
-                          {user.name}
+                        <MenuItem key={user._id} value={user._id}>
+                          {user.user_name} ({user.email})
                         </MenuItem>
                       ))}
                     </Select>
                   </FormControl>
-                  
-                  <TextField
-                    fullWidth
-                    label="Role"
-                    value={member.project_role}
-                    onChange={(e) => handleMemberChange(index, "project_role", e.target.value)}
-                  />
-                  
-                  <Button 
-                    color="error" 
+
+                  <FormControl fullWidth>
+                    <InputLabel>Role</InputLabel>
+                    <Select
+                      value={member.project_role}
+                      label="Role"
+                      onChange={(e) =>
+                        handleMemberChange(
+                          index,
+                          "project_role",
+                          e.target.value
+                        )
+                      }
+                    >
+                      <MenuItem value="Project Manager">
+                        Project Manager
+                      </MenuItem>
+                      <MenuItem value="Technical Leader">
+                        Technical Leader
+                      </MenuItem>
+                      <MenuItem value="Developer">Developer</MenuItem>
+                      <MenuItem value="Tester">Tester</MenuItem>
+                      <MenuItem value="Business Analytics">
+                        Business Analytics
+                      </MenuItem>
+                      <MenuItem value="Technical Consultant">
+                        Technical Consultant
+                      </MenuItem>
+                      <MenuItem value="Quality Analytics">
+                        Quality Analytics
+                      </MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  <Button
+                    color="error"
                     onClick={() => handleRemoveMember(index)}
                     disabled={formik.values.project_members.length <= 1}
                   >
@@ -411,10 +523,13 @@ const ProjectManagementPage: React.FC = () => {
                   </Button>
                 </div>
               ))}
-              
-              {formik.touched.project_members && typeof formik.errors.project_members === 'string' && (
-                <Typography color="error">{formik.errors.project_members}</Typography>
-              )}
+
+              {formik.touched.project_members &&
+                typeof formik.errors.project_members === "string" && (
+                  <Typography color="error">
+                    {formik.errors.project_members}
+                  </Typography>
+                )}
             </div>
           </DialogContent>
           <DialogActions>

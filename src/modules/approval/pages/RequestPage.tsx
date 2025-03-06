@@ -1,12 +1,29 @@
 import { useState, useEffect } from "react";
-import { Modal, Button, TextField } from "@mui/material";
+import {
+  Modal,
+  Button,
+  TextField,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+} from "@mui/material";
 import axios from "axios";
 import "./RequestPage.css";
 import moment from "moment";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
+import { useForm, Controller } from "react-hook-form";
+import * as yup from "yup";
+import { yupResolver } from "@hookform/resolvers/yup";
+import Layout from "../../../shared/layouts/Layout";
 
 const API_REQUESTS = "https://67245b0d493fac3cf24dfc59.mockapi.io/api/approver";
+
+const convertToLocalTime = (utcDate: string) => {
+  return moment.utc(utcDate).utcOffset(7).format("YYYY-MM-DD");
+};
 
 interface Request {
   id: number;
@@ -22,6 +39,59 @@ interface Request {
   reason: string;
 }
 
+interface IFormInput {
+  name: string;
+  startDate: moment.Moment | null;
+  endDate: moment.Moment | null;
+  totalTimes: number | null;
+}
+
+const schema = yup
+  .object({
+    name: yup.string().required("Request Name is required"),
+    startDate: yup
+      .date()
+      .nullable()
+      .required("Start Date is required")
+      .test(
+        "startDate",
+        "Start Date cannot be in the future",
+        function (value) {
+          if (!value) return true;
+          return moment(value).isSameOrBefore(moment(), "day");
+        }
+      )
+      .test(
+        "startDate",
+        "Start Date must be before End Date",
+        function (value) {
+          const { endDate } = this.parent;
+          if (!endDate || !value) return true;
+          return moment(value).isBefore(moment(endDate), "day");
+        }
+      ),
+    endDate: yup
+      .date()
+      .nullable()
+      .required("End Date is required")
+      .test("endDate", "End Date cannot be in the future", function (value) {
+        if (!value) return true;
+        return moment(value).isSameOrBefore(moment(), "day");
+      })
+      .test("endDate", "End Date must be after Start Date", function (value) {
+        const { startDate } = this.parent;
+        if (!startDate || !value) return true;
+        return moment(startDate).isBefore(moment(value), "day");
+      }),
+    totalTimes: yup
+      .number()
+      .required("Total Times is required")
+      .positive("Total Times must be positive")
+      .min(1, "Total Times must be at least 1")
+      .integer("Total Times must be a whole number"),
+  })
+  .required();
+
 const RequestPage = () => {
   const [requests, setRequests] = useState<Request[]>([]);
   const [search, setSearch] = useState("");
@@ -30,6 +100,24 @@ const RequestPage = () => {
   const [currentRequest, setCurrentRequest] = useState<Request | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [userEmail, setUserEmail] = useState<string>("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteRequestId, setDeleteRequestId] = useState<number | null>(null);
+  const [dateError, setDateError] = useState<string | null>(null);
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<IFormInput>({
+    resolver: yupResolver(schema),
+    defaultValues: {
+      name: "",
+      startDate: null,
+      endDate: null,
+      totalTimes: null,
+    },
+  });
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -66,36 +154,66 @@ const RequestPage = () => {
     fetchRequests();
   }, [userEmail]);
 
-  const handleAddModalOk = async (event: React.FormEvent) => {
-    event.preventDefault();
+  const checkDateOverlap = (startDate: moment.Moment, endDate: moment.Moment) => {
+    return requests.some(
+      (req) =>
+        moment(startDate).isBetween(req.startDate, req.endDate, "day", "[]") ||
+        moment(endDate).isBetween(req.startDate, req.endDate, "day", "[]") ||
+        moment(req.startDate).isBetween(startDate, endDate, "day", "[]") ||
+        moment(req.endDate).isBetween(startDate, endDate, "day", "[]")
+    );
+  };
+
+  const handleAddModalOk = async (data: IFormInput) => {
     if (!userEmail) return;
+
+    if (data.startDate && data.endDate && checkDateOverlap(data.startDate, data.endDate)) {
+      setDateError("The selected date range overlaps with an existing claim.");
+      return;
+    }
 
     try {
       const newRequest = {
-        name: "New Request",
+        name: data.name,
         status: "DRAFT",
-        startDate: moment().format("YYYY-MM-DD"),
-        endDate: moment().add(1, "days").format("YYYY-MM-DD"),
-        totalTimes: 8,
+        startDate: moment(data.startDate).format("YYYY-MM-DD"),
+        endDate: moment(data.endDate).format("YYYY-MM-DD"),
+        totalTimes: data.totalTimes,
         reason: "DRAFT",
         userEmail: userEmail,
         userId: 1,
+        submittedDate: moment().format("YYYY-MM-DD"),
+        createDate: moment().format("YYYY-MM-DD"),
       };
 
       const response = await axios.post(API_REQUESTS, newRequest);
       setRequests([...requests, response.data]);
       setIsAddModalVisible(false);
+      reset();
+      setDateError(null);
     } catch (error) {
       console.error("Error adding request:", error);
     }
   };
 
-  const handleEditModalOk = async (event: React.FormEvent) => {
-    event.preventDefault();
+  const handleEditModalOk = async (data: IFormInput) => {
     if (!currentRequest) return;
 
+    if (data.startDate && data.endDate && checkDateOverlap(data.startDate, data.endDate)) {
+      setDateError("The selected date range overlaps with an existing claim.");
+      return;
+    }
+
     try {
-      const updatedRequest = { ...currentRequest, name: "Updated Request" };
+      const updatedRequest: Request = {
+        ...currentRequest,
+        name: data.name,
+        startDate:
+          data.startDate?.format("YYYY-MM-DD") || currentRequest.startDate,
+        endDate: data.endDate?.format("YYYY-MM-DD") || currentRequest.endDate,
+        totalTimes: data.totalTimes || currentRequest.totalTimes,
+      };
+
       await axios.put(`${API_REQUESTS}/${currentRequest.id}`, updatedRequest);
       setRequests(
         requests.map((req) =>
@@ -104,18 +222,33 @@ const RequestPage = () => {
       );
       setIsEditModalVisible(false);
       setCurrentRequest(null);
+      reset();
     } catch (error) {
       console.error("Error editing request:", error);
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = (id: number) => {
+    setDeleteRequestId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteRequestId) return;
+
     try {
-      await axios.delete(`${API_REQUESTS}/${id}`);
-      setRequests(requests.filter((req) => req.id !== id));
+      await axios.delete(`${API_REQUESTS}/${deleteRequestId}`);
+      setRequests(requests.filter((req) => req.id !== deleteRequestId));
+      setDeleteDialogOpen(false);
+      setDeleteRequestId(null);
     } catch (error) {
       console.error("Error deleting request:", error);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteDialogOpen(false);
+    setDeleteRequestId(null);
   };
 
   const handleRequestApproval = async (id: number) => {
@@ -134,211 +267,315 @@ const RequestPage = () => {
     setIsAddModalVisible(false);
     setIsEditModalVisible(false);
     setCurrentRequest(null);
+    reset();
   };
 
   return (
-    <div
-      className={`request-container-approval ${
-        isAddModalVisible || isEditModalVisible ? "blur-background" : ""
-      }`}
-    >
-      <div className="request-box-approval">
-        <h1 className="request-title-approval">Manage Claim Requests</h1>
+    <Layout>
+      <div
+        className={`request-container-approval ${
+          isAddModalVisible || isEditModalVisible ? "blur-background" : ""
+        }`}
+      >
+        <div className="request-box-approval">
+          <h1 className="request-title-approval">Manage Claim Requests</h1>
 
-        <div className="search-container-approval">
-          <TextField
-            type="text"
-            placeholder="Search requests..."
-            className="search-input-approval"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <Button
-            onClick={() => setIsAddModalVisible(true)}
-            className="add-button-approval"
-          >
-            + Add Request
-          </Button>
-        </div>
+          <div className="search-container-approval">
+            <TextField
+              type="text"
+              placeholder="Search requests..."
+              className="search-input-approval"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            <Button
+              onClick={() => setIsAddModalVisible(true)}
+              className="add-button-approval"
+            >
+              + Add Request
+            </Button>
+          </div>
 
-        {loading ? (
-          <p>Loading...</p>
-        ) : (
-          <table className="request-table-approval">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Request Name</th>
-                <th>Status</th>
-                <th>Start Date</th>
-                <th>End Date</th>
-                <th>Total Times (Hours)</th>
-                <th>Reason</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {requests
-                .filter((req) =>
-                  req.name.toLowerCase().includes(search.toLowerCase())
-                )
-                .map((req) => (
-                  <tr key={req.id}>
-                    <td>{req.id}</td>
-                    <td>{req.name}</td>
-                    <td
-                      className={`status-${req.status.toLowerCase()}-approval`}
-                    >
-                      {req.status}
-                    </td>
-                    <td>{req.startDate}</td>
-                    <td>{req.endDate}</td>
-                    <td>{req.totalTimes}</td>
-                    <td
-                      className={
-                        req.reason === "DRAFT" ? "reason-draft-approval" : ""
-                      }
-                    >
-                      {req.reason}
-                    </td>
-                    <td>
-                      <Button
-                        onClick={() => {
-                          setCurrentRequest(req);
-                          setIsEditModalVisible(true);
-                        }}
-                        className="edit-button-approval"
+          {loading ? (
+            <p>Loading...</p>
+          ) : (
+            <table className="request-table-approval">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Request Name</th>
+                  <th>Status</th>
+                  <th>Start Date</th>
+                  <th>End Date</th>
+                  <th>Total Times (Hours)</th>
+                  <th>Reason</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {requests
+                  .filter((req) =>
+                    req.name.toLowerCase().includes(search.toLowerCase())
+                  )
+                  .map((req) => (
+                    <tr key={req.id}>
+                      <td>{req.id}</td>
+                      <td>{req.name}</td>
+                      <td
+                        className={`status-${req.status.toLowerCase()}-approval`}
                       >
-                        Edit
-                      </Button>
-                      <Button
-                        onClick={() => handleDelete(req.id)}
-                        className="delete-button-approval"
+                        {req.status}
+                      </td>
+                      <td>{convertToLocalTime(req.startDate)}</td>
+                      <td>{convertToLocalTime(req.endDate)}</td>
+                      <td>{req.totalTimes}</td>
+                      <td
+                        className={
+                          req.reason === "DRAFT" ? "reason-draft-approval" : ""
+                        }
                       >
-                        Delete
-                      </Button>
-                      {req.status === "DRAFT" && (
+                        {req.reason}
+                      </td>
+                      <td>
                         <Button
-                          onClick={() => handleRequestApproval(req.id)}
-                          className="approve-button-approval"
+                          onClick={() => {
+                            setCurrentRequest(req);
+                            reset({
+                              name: req.name,
+                              startDate: moment(req.startDate),
+                              endDate: moment(req.endDate),
+                              totalTimes: req.totalTimes,
+                            });
+                            setIsEditModalVisible(true);
+                          }}
+                          className="edit-button-approval"
+                          disabled={req.status === "PENDING"}
                         >
-                          Request Approval
+                          Edit
                         </Button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-        )}
+                        <Button
+                          onClick={() => handleDelete(req.id)}
+                          className="delete-button-approval"
+                          disabled={req.status === "PENDING"}
+                        >
+                          Delete
+                        </Button>
+                        {req.status === "DRAFT" && (
+                          <Button
+                            onClick={() => handleRequestApproval(req.id)}
+                            className="approve-button-approval"
+                          >
+                            Request Approval
+                          </Button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        <Modal
+          open={isAddModalVisible}
+          onClose={handleModalCancel}
+          className="custom-modal-approval"
+        >
+          <div className="modal-content">
+            <h2>Add Request</h2>
+            <form onSubmit={handleSubmit(handleAddModalOk)}>
+              <Controller
+                name="name"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="Request Name"
+                    required
+                    fullWidth
+                    margin="normal"
+                    error={!!errors.name}
+                    helperText={errors.name?.message}
+                  />
+                )}
+              />
+              <LocalizationProvider dateAdapter={AdapterMoment}>
+                <Controller
+                  name="startDate"
+                  control={control}
+                  render={({ field }) => (
+                    <DatePicker
+                      {...field}
+                      label="Start Date"
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          margin: "normal",
+                          required: true,
+                          error: !!errors.startDate,
+                          helperText: errors.startDate?.message,
+                        },
+                      }}
+                    />
+                  )}
+                />
+                <Controller
+                  name="endDate"
+                  control={control}
+                  render={({ field }) => (
+                    <DatePicker
+                      {...field}
+                      label="End Date"
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          margin: "normal",
+                          required: true,
+                          error: !!errors.endDate,
+                          helperText: errors.endDate?.message,
+                        },
+                      }}
+                    />
+                  )}
+                />
+              </LocalizationProvider>
+              <Controller
+                name="totalTimes"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="Total Times"
+                    type="number"
+                    required
+                    fullWidth
+                    margin="normal"
+                    inputProps={{ min: 1 }}
+                    error={!!errors.totalTimes}
+                    helperText={errors.totalTimes?.message}
+                  />
+                )}
+              />
+              {dateError && <p className="error-message">{dateError}</p>}
+              <Button type="submit" variant="contained" color="primary">
+                Add
+              </Button>
+            </form>
+          </div>
+        </Modal>
+
+        <Modal
+          open={isEditModalVisible}
+          onClose={handleModalCancel}
+          className="custom-modal-approval"
+        >
+          <div className="modal-content">
+            <h2>Edit Request</h2>
+            <form onSubmit={handleSubmit(handleEditModalOk)}>
+              <Controller
+                name="name"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="Request Name"
+                    required
+                    fullWidth
+                    margin="normal"
+                    error={!!errors.name}
+                    helperText={errors.name?.message}
+                  />
+                )}
+              />
+              <LocalizationProvider dateAdapter={AdapterMoment}>
+                <Controller
+                  name="startDate"
+                  control={control}
+                  render={({ field }) => (
+                    <DatePicker
+                      {...field}
+                      label="Start Date"
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          margin: "normal",
+                          required: true,
+                          error: !!errors.startDate,
+                          helperText: errors.startDate?.message,
+                        },
+                      }}
+                    />
+                  )}
+                />
+                <Controller
+                  name="endDate"
+                  control={control}
+                  render={({ field }) => (
+                    <DatePicker
+                      {...field}
+                      label="End Date"
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          margin: "normal",
+                          required: true,
+                          error: !!errors.endDate,
+                          helperText: errors.endDate?.message,
+                        },
+                      }}
+                    />
+                  )}
+                />
+              </LocalizationProvider>
+              <Controller
+                name="totalTimes"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="Total Times"
+                    type="number"
+                    required
+                    fullWidth
+                    margin="normal"
+                    inputProps={{ min: 1 }}
+                    error={!!errors.totalTimes}
+                    helperText={errors.totalTimes?.message}
+                  />
+                )}
+              />
+              {dateError && <p className="error-message">{dateError}</p>}
+              <Button type="submit" variant="contained" color="primary">
+                Save
+              </Button>
+            </form>
+          </div>
+        </Modal>
+
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={handleCancelDelete}
+          aria-labelledby="alert-dialog-title"
+          aria-describedby="alert-dialog-description"
+        >
+          <DialogTitle id="alert-dialog-title">{"Confirm Delete"}</DialogTitle>
+          <DialogContent>
+            <DialogContentText id="alert-dialog-description">
+              Are you sure you want to delete this request? This action cannot
+              be undone.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCancelDelete} color="primary">
+              Cancel
+            </Button>
+            <Button onClick={handleConfirmDelete} color="error" autoFocus>
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
       </div>
-
-      <Modal
-        open={isAddModalVisible}
-        onClose={handleModalCancel}
-        className="custom-modal-approval"
-      >
-        <div className="modal-content">
-          <h2>Add Request</h2>
-          <form onSubmit={handleAddModalOk}>
-            <TextField
-              label="Request Name"
-              name="name"
-              required
-              fullWidth
-              margin="normal"
-            />
-            <LocalizationProvider dateAdapter={AdapterMoment}>
-              <DatePicker
-                label="Start Date"
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    margin: "normal",
-                    required: true,
-                  },
-                }}
-              />
-              <DatePicker
-                label="End Date"
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    margin: "normal",
-                    required: true,
-                  },
-                }}
-              />
-            </LocalizationProvider>
-            <TextField
-              label="Total Times"
-              name="totalTimes"
-              type="number"
-              required
-              fullWidth
-              margin="normal"
-              inputProps={{ min: 1 }}
-            />
-            <Button type="submit" variant="contained" color="primary">
-              Add
-            </Button>
-          </form>
-        </div>
-      </Modal>
-
-      <Modal
-        open={isEditModalVisible}
-        onClose={handleModalCancel}
-        className="custom-modal-approval"
-      >
-        <div className="modal-content">
-          <h2>Edit Request</h2>
-          <form onSubmit={handleEditModalOk}>
-            <TextField
-              label="Request Name"
-              name="name"
-              required
-              fullWidth
-              margin="normal"
-            />
-            <LocalizationProvider dateAdapter={AdapterMoment}>
-              <DatePicker
-                label="Start Date"
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    margin: "normal",
-                    required: true,
-                  },
-                }}
-              />
-              <DatePicker
-                label="End Date"
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    margin: "normal",
-                    required: true,
-                  },
-                }}
-              />
-            </LocalizationProvider>
-            <TextField
-              label="Total Times"
-              name="totalTimes"
-              type="number"
-              required
-              fullWidth
-              margin="normal"
-              inputProps={{ min: 1 }}
-            />
-            <Button type="submit" variant="contained" color="primary">
-              Save
-            </Button>
-          </form>
-        </div>
-      </Modal>
-    </div>
+    </Layout>
   );
 };
 

@@ -15,7 +15,7 @@ export interface ProjectMember {
     project_status: string;
     project_start_date: string;
     project_end_date: string;
-    project_members: ProjectMember[];
+    project_members: User[];
     created_at?: string;
     updated_at?: string;
     updated_by?: string;
@@ -24,8 +24,10 @@ export interface ProjectMember {
   }
   
   export interface User {
-    id: string;
-    name: string;
+    _id: string;
+    project_role: string;
+    user_name: string;
+    email: string;
   }
   
   export interface ApiResponse {

@@ -1,9 +1,18 @@
 import { useEffect, useState } from "react";
 import { searchUsers, createUser, updateUser, changeUserStatus, fetchUser, deleteUser } from "../services/userService";
 import Layout from "../../../shared/layouts/Layout";
-import { Button, TableContainer, Table, TableHead, TableBody, TableRow, TableCell, TextField, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper } from "@mui/material";
+import { Button, TableContainer, Table, TableHead, TableBody, TableRow, TableCell, TextField, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, Typography
+
+ } from "@mui/material";
 import { User } from "../types/user";
 import { Pagination } from "@mui/material";
+import { Pencil } from 'lucide-react';
+import { CircleX } from 'lucide-react';
+import { Plus, Search } from "lucide-react";
+import { Lock, Unlock } from "lucide-react";
+
+
+
 
 
 const UserManagement = () => {
@@ -113,45 +122,70 @@ const UserManagement = () => {
 
   return (
     <Layout>
-      <div className="p-4">
+      <h1 className="text-6xl p-4 font-mono bold " style={{ backgroundColor: "#90E0EF" }}>USER MANAGEMENT</h1>
+      <div className="p-4 " style={{ backgroundColor: "#90E0EF" }}>
+        <div className="flex justify-end items-center gap-4 mb-4">
+      <div className="w-[250px] min-w-[150px]  ">
+        
       <TextField
-        label="Search by Username or RoleCode"
+        label="Search by Username...."
         variant="outlined"
         fullWidth
         margin="dense"
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
+        
+        size="small"
+        sx={{
+          
+        }}
+        
+    
+      
       />
-        <Dialog open={popupOpen} onClose={() => setPopupOpen(false)}>
-  <DialogTitle>{editingUser ? "Edit User" : "Add New User"}</DialogTitle>
+      </div>
+        <Dialog open={popupOpen} onClose={() => setPopupOpen(false)}
+          sx={{ "& .MuiPaper-root": { borderRadius: "12px", padding: "20px", width: "500px" } }}>
+  <DialogTitle>
+  <Typography variant="h6" fontWeight="bold" fontSize="27px">
+    {editingUser ? "Edit User" : "Create  new user"}
+    </Typography>
+    </DialogTitle>
+
+
   <DialogContent>
     {/* Email Field */}
+    Email
     <TextField
-      label="Email"
+      
       fullWidth
       margin="dense"
       value={form.email}
       onChange={(e) => setForm({ ...form, email: e.target.value })}
+      sx={{ backgroundColor: "#E3F2FD", borderRadius: "6px" ,color:"gray" }}
     />
 
     {/* Username Field */}
+    Username
     <TextField
-      label="Username"
+      
       fullWidth
       margin="dense"
       value={form.user_name}
       onChange={(e) => setForm({ ...form, user_name: e.target.value })}
+      sx={{ backgroundColor: "#E3F2FD", borderRadius: "6px" ,color:"gray" }}
     />
 
     {/* Role Dropdown */}
+    Role
     <TextField
       select
-      label="Role"
+      
       fullWidth
       margin="dense"
       value={form.role_code}
       onChange={(e) => setForm({ ...form, role_code: e.target.value })}
-      SelectProps={{ native: true }}
+      sx={{ backgroundColor: "#E3F2FD", borderRadius: "6px" }}
     >
       <option value="A001">A001</option>
       <option value="A002">A002</option>
@@ -160,14 +194,16 @@ const UserManagement = () => {
     </TextField>
 
     {/* Password Field (ONLY for Adding New User) */}
+    Password
     {!editingUser && (
       <TextField
-        label="Password"
+        
         fullWidth
         margin="dense"
         type="password"
         value={form.password}
         onChange={(e) => setForm({ ...form, password: e.target.value })}
+        sx={{ backgroundColor: "#E3F2FD", borderRadius: "6px" }}
       />
     )}
   </DialogContent>
@@ -185,32 +221,74 @@ const UserManagement = () => {
     setEditingUser(null); // Reset editing state
     setForm({ email: "", user_name: "", role_code: "A001", password: "" }); // Reset form
     setPopupOpen(true); // Open popup
-  }}
-  style={{ marginBottom: "16px" }}
->
-  Add New User
-</Button>
 
-        <TableContainer component={Paper} className="mt-4">
+  }}
+  sx={{
+    backgroundColor: "blue", // Màu cam
+    color: "white", // Màu chữ trắng
+    fontWeight: "bold",
+    textTransform: "none", // Không in hoa
+    borderRadius: "30px", // Bo tròn
+    padding: "10px 20px", // Kích thước padding
+    fontSize: "16px", // Cỡ chữ
+    "&:hover": {
+      backgroundColor: "Navy", // Màu khi hover
+    },
+    display: "flex",
+    alignItems: "center",
+    gap: "8px", // Khoảng cách giữa icon và chữ
+  }}
+>
+  <Plus/>
+  Create Account
+</Button>
+</div>
+
+        <TableContainer component={Paper} className="mt-4" sx={{  borderRadius:"12px"  }}>
           <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Email</TableCell>
-                <TableCell>Role</TableCell>
-                <TableCell>Username</TableCell>
-                <TableCell>Blocked</TableCell>
-                <TableCell>Actions</TableCell>
+            <TableHead sx={{ backgroundColor: "#03045E" , }}>
+              <TableRow >
+              <TableCell sx={{  fontWeight: "bold" , fontSize:'17px', borderRight: "2px solid #ffff" , textAlign: "center" , color:"white" }}>Username</TableCell>
+                <TableCell sx={{  fontWeight: "bold", fontSize:'17px', borderRight: "2px solid #ffff" , textAlign: "center" , color:"white"  }}>Email</TableCell>
+                <TableCell sx={{  fontWeight: "bold" , fontSize:'17px' , borderRight: "2px solid #ffff", textAlign: "center" , color:"white"  }}>Role</TableCell> 
+                <TableCell sx={{  fontWeight: "bold", fontSize:'17px' , borderRight: "2px solid #ffff" , textAlign: "center" , color:"white" }}>Blocked</TableCell>
+                <TableCell sx={{  fontWeight: "bold" , fontSize:'17px' , textAlign: "center", color:"white" }}>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {filteredUsers.map((user) => (
-                <TableRow key={user._id}>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.role_code}</TableCell>
-                  <TableCell>{user.user_name}</TableCell>
-                  <TableCell> <Button onClick={() => setConfirmDialog({ open: true, user, action: "block" })}>
-                        {user.is_blocked ? "Locked" : "Unlocked"} </Button></TableCell>
-                  <TableCell>
+                <TableRow key={user._id}  sx={{ borderBottom: "6px solid #90E0EF" }}  >
+                  <TableCell sx={{ textAlign: "center"}}>{user.user_name}</TableCell>
+                  <TableCell sx={{ textAlign: "center"}}>{user.email}</TableCell>
+                  <TableCell sx={{ textAlign: "center"}}>{user.role_code}</TableCell>
+                  
+                  <TableCell sx={{ textAlign: "center"}}> 
+                  <Button
+    onClick={() => setConfirmDialog({ open: true, user, action: "block" })}
+    variant="contained" 
+    startIcon={user.is_blocked ? <Lock size={16} /> : <Unlock size={16} />}
+    
+    sx={{
+      
+      textTransform: "none", // Không viết hoa chữ
+      borderRadius: "12px", // Bo tròn góc
+      fontWeight: 600, // Chữ đậm
+      backgroundColor: user.is_blocked ? "#FF3B30" : "#34C759",
+      "&:hover": {
+        backgroundColor: user.is_blocked ? "#D32F2F" : "#2E7D32", // Màu khi hover
+      }
+
+    }}
+  >
+    {user.is_blocked ? "Locked" : "Unlocked"}
+  </Button>
+  
+                         </TableCell>
+                         
+
+                  <TableCell sx={{ textAlign: "center"}}>
+
+                    
                   <Button 
                         color="inherit" 
                         onClick={() => {
@@ -223,10 +301,14 @@ const UserManagement = () => {
                           setPopupOpen(true); // Open popup
                         }}
                       >
-                        Edit
+                        
+                        <Pencil size={18} />
+                        
                       </Button>
+
+                     
                     <Button color="warning" onClick={() => setConfirmDialog({ open: true, user, action: "delete" })}>
-                      Delete
+                    <CircleX size={18} />
                     </Button>
                   </TableCell>
                 </TableRow>

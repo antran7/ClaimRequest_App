@@ -5,33 +5,10 @@
   padding: 16px;
 }
 
-/* Search Bar */
-.search-bar {
-  margin-bottom: 16px;
-}
+
+
 
 /* Table Styling */
-.MuiTable-root {
-  width: 100%;
-<<<<<<< HEAD
-  min-height: 600px;
-  background-color: #f9f9f9;
-  margin: 0 auto 20px;
-  font-family: Arial, sans-serif;
-  font-size: large;
-  border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  padding: 20px;
-  box-sizing: border-box;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  text-align: center;
-  background-image: url('https://img.freepik.com/free-photo/beach-aegean-sea-partly-cloudy-sky-greece_1268-15826.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-}
 
 .user-management-page {
   min-height: 100vh;
@@ -39,13 +16,6 @@
   flex-direction: column;
 }
 
-h1 {
-  text-align: center;
-  margin-bottom: 20px;
-  margin-top: 50px;
-  font-size: 2rem;
-  color: #333;
-}
 
 .user-management-page button {
   padding: 8px 10px; /* Reduced padding */
@@ -96,8 +66,7 @@ input[type="text"] {
 table {
   width: 100%;
   min-width: 1100px; /* Ensure enough width for all columns */
-=======
->>>>>>> a1eb081a46b149b2e909cb4a3a5c9b132cfe6c27
+
   border-collapse: collapse;
 }
 
@@ -139,10 +108,6 @@ table {
 }
 
 /* Dialog Styling */
-.MuiDialogTitle-root {
-  font-size: 1.2rem;
-  font-weight: bold;
-}
 
 .MuiDialogActions-root {
   justify-content: space-between;
@@ -158,4 +123,8 @@ table {
   .MuiButton-root {
     font-size: 0.8rem;
   }
+}
+
+.h1 {
+  font-size: 100px;
 }
