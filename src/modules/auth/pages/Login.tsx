@@ -4,7 +4,7 @@ import { useAuth } from "../../../core/hooks/useAuth";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useForm } from "react-hook-form";
-import { TextField, Checkbox, FormControlLabel, Button } from "@mui/material";
+import { TextField, Checkbox, FormControlLabel, Button,CircularProgress } from "@mui/material";
 
 interface LoginFormInputs {
   email: string;
@@ -84,7 +84,7 @@ const Login = () => {
             </div>
           </div>
           <Button type="submit" variant="contained" fullWidth disabled={isLoading} className="login-submit">
-            Sign in
+            {isLoading? <CircularProgress size={24}/>: "Sign in"}
           </Button>
         </form>
       </div>
