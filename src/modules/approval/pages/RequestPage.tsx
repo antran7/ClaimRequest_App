@@ -110,7 +110,7 @@ const RequestPage = () => {
     reset,
     formState: { errors },
   } = useForm<IFormInput>({
-    resolver: yupResolver(schema),
+    resolver: yupResolver(schema) as any,
     defaultValues: {
       name: "",
       startDate: null,
@@ -154,7 +154,10 @@ const RequestPage = () => {
     fetchRequests();
   }, [userEmail]);
 
-  const checkDateOverlap = (startDate: moment.Moment, endDate: moment.Moment) => {
+  const checkDateOverlap = (
+    startDate: moment.Moment,
+    endDate: moment.Moment
+  ) => {
     return requests.some(
       (req) =>
         moment(startDate).isBetween(req.startDate, req.endDate, "day", "[]") ||
@@ -167,7 +170,11 @@ const RequestPage = () => {
   const handleAddModalOk = async (data: IFormInput) => {
     if (!userEmail) return;
 
-    if (data.startDate && data.endDate && checkDateOverlap(data.startDate, data.endDate)) {
+    if (
+      data.startDate &&
+      data.endDate &&
+      checkDateOverlap(data.startDate, data.endDate)
+    ) {
       setDateError("The selected date range overlaps with an existing claim.");
       return;
     }
@@ -199,7 +206,11 @@ const RequestPage = () => {
   const handleEditModalOk = async (data: IFormInput) => {
     if (!currentRequest) return;
 
-    if (data.startDate && data.endDate && checkDateOverlap(data.startDate, data.endDate)) {
+    if (
+      data.startDate &&
+      data.endDate &&
+      checkDateOverlap(data.startDate, data.endDate)
+    ) {
       setDateError("The selected date range overlaps with an existing claim.");
       return;
     }
