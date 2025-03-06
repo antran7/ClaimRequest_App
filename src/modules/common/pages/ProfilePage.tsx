@@ -3,24 +3,28 @@ import Layout from '../../../shared/layouts/Layout'
 import './ProfilePage.css'
 import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined';
 import { useForm } from 'react-hook-form';
-import { Avatar } from '@mui/material';
+import { Avatar, Switch } from '@mui/material';
 import { useAuth } from '../../../core/hooks/useAuth';
-import { updateInfo } from '../services/userApi';
+import { updateInfo, updatePassword } from '../services/userApi';
 import toast from 'react-hot-toast';
 
 type FormData = {
-  username: string;
-  email: string;
+  username?: string;
+  email?: string;
+  oldPassword?: string;
+  newPassword?: string;
 };
 
 const ProfilePage = () => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [isPasswordMode, setIsPasswordMode] = useState(false);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
+    reset,
   } = useForm<FormData>();
 
   const formatDateToUTC7 = (isoString?: string) => {
@@ -29,18 +33,31 @@ const ProfilePage = () => {
       : "N/A";
   };
 
+  const handleSwitchChange = () => {
+    setIsPasswordMode((prev) => !prev);
+    reset();
+  };
+
   const onSubmit = async (data: FormData) => {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      await updateInfo(user?._id, {
-        email: data.email, 
-        user_name: data.username
-      });
+      if (isPasswordMode) {
+        await updatePassword({
+          old_password: data.oldPassword,
+          new_password: data.newPassword,
+        });
+      } else {
+        await updateInfo(user?._id, {
+          email: data.email,
+          user_name: data.username
+        });
+      }
       toast("Update successfully.", {
         icon: "✅",
         style: { background: "#333", color: "#ccc" },
       });
+      reset();
     } catch (error) {
       toast(error.toString(), {
         icon: "❌",
@@ -74,32 +91,67 @@ const ProfilePage = () => {
                 </p>
               </div>
               <form onSubmit={handleSubmit(onSubmit)} className='update-form'>
-                <input
-                  defaultValue={user?.user_name}
-                  {...register('username', { required: 'Username is required' })}
-                  placeholder="Enter username"
-                />
-                {errors.username && <p style={{ color: 'red' }}>{errors.username.message}</p>}
+                {!isPasswordMode ? (
+                  <>
+                    <input
+                      defaultValue={user?.user_name}
+                      {...register('username', { required: 'Username is required' })}
+                      placeholder="Enter username"
+                    />
+                    {errors.username && <p style={{ color: 'red' }}>{errors.username.message}</p>}
 
-                <input
-                  type="email"
-                  defaultValue={user?.email}
-                  {...register('email', {
-                    required: 'Email is required',
-                    pattern: {
-                      value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/,
-                      message: 'Invalid email format',
-                    },
-                  })}
-                  placeholder="Enter email"
-                />
-                {errors.email && <p style={{ color: 'red' }}>{errors.email.message}</p>}
-                <div className='activate-info'>
-                  <p>Is activate</p>
-                  <div></div>
-                </div>
-                <button type="submit" disabled={isLoading}>Update</button>
+                    <input
+                      type="email"
+                      defaultValue={user?.email}
+                      {...register('email', {
+                        required: 'Email is required',
+                        pattern: {
+                          value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/,
+                          message: 'Invalid email format',
+                        },
+                      })}
+                      placeholder="Enter email"
+                    />
+                    {errors.email && <p style={{ color: 'red' }}>{errors.email.message}</p>}
+                    <div className='activate-info'>
+                      <p>Is activate</p>
+                      <div></div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <input
+                      type="password"
+                      {...register('oldPassword', { required: 'Old password is required' })}
+                      placeholder="Enter old password"
+                    />
+                    {errors.oldPassword && <p style={{ color: 'red' }}>{errors.oldPassword.message}</p>}
+
+                    <input
+                      type="password"
+                      {...register('newPassword', { required: 'New password is required' })}
+                      placeholder="Enter new password"
+                    />
+                    {errors.newPassword && <p style={{ color: 'red' }}>{errors.newPassword.message}</p>}
+                    <div className='activate-info'>
+                      <p>Is activate</p>
+                      <div></div>
+                    </div>
+                  </>
+                )}
+                <button type="submit" disabled={isLoading}>
+                  {isPasswordMode ? "Update Password" : "Update Profile"}
+                </button>
               </form>
+              <div className="switch-container">
+                <span>Update Profile</span>
+                <Switch
+                  checked={isPasswordMode}
+                  onChange={handleSwitchChange}
+                  color="primary"
+                />
+                <span>Update Password</span>
+              </div>
             </div>
             <div className='profile-right-top-panel'>
               <div className='create-update-title'>
