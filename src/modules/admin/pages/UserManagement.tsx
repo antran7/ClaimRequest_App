@@ -220,8 +220,9 @@ const UserManagement = () => {
     </TextField>
 
     {/* Password Field (ONLY for Adding New User) */}
-    Password
+    <span style={{ visibility: editingUser ? "hidden" : "visible" }}>Password</span>
     {!editingUser && (
+      
       <TextField
        
         fullWidth
