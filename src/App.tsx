@@ -12,6 +12,7 @@ function App() {
       <ToastProvider>
         <AppRoutes />
       </ToastProvider>
+      <CustomCursor />
     </>
   );
 }
