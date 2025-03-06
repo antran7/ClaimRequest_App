@@ -31,8 +31,7 @@ interface SideBarProps {
 
 const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
   const navigate = useNavigate();
-  const { getUserInfo } = useAuth();
-  const role = localStorage.getItem("userRole");
+  const { user, getUserInfo } = useAuth();
   const [openManagement, setOpenManagement] = useState(false);
 
   const menuItems = [
@@ -67,23 +66,37 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
       ],
     },
   ];
-  const usersItems = [
-    
-  ];
+<<<<<<< HEAD
+=======
+  const usersItems = [];
+>>>>>>> 819d110c981a405fa44ca73a8bb9cd5718e7e0a6
 
   const approvalItems = [
     {
       text: "Approve Claims",
       icon: <CheckBoxIcon />,
-      path: "/approval/dashboard",
+      path: "/approval/claims",
     },
   ];
 
-  const finaceItems = [
-    { text: "Paid Claims", icon: <PaidIcon />, path: "/#" },
-  ];
+  const finaceItems = [{ text: "Paid Claims", icon: <PaidIcon />, path: "/#" }];
 
   const handleNavigation = (path: string) => {
+<<<<<<< HEAD
+    if (path === "/my-requests") {
+      navigate("user/my-requests");
+    } else {
+      if (path === "/dashboard") {
+        if (user?.role_code === "A004") {
+          navigate("/user/dashboard");
+        } else if (user?.role_code === "A001") {
+          navigate("/admin/dashboard");
+        } else if (user?.role_code === "A003") {
+          navigate("/approval/dashboard");
+        } else {
+          navigate("/finance/claims");
+        }
+=======
     console.log(role);
     if (path === "/dashboard") {
       if (role === "user") {
@@ -92,15 +105,23 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
         navigate("/admin/dashboard");
       } else if (role === "approver") {
         navigate("/approval/dashboard");
+>>>>>>> 819d110c981a405fa44ca73a8bb9cd5718e7e0a6
       } else {
         navigate("/finance/claims");
       }
-    } else {
-      navigate(path);
+    } else if (path === "/my-requests") {
+      if (role === "user") {
+        navigate("/user/my-requests");
+      } else if (role === "admin") {
+        navigate("/admin/my-requests");
+      } else if (role === "approver") {
+        navigate("/approval/my-requests");
+      } else {
+        navigate("/finance/my-requests");
+      }
     }
     toggleSidebar();
   };
-
   useEffect(() => {
     const fetchAuth = async () => {
       try {
@@ -130,7 +151,7 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
 
         {/* Admin Management */}
         <List>
-          {role === Role.ADMIN &&
+          {user?.role_code === Role.ADMIN &&
             adminItems.map(({ text, icon, children }) => (
               <Box key={text}>
                 <ListItem disablePadding>
@@ -159,7 +180,7 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
               </Box>
             ))}
 
-          {role === Role.APPROVER &&
+          {user?.role_code === Role.APPROVER &&
             approvalItems.map(({ text, icon, path }) => (
               <ListItem key={text} disablePadding>
                 <ListItemButton onClick={() => handleNavigation(path)}>
@@ -169,20 +190,7 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
               </ListItem>
             ))}
 
-          {role === Role.USER && (
-            <List>
-              {usersItems.map(({ text, icon, path }) => (
-                <ListItem key={text} disablePadding>
-                  <ListItemButton onClick={() => handleNavigation(path)}>
-                    <ListItemIcon>{icon}</ListItemIcon>
-                    <ListItemText primary={text} />
-                  </ListItemButton>
-                </ListItem>
-              ))}
-            </List>
-          )}
-
-          {role === Role.FINANCE &&
+          {user?.role_code === Role.FINANCE &&
             finaceItems.map(({ text, icon, path }) => (
               <ListItem key={text} disablePadding>
                 <ListItemButton onClick={() => handleNavigation(path)}>

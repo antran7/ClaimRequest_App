@@ -35,7 +35,11 @@ api.interceptors.response.use(
     if (error.response) {
       const data = error.response.data;
       if (data) {
-        errorMessage = data.message;
+        if (data.message) {
+          errorMessage = data.message;
+        } else if (Array.isArray(data.errors) && data.errors.length > 0) {
+          errorMessage = data.errors[0].message;
+        }
       }
     }
     return Promise.reject(new Error(errorMessage));
