@@ -103,12 +103,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const fetchUser = async () => {
       const token = localStorage.getItem("token");
       if (token) {
-        await getUserInfo(); // Lấy lại thông tin user từ API
+        await getUserInfo();
       }
-      setLoading(false); // Đánh dấu là đã tải xong
+      setLoading(false); 
     };
   
     fetchUser();
+    console.log(user);
   }, []);
 
   return (

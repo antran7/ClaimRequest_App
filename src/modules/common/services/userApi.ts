@@ -22,3 +22,12 @@ export const updateInfo = async (_id: string, updateData: { email: string; user_
         throw error;
     }
 }
+
+export const updatePassword = async (updateData: {old_password: string; new_password: string}): Promise<void> => {
+    try {
+        const response = await apiService.put('/users/change-password', updateData);
+    }catch (error) {
+        console.error("Error: ", error);
+        throw error;
+    }
+}
