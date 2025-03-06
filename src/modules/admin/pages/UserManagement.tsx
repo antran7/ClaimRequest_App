@@ -10,7 +10,7 @@ import {
   changeUserRole,
 } from "../services/userService";
 import Layout from "../../../shared/layouts/Layout";
-import { Button, TableContainer, Table, TableHead, TableBody, TableRow, TableCell, TextField, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, Typography
+import { Button, TableContainer, Table, TableHead, TableBody, TableRow, TableCell, TextField, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, Typography, MenuItem
 
  } from "@mui/material";
 import { User } from "../types/user";
@@ -207,17 +207,16 @@ const UserManagement = () => {
     Role
     <TextField
       select
-      
       fullWidth
       margin="dense"
       value={form.role_code}
       onChange={(e) => setForm({ ...form, role_code: e.target.value })}
       sx={{ backgroundColor: "#E3F2FD", borderRadius: "6px" }}
     >
-      <option value="A001">A001</option>
-      <option value="A002">A002</option>
-      <option value="A003">A003</option>
-      <option value="A004">A004</option>
+      <MenuItem value="A001">A001</MenuItem>
+      <MenuItem value="A002">A002</MenuItem>
+      <MenuItem value="A003">A003</MenuItem>
+      <MenuItem value="A004">A004</MenuItem>
     </TextField>
 
     {/* Password Field (ONLY for Adding New User) */}
