@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import "./Login.css";
 import { useAuth } from "../../../core/hooks/useAuth";
 import { Link, useNavigate } from "react-router-dom";
@@ -12,7 +12,7 @@ interface LoginFormInputs {
   remember: boolean;
 }
 
-const Login = () => {
+const Login: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
