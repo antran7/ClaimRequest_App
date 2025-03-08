@@ -141,9 +141,7 @@
         div {
           width: 15px;
           height: 15px;
-          background-color: #00ffcc;
           border-radius: 50%;
-          box-shadow: 0 0 30px #00ffcc, 0 0 60px #00ffcc;
           margin-left: 30px;
         }
       }
@@ -280,4 +278,10 @@
   transform: rotate(-30deg);
   overflow: hidden;
   z-index: -1;
+}
+
+.left-panel-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
