@@ -19,6 +19,7 @@
     "@mui/x-charts": "^7.27.1",
     "@mui/x-date-pickers": "^7.27.0",
     "@tailwindcss/vite": "^4.0.6",
+    "animate.css": "^4.1.1",
     "axios": "^1.7.9",
     "chart.js": "^4.4.7",
     "claim-request-app": "file:",
