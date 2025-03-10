@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Box } from "@mui/material";
 import Layout from "../../../shared/layouts/Layout";
 import DashboardPage from "./DashboardPage";
-import RequestPage from "./RequestPage";
+import RequestPage from "./ApproveRequestPage";
 import ApprovalPage from "./ApprovalPage";
 import { useLocation } from "react-router-dom";
 

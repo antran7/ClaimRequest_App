@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "@mui/material";
 import axios from "axios";
-import "./RequestPage.css";
+import "./ApproveRequestPage.css";
 import moment from "moment";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
