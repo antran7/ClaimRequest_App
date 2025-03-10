@@ -166,16 +166,22 @@ const UserManagement = () => {
       </h1>
       <div className="p-4 " style={{ backgroundColor: "#90E0EF" }}>
         <div className="flex justify-end items-center gap-4 mb-4">
-          <div className="w-[250px] min-w-[150px]  ">
+          <div className="w-[250px] min-w-[150px] ">
             <div className="relative">
               <TextField
                 label="Search by Username...."
-                variant="outlined"
                 fullWidth
                 margin="dense"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 size="small"
+                variant="filled"
+                style={{
+                  border: "100px !important ",
+                  backgroundColor: "#fff",
+                  borderRadius: "20px",
+                  overflow: "hidden",
+                }}
               />
               <Search className="absolute right-3 top-4" />
             </div>
