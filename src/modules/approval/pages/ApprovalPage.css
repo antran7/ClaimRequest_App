@@ -1,154 +1,201 @@
 .approval-container {
   display: flex;
   justify-content: center;
-  height: 100vh;
-  padding: 20px;
-  transition: filter 0.3s;
+  min-height: 100vh;
+  padding: 24px;
+  background-color: #f8fafc;
 }
 
-.approval-content.blur-background {
-  filter: blur(6px);
-  transition: filter 0.3s;
+.approval-content {
+  width: 95%;
+  max-width: 1800px;
+  background: white;
+  padding: 32px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .approval-title {
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 600;
-  color: #1d4ed8;
+  color: #1e40af;
   text-align: center;
+  margin-bottom: 32px;
+  letter-spacing: 0.025em;
+}
+
+.approval-filters {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  gap: 16px;
+}
+
+.search-field {
+  flex: 1;
+}
+
+.status-filter {
+  min-width: 200px;
+}
+
+.approval-table-container {
   margin-bottom: 20px;
-}
-
-.approval-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: white;
-}
-
-.approval-table th,
-.approval-table td {
-  padding: 12px;
-  border: 1px solid #ddd;
-  text-align: center;
-}
-
-.approval-table th {
-  background-color: #f5f5f5;
-  color: #1e3a8a;
+  max-height: 600px;
+  overflow-y: auto;
 }
 
 .action-buttons {
   display: flex;
   gap: 8px;
-  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.approve-button,
+.reject-button,
+.return-button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
 }
 
 .approve-button {
-  background-color: #16a34a;
+  background-color: #46d179;
   color: white;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: 0.3s;
 }
 
 .reject-button {
   background-color: #dc2626;
   color: white;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: 0.3s;
 }
 
 .return-button {
-  background-color: #f59e0b;
-  color: white;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: 0.3s;
+  background-color: #e6cb62;
+  color: black;
 }
 
-.approve-button:hover,
-.reject-button:hover,
-.return-button:hover {
+.approve-button:hover {
+  background-color: #16a34a;
+  color: #ffffff;
   transform: scale(1.05);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
 }
 
-.pagination {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 20px;
+.reject-button:hover {
+  background-color: #eb3e3e;
+  color: #ffffff;
+  transform: scale(1.05);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
 }
 
-.modal {
-  position: fixed;
+.return-button:hover {
+  background-color: #eab308;
+  color: #ffffff;
+  transform: scale(1.05);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+/* Status badges */
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.status-draft {
+  background-color: #e2e8f0;
+  color: #64748b;
+}
+
+.status-pending-approval {
+  background-color: #dbeafe;
+  color: #2563eb;
+}
+
+.status-approved {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.status-rejected {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.status-returned {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+/* Modal styles */
+.custom-modal .modal-content {
+  position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 400px;
-  background: white;
-  padding: 30px;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  z-index: 1000;
+  padding: 32px;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  width: 90%;
+  max-width: 600px;
 }
 
-.modal-textfield {
-  width: 100%;
-  padding: 10px;
-  margin-top: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+.blur-background {
+  filter: blur(4px);
+  transition: filter 0.3s ease;
+}
+
+.modal-instruction {
+  margin-top: 16px;
+  margin-bottom: 8px;
+  color: #4b5563;
 }
 
 .modal-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  margin-top: 20px;
+  gap: 16px;
+  margin-top: 24px;
 }
 
-.submit-button,
-.cancel-button {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.submit-button {
-  background-color: #4caf50;
-  color: white;
+.action-button {
+  min-width: 100px;
 }
 
 .cancel-button {
-  background-color: #f44336;
-  color: white;
+  min-width: 100px;
 }
 
-.submit-button:hover,
-.cancel-button:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.close-button {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: transparent;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
-}
 .error-message {
-  color: red;
+  color: #dc2626;
+  margin-top: 8px;
+  font-size: 0.875rem;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  gap: 16px;
+}
+
+.no-claims {
+  text-align: center;
+  padding: 48px;
+  color: #6b7280;
+  font-size: 1.1rem;
 }
