@@ -44,6 +44,13 @@ const UserManagement = () => {
   const [totalPages, setTotalPages] = useState(1); // Total pages from API
   const [viewUser, setViewUser] = useState<User | null>(null); //View detail
 
+  const roleMap: Record<string, string> = {
+    A001: "Admin",
+    A002: "Finance",
+    A003: "Approval",
+    A004: "Member",
+  };
+
   const [form, setForm] = useState<{
     email: string;
     user_name: string;
@@ -245,10 +252,10 @@ const UserManagement = () => {
                 }
                 sx={{ backgroundColor: "#E3F2FD", borderRadius: "6px" }}
               >
-                <MenuItem value="A001">A001</MenuItem>
-                <MenuItem value="A002">A002</MenuItem>
-                <MenuItem value="A003">A003</MenuItem>
-                <MenuItem value="A004">A004</MenuItem>
+                <MenuItem value="A001">Admin</MenuItem>
+                <MenuItem value="A002"> Finance</MenuItem>
+                <MenuItem value="A003">Approval</MenuItem>
+                <MenuItem value="A004">Member</MenuItem>
               </TextField>
               {/* Password Field (ONLY for Adding New User) */}
               <span style={{ visibility: editingUser ? "hidden" : "visible" }}>
@@ -416,8 +423,34 @@ const UserManagement = () => {
                   <TableCell sx={{ textAlign: "center" }}>
                     {user.email}
                   </TableCell>
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {user.role_code}
+                  <TableCell
+                    sx={{
+                      textAlign: "center",
+                      borderRadius: "6px",
+                      padding: "4px 4px ",
+                      margin: "15px",
+                      backgroundColor:
+                        user.role_code === "A001"
+                          ? "#FFEBEE" // Đỏ nhạt
+                          : user.role_code === "A002"
+                          ? "#FFF9C4" // Vàng nhạt
+                          : user.role_code === "A003"
+                          ? "#E8F5E9" // Xanh lá nhạt
+                          : "#F5F5F5", // Trắng
+                      color:
+                        user.role_code === "A001"
+                          ? "#D32F2F" // Đỏ đậm
+                          : user.role_code === "A002"
+                          ? "#FBC02D" // Vàng đậm
+                          : user.role_code === "A003"
+                          ? "#388E3C" // Xanh lá đậm
+                          : "#424242", // Xám đậm
+                      fontWeight: "bold",
+                      display: "inline-block",
+                      minWidth: "100px",
+                    }}
+                  >
+                    {roleMap[user.role_code] || "Unknown"}
                   </TableCell>
 
                   <TableCell sx={{ textAlign: "center" }}>
