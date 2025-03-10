@@ -72,3 +72,27 @@ export const changeUserRole = async (userId : string, roleCode : string) => {
     return false;
   }
 };
+
+export const getEmployeeById = async (userId: string) => {
+  try {
+    const response = await apiService.get(`/employees/${userId}`);
+    console.log("Backend API Response:", response);
+
+    if (!response.data || Object.keys(response.data).length === 0) {
+      throw new Error("Employee data is empty or not found");
+    } 
+    return response.data; // Extract employee data from response
+  } catch (error) {
+    console.error(`Failed to fetch employee with ID: ${userId}`, error);
+    throw error;
+  }
+};
+
+export const updateEmployee = async (userId: string, employeeData: object) => {
+  try {
+    await apiService.put(`/employees/${userId}`, employeeData);
+  } catch (error) {
+    console.error(`Failed to update employee with ID: ${userId}`, error);
+    throw error;
+  }
+};
