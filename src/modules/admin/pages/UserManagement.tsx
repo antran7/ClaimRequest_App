@@ -207,15 +207,12 @@ const UserManagement = () => {
         address: employee.address ?? "",
         avatar_url: employee.avatar_url ?? "",
         department_code: employee.department_code ?? "",
-        created_at: employee.created_at ?? "",
         end_date: employee.end_date ?? "",
         full_name: employee.full_name ?? "",
         is_deleted: employee.is_deleted ?? false,
         phone: employee.phone ?? "",
         salary: employee.salary ?? 0,
         start_date: employee.start_date ?? "",
-        updated_at: employee.updated_at ?? "",
-        updated_by: employee.updated_by ?? "",
       });
   
       setPopupOpen2(true);
@@ -227,15 +224,9 @@ const UserManagement = () => {
   
  const handleSaveEmployeeDetails = async () => {
   try {
-    if (!employeeData.created_at) {
-      console.error("Error: created_at is missing!");
-      return;
-    }
 
     const updatedEmployeeData = {
       ...employeeData,
-      created_at: new Date(employeeData.created_at), // Ensure it's a Date
-      updated_at: new Date(),
     };
 
     console.log("Sending to API:", JSON.stringify(updatedEmployeeData, null, 2));
@@ -788,21 +779,8 @@ const UserManagement = () => {
             margin="dense"
             InputLabelProps={{ shrink: true }}
           />
-          <TextField
-            label="Created Date"
-            value={employeeData.created_at}
-            onChange={(e) => setEmployeeData({ ...employeeData, created_at: e.target.value })}
-            fullWidth
-            margin="dense"
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            label="Updated by :"
-            value={employeeData._id}
-            onChange={(e) => setEmployeeData({ ...employeeData, _id: e.target.value })}
-            fullWidth
-            margin="dense"
-          />
+          
+          
         </>
       )}
     </DialogContent>

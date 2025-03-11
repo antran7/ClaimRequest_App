@@ -14,7 +14,7 @@ interface LoginFormInputs {
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, getUserInfo } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -28,6 +28,7 @@ const Login: React.FC = () => {
     setIsLoading(true);
     try {
       await login(data.email, data.password);
+      await getUserInfo();
       navigate("/");
       toast("Login successfully.", {
         icon: "🔥",
