@@ -1,0 +1,30 @@
+.search-bar-input {
+    display: flex;
+    justify-content: space-between;
+    background: linear-gradient(to bottom, #00093c, #2d0b00);
+    padding: 25px 100px;
+}
+
+.search-bar-filter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #F0F0F0;
+    height: 100%;
+    padding: 25px 100px;
+}
+
+.filter-results-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 100px;
+}
+
+.results-card-container {
+    padding: 25px 100px;
+
+    .MuiSelect-select {
+        padding: 0px;
+    }
+}

@@ -1,3 +1,4 @@
+import apiService from "../../../core/api/api";
 import { Project } from "../types/projectInterface";
 
 const API_URL = "https://management-claim-request.vercel.app/api";
@@ -111,4 +112,79 @@ export const searchProject = async (searchTerm: string = "", pageNum: number = 1
   }
 };
 
+interface SearchData {
+  searchTerm?: string,
+  startDate?: string | "",
+  endDate?: string | "",
+  department?: string,
+}
 
+interface ProjectData {
+  pageData: [
+    {
+      _id: string,
+      project_name: string,
+      project_code: string,
+      project_department: string,
+      project_description: string,
+      project_status: string,
+      project_start_date: string,
+      project_end_date: string,
+      updated_by: string,
+      is_deleted: boolean,
+      created_at: string,
+      updatedjeees: string,
+      project_comment: string | null,
+      project_members: [
+        {
+          project_code: string,
+          user_id: string,
+          employee_id: string,
+          user_name: string,
+          full_name: ""
+        }
+      ]
+    }
+  ],
+  pageInfo: {
+    pageNum: number,
+    pageSize: number,
+    totalItems: number,
+    totalPages: number,
+  }
+}
+
+export const searchProjectWithData = async (searchData: SearchData, pageNum: number = 1): Promise<ProjectData> => {
+  try {
+    const bodyData = {
+      searchCondition: {
+        keyword: searchData?.searchTerm,
+        project_start_date: searchData?.startDate,
+        project_end_date: searchData?.endDate,
+        is_delete: false,
+        user_id: "",
+      },
+      pageInfo: {
+        pageNum: pageNum,
+        pageSize: 10,
+      },
+    };
+
+    const response = await apiService.post<ProjectData>("/projects/search", bodyData);
+    if (response && response.data) {
+      return response.data;
+    }
+    return {
+      pageData: [],
+      pageInfo: {
+        pageNum,
+        pageSize: 10,
+        totalItems: 0,
+        totalPages: 0,
+      }
+    }
+  } catch (error) {
+    console.error("Error: ", error);
+    throw error;
+  }
+}
