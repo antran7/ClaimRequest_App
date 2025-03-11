@@ -28,7 +28,7 @@ export const commonRoutes: RouteObject[] = [
     },
 
     {
-        path: "/verify",
+        path: "/verify/:token",
         element: <Verify />
     },
 
