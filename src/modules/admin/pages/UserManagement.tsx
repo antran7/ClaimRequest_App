@@ -247,7 +247,6 @@ const UserManagement = () => {
         salary: employee.salary ?? 0,
         start_date: employee.start_date ?? "",
       });
-
       setPopupOpen2(true);
     } catch (error) {
       console.error("Error fetching employee details:", error);
