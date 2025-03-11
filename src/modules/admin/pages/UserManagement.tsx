@@ -35,6 +35,8 @@ import Select, { SelectChangeEvent } from "@mui/material/Select";
 
 import { User, Employee } from "../types/user";
 import { Pagination } from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { IconButton } from "@mui/material";
 import { Pencil, CircleX, Plus, Search, Lock, Unlock, Eye } from "lucide-react";
 
 const UserManagement = () => {
@@ -79,12 +81,31 @@ const UserManagement = () => {
     user_name: string;
     role_code: string;
     password?: string;
+    confirmPassword?: "",
   }>({
     email: "",
     user_name: "",
     role_code: "A001",
     password: "",
+    confirmPassword: "",
   });
+
+  const [errors, setErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const validateForm = () => {
+  let newErrors = {};
+
+  if (!form.email.trim()) newErrors.email = "Email is required";
+  if (!form.user_name.trim()) newErrors.user_name = "Username is required";
+  if (!editingUser && !form.password.trim()) newErrors.password = "Password is required";
+  if (!editingUser && form.password !== form.confirmPassword)
+    newErrors.confirmPassword = "Passwords do not match";
+
+  setErrors(newErrors);
+  return Object.keys(newErrors).length === 0; // Returns true if no errors
+};
   const [searchTerm, setSearchTerm] = useState("");
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
@@ -132,6 +153,7 @@ const UserManagement = () => {
 
   const handleSave = async () => {
     try {
+      if (!validateForm()) return;
       if (editingUser) {
         // Check if role changed
         if (editingUser.role_code !== form.role_code) {
@@ -149,7 +171,7 @@ const UserManagement = () => {
           email: form.email,
           user_name: form.user_name,
           role_code: form.role_code,
-          password: form.password, // Password required for new users
+          password: form.password, // Password required for new user
         });
       }
 
@@ -187,6 +209,14 @@ const UserManagement = () => {
   };
 
   const handleOpenEmployeeDetails = async (id: string) => {
+    console.log("Fetching details for User ID:", id);
+
+  if (!id) {
+    toast.error("Invalid User ID");
+    console.error("Invalid User ID: ID is missing");
+    return; 
+  }
+
     try {
       const response = await getEmployeeById(id);
 
@@ -217,7 +247,6 @@ const UserManagement = () => {
         salary: employee.salary ?? 0,
         start_date: employee.start_date ?? "",
       });
-
       setPopupOpen2(true);
     } catch (error) {
       console.error("Error fetching employee details:", error);
@@ -337,6 +366,8 @@ const UserManagement = () => {
                 margin="dense"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
+                error={!!errors.email}
+                helperText={errors.email}
                 sx={{
                   backgroundColor: "#E3F2FD",
                   borderRadius: "6px",
@@ -352,6 +383,8 @@ const UserManagement = () => {
                 onChange={(e) =>
                   setForm({ ...form, user_name: e.target.value })
                 }
+                error={!!errors.user_name}
+                helperText={errors.user_name}
                 sx={{
                   backgroundColor: "#E3F2FD",
                   borderRadius: "6px",
@@ -388,9 +421,38 @@ const UserManagement = () => {
                   onChange={(e) =>
                     setForm({ ...form, password: e.target.value })
                   }
+                  error={!!errors.password}
+                  helperText={errors.password}
                   sx={{ backgroundColor: "#E3F2FD", borderRadius: "6px" }}
+                  InputProps={{
+                    endAdornment: (
+                      <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    ),
+                  }}
                 />
               )}
+               {/* Confirm Password Field */}
+                  Confirm Password
+                  <TextField
+                    fullWidth
+                    margin="dense"
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={form.confirmPassword}
+                    onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+                    error={!!errors.confirmPassword}
+                    helperText={errors.confirmPassword}
+                    sx={{ backgroundColor: "#E3F2FD", borderRadius: "6px" }}
+                    InputProps={{
+                      endAdornment: (
+                        <IconButton onClick={() => setShowConfirmPassword(!showConfirmPassword)} edge="end">
+                          {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      ),
+                    }}
+                  />
+
             </DialogContent>
 
             <DialogActions>
@@ -422,7 +484,7 @@ const UserManagement = () => {
                     <strong>Email:</strong> {viewUser.email}
                   </Typography>
                   <Typography>
-                    <strong>Role:</strong> {viewUser.role_code}
+                  <strong>Role:</strong> {roleMap[viewUser.role_code]}
                   </Typography>
                   <Typography>
                     <strong>Created at:</strong> {viewUser.created_at}
@@ -430,15 +492,8 @@ const UserManagement = () => {
                   <Typography>
                     <strong>Updated at:</strong> {viewUser.updated_at}
                   </Typography>
-                  <Typography>
-                    <strong>Is Blocked:</strong> {String(viewUser.is_blocked)}
-                  </Typography>
-                  <Typography>
-                    <strong>Is Verified:</strong> {String(viewUser.is_verified)}
-                  </Typography>
-                  <Typography>
-                    <strong>Token:</strong> {String(viewUser.token_version)}
-                  </Typography>
+                 
+                 
                 </div>
               )}
             </DialogContent>
@@ -459,6 +514,7 @@ const UserManagement = () => {
                 user_name: "",
                 role_code: "A001",
                 password: "",
+                confirmPassword:"",
               }); // Reset form
               setPopupOpen(true); // Open popup
             }}
@@ -480,28 +536,6 @@ const UserManagement = () => {
           >
             <Plus />
             Create Account
-          </Button>
-
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => setPopupOpen2(true)}
-            sx={{
-              backgroundColor: "blue",
-              color: "white",
-              fontWeight: "bold",
-              textTransform: "none",
-              borderRadius: "30px",
-              padding: "10px 20px",
-              fontSize: "16px",
-              "&:hover": { backgroundColor: "Navy" },
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
-            <Plus />
-            Employees Details
           </Button>
         </div>
 
@@ -683,6 +717,17 @@ const UserManagement = () => {
                     >
                       <CircleX size={18} />
                     </Button>
+
+                    <Button
+                    onClick={() => {
+                      console.log("Selected User ID:", user._id); // ✅ Check if user.id exists
+                      handleOpenEmployeeDetails(user._id);
+                    }}
+                    variant="contained"
+                    color="primary"
+                  >
+                    Employees Details
+                  </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -924,22 +969,6 @@ const UserManagement = () => {
   <Dialog open={popupOpen2} onClose={() => setPopupOpen2(false)}>
     <DialogTitle>Employee Details</DialogTitle>
     <DialogContent>
-      <TextField
-        label="User ID"
-        value={userId}
-        onChange={(e) => setUserId(e.target.value)}
-        fullWidth
-        margin="dense"
-      />
-      <Button 
-        onClick={() => handleOpenEmployeeDetails(userId)} 
-        variant="contained"
-        color="primary"
-        sx={{ marginTop: "10px" }}
-      >
-        Fetch Employee
-      </Button>
-
       {/* Employee Fields */}
       {employeeData && (
         <>
