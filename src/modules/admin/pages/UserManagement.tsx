@@ -283,33 +283,10 @@ const UserManagement = () => {
 
   const handleRoleChange = async (userId: string, newRoleCode: string) => {
     if (!userId) return;
-=======
-  
- const handleSaveEmployeeDetails = async () => {
-  try {
-
-    const updatedEmployeeData = {
-      ...employeeData,
-    };
-
-
-    const userToUpdate = users.find((u) => u._id === userId);
-    if (!userToUpdate || userToUpdate.role_code === newRoleCode) return;
-
-    try {
-      await changeUserRole(userId, newRoleCode);
-
-      // Cập nhật state để UI phản ánh ngay lập tức
-      setUsers((prevUsers) =>
-        prevUsers.map((user) =>
-          user._id === userId ? { ...user, role_code: newRoleCode } : user
-        )
-      );
-    } catch (error) {
-      console.error("Lỗi khi cập nhật vai trò:", error);
-    }
   };
-
+  
+  
+  
   return (
     <Layout>
       <h1
@@ -965,8 +942,8 @@ const UserManagement = () => {
             </Button>
           </DialogActions>
         </Dialog>
-=======
-  <Dialog open={popupOpen2} onClose={() => setPopupOpen2(false)}>
+      )};
+    <Dialog open={popupOpen2} onClose={() => setPopupOpen2(false)}>
     <DialogTitle>Employee Details</DialogTitle>
     <DialogContent>
       <TextField
@@ -1074,8 +1051,12 @@ const UserManagement = () => {
         </>
 
       )}
-    </Layout>
+      </DialogContent>
+      </Dialog>
+
+  </Layout>
   );
 };
+
 
 export default UserManagement;
