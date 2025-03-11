@@ -80,15 +80,7 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
 
   const handleNavigation = (path: string) => {
     if (path === "/my-requests") {
-      if (user?.role_code === "A004") {
-        navigate("/user/my-requests");
-      } else if (user?.role_code === "A001") {
-        navigate("/admin/my-requests");
-      } else if (user?.role_code === "A003") {
-        navigate("/approval/my-requests");
-      } else {
-        navigate("/finance/my-requests");
-      }
+      navigate("/user/my-requests");
     } else {
       if (path === "/dashboard") {
         if (user?.role_code === "A004") {
