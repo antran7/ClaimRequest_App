@@ -6,18 +6,18 @@ const Search = ({ onSearch }) => {
   const handleChange = (e) => {
     const value = e.target.value;
     setSearchTerm(value);
-    onSearch(value); 
+    onSearch(value);
   };
 
   return (
     <div className="relative">
       <input
         placeholder="Search..."
-        className="input shadow-lg focus:border-2 border-gray-300 px-5 py-3 rounded-xl w-200 transition-all focus:w-224 outline-none [&::-webkit-search-cancel-button]:hidden [&::-moz-search-clear-button]:hidden"
+        className="input bg-white shadow-sm focus:border-2 border-gray-300 px-5 py-3 rounded-xl w-180 transition-all outline-none [&::-webkit-search-cancel-button]:hidden [&::-moz-search-clear-button]:hidden"
         name="search"
         type="search"
         value={searchTerm}
-        onChange={handleChange} 
+        onChange={handleChange}
       />
       <svg
         className="size-6 absolute top-3 right-3 text-gray-500"

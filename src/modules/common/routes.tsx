@@ -9,6 +9,7 @@ import Error from "../auth/pages/Error";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import ProfilePage from "./pages/ProfilePage";
+import ViewProject from "./pages/ViewProject";
 
 export const commonRoutes: RouteObject[] = [
     {
@@ -27,7 +28,7 @@ export const commonRoutes: RouteObject[] = [
     },
 
     {
-        path: "/verify",
+        path: "/verify/:token",
         element: <Verify />
     },
 
@@ -44,6 +45,11 @@ export const commonRoutes: RouteObject[] = [
     {
         path: "/contact",
         element: <Contact />,
+    },
+
+    {
+        path: "/viewprojects",
+        element: <ViewProject />,
     },
 
     {

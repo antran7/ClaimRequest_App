@@ -14,7 +14,7 @@ interface LoginFormInputs {
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, getUserInfo } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -28,6 +28,7 @@ const Login: React.FC = () => {
     setIsLoading(true);
     try {
       await login(data.email, data.password);
+      await getUserInfo();
       navigate("/");
       toast("Login successfully.", {
         icon: "🔥",
@@ -46,7 +47,10 @@ const Login: React.FC = () => {
       <div className="login-left">
         <div className="login-home-container">
           <Link to="/" className="login-home-link">HOME</Link>
+          <Link to="/verify" className="login-verify-link">Verify Account</Link>
+
         </div>
+
         <img
           src="https://tailwindui.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600"
           alt="#"
@@ -83,6 +87,9 @@ const Login: React.FC = () => {
               Forgot password?
             </div>
           </div>
+          <div className="verify" onClick={() => navigate("/verify")}>
+              Verify Account
+            </div>
           <Button type="submit" variant="contained" fullWidth disabled={isLoading} className="login-submit">
             {isLoading? <CircularProgress size={24}/>: "Sign in"}
           </Button>
