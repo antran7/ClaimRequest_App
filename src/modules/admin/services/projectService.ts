@@ -1,4 +1,4 @@
-import { Project } from "../types/projectInterface";
+import { ApiResponse, Project } from "../types/projectInterface";
 
 const API_URL = "https://management-claim-request.vercel.app/api";
 
@@ -10,10 +10,12 @@ const getHeaders = () => {
   return {
     Authorization: `Bearer ${token}`,
     "Content-Type": "application/json",
-  }
-}
+  };
+};
 
-export const addProject = async (project: Partial<Project>): Promise<Project> => {
+export const addProject = async (
+  project: Partial<Project>
+): Promise<Project> => {
   try {
     const response = await fetch(`${API_URL}/projects`, {
       method: "POST",
@@ -28,7 +30,7 @@ export const addProject = async (project: Partial<Project>): Promise<Project> =>
     console.error("Error adding project:", error);
     throw error;
   }
-}
+};
 
 export const updateProject = async (project: Project): Promise<Project> => {
   try {
@@ -45,7 +47,7 @@ export const updateProject = async (project: Project): Promise<Project> => {
     console.error("Error updating project:", error);
     throw error;
   }
-}
+};
 
 export const deleteProject = async (id: string): Promise<void> => {
   try {
@@ -78,7 +80,10 @@ export const fetchProjectById = async (projectId: string): Promise<Project> => {
   }
 };
 
-export const searchProject = async (searchTerm: string = "", pageNum: number = 1): Promise<ApiResponse> => {
+export const searchProject = async (
+  searchTerm: string = "",
+  pageNum: number = 1
+): Promise<ApiResponse> => {
   try {
     const bodyData = {
       searchCondition: {
@@ -110,5 +115,3 @@ export const searchProject = async (searchTerm: string = "", pageNum: number = 1
     throw error;
   }
 };
-
-
