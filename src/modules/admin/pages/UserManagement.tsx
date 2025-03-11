@@ -240,12 +240,15 @@ const UserManagement = () => {
         address: employee.address ?? "",
         avatar_url: employee.avatar_url ?? "",
         department_code: employee.department_code ?? "",
+        created_at: employee.created_at ?? "",
         end_date: employee.end_date ?? "",
         full_name: employee.full_name ?? "",
         is_deleted: employee.is_deleted ?? false,
         phone: employee.phone ?? "",
         salary: employee.salary ?? 0,
         start_date: employee.start_date ?? "",
+        updated_at: employee.updated_at ?? "",
+        updated_by: employee.updated_by ?? "",
       });
       setPopupOpen2(true);
     } catch (error) {
@@ -253,7 +256,6 @@ const UserManagement = () => {
       toast.error(error.message || "Error fetching employee details");
     }
   };
-
 
   const handleSaveEmployeeDetails = async () => {
     try {
@@ -283,6 +285,22 @@ const UserManagement = () => {
 
   const handleRoleChange = async (userId: string, newRoleCode: string) => {
     if (!userId) return;
+
+    const userToUpdate = users.find((u) => u._id === userId);
+    if (!userToUpdate || userToUpdate.role_code === newRoleCode) return;
+
+    try {
+      await changeUserRole(userId, newRoleCode);
+
+      // Cập nhật state để UI phản ánh ngay lập tức
+      setUsers((prevUsers) =>
+        prevUsers.map((user) =>
+          user._id === userId ? { ...user, role_code: newRoleCode } : user
+        )
+      );
+    } catch (error) {
+      console.error("Lỗi khi cập nhật vai trò:", error);
+    }
   };
   
   
@@ -447,7 +465,14 @@ const UserManagement = () => {
             onClose={() => setViewUser(null)}
             sx={{}}
           >
-            <DialogTitle>User Details</DialogTitle>
+            <DialogTitle
+              sx={{
+                font: "bold",
+                fontSize: "50px",
+              }}
+            >
+              User Details
+            </DialogTitle>
             <DialogContent>
               {viewUser && (
                 <div>
@@ -469,8 +494,20 @@ const UserManagement = () => {
                   <Typography>
                     <strong>Updated at:</strong> {viewUser.updated_at}
                   </Typography>
+
+                  <Typography>
+                    <strong>Status:</strong> {String(viewUser.is_blocked)}
+                  </Typography>
+                  <Typography>
+                    <strong>Verified:</strong> {String(viewUser.is_verified)}
+                  </Typography>
+                  <Typography>
+                    <strong>Token:</strong> {String(viewUser.token_version)}
+                  </Typography>
+
                  
                  
+
                 </div>
               )}
             </DialogContent>
@@ -752,7 +789,6 @@ const UserManagement = () => {
       </Dialog>
 
       {popupOpen2 && (
-
         <Dialog open={popupOpen2} onClose={() => setPopupOpen2(false)}>
           <DialogTitle>Employee Details</DialogTitle>
           <DialogContent>
@@ -1049,6 +1085,7 @@ const UserManagement = () => {
           
           
         </>
+
 
       )}
       </DialogContent>
