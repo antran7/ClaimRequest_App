@@ -9,6 +9,9 @@ import Layout from "../../../shared/layouts/Layout";
 import { useEffect, useState } from "react";
 import { User } from "../types/user";
 import { searchUsers } from "../services/userService";
+import { searchProject } from "../services/projectService";
+import ClaimRequestBarChart from "../components/ClaimRequestBarChart";
+
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
@@ -21,6 +24,9 @@ function AdminDashboard() {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [count, setCount] = useState(0);
+  const [projects, setProjects] = useState([]);
+  const [projectCount, setProjectCount] = useState(0);
+
   const fetchUsers = async () => {
     // Fetch total user count
     setLoading(true);
@@ -40,9 +46,30 @@ function AdminDashboard() {
       setLoading(false);
     }
   };
+  const fetchProjects = async () => {
+    setLoading(true);
+    try {
+      const response = await searchProject("", pageNum);
+      setProjectCount(response.data.pageInfo.totalItems);
+      if (response?.data.pageData && response?.data.pageInfo) {
+        setProjectCount(response.data.pageInfo.totalItems); 
+        setTotalPages(response.data.pageInfo.totalPages || 1); 
+      } else {
+        console.error("Invalid API response structure:", response);
+        setProjects([]); // 🛠 Prevent crashes
+      }
+    } catch (error) {
+      console.error("Failed to fetch project count", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
+    fetchProjects(); // Call fetchProjects to get project count
   }, [pageNum, searchTerm]);
+
   const data = {
     labels: ["Admin", "Approval", "Finance", "User"],
     datasets: [
@@ -63,21 +90,7 @@ function AdminDashboard() {
       },
     ],
   };
-  const claimRequestData = {
-    labels: ["Pending", "Approved", "Rejected", "Paid"],
-    datasets: [
-      {
-        label: "Claim Requests",
-        data: [40, 25, 10, 30],
-        backgroundColor: [
-          "rgba(255, 99, 132, 0.7)",
-          "rgba(54, 162, 235, 0.7)",
-          "rgba(255, 206, 86, 0.7)",
-          "rgba(36, 250, 118, 0.7)",
-        ],
-      },
-    ],
-  };
+
 
   return (
     <div>
@@ -101,7 +114,7 @@ function AdminDashboard() {
                 <div className="project-card">
                   <div className="project-card-left">
                     <p>Project</p>
-                    <p>20</p>
+                    <p>{projectCount}</p>
                   </div>
                   <div className="user-card-right">
                     <Folder style={{ fontSize: "50px" }} />
@@ -140,10 +153,8 @@ function AdminDashboard() {
               </Grid>
               <Grid item xs={6}>
                 <div className="bar-chart">
-                  <p style={{ textAlign: "center", margin: "20px", fontSize: "20px", color: "#418c9f" }}>
-                    Claim Request
-                  </p>
-                  <Bar data={claimRequestData} />
+                <ClaimRequestBarChart/>
+
                 </div>
               </Grid>
             </Grid>

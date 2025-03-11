@@ -22,7 +22,6 @@ import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import PaidIcon from "@mui/icons-material/Paid";
 import { useNavigate } from "react-router-dom";
 import { Role } from "../constants/roles";
-import { useAuth } from "../../core/hooks/useAuth";
 
 interface SideBarProps {
   isOpen: boolean;
@@ -31,7 +30,6 @@ interface SideBarProps {
 
 const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
   const navigate = useNavigate();
-  const { getUserInfo } = useAuth();
   const [openManagement, setOpenManagement] = useState(false);
   const user = JSON.parse(localStorage.getItem("userData") || "{}");
 
@@ -80,15 +78,7 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
 
   const handleNavigation = (path: string) => {
     if (path === "/my-requests") {
-      if (user?.role_code === "A004") {
-        navigate("/user/my-requests");
-      } else if (user?.role_code === "A001") {
-        navigate("/admin/my-requests");
-      } else if (user?.role_code === "A003") {
-        navigate("/approval/my-requests");
-      } else {
-        navigate("/finance/my-requests");
-      }
+      navigate("/user/my-requests");
     } else {
       if (path === "/dashboard") {
         if (user?.role_code === "A004") {
@@ -107,16 +97,8 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
     }
   };
   useEffect(() => {
-    const fetchAuth = async () => {
-      try {
-        await getUserInfo();
-      } catch (error) {
-        console.error("Error:", error);
-      }
-    };
-
-    fetchAuth();
-  });
+    
+  }, []);
 
   return (
     <Drawer open={isOpen} onClose={toggleSidebar}>
