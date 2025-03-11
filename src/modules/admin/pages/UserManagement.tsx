@@ -401,7 +401,14 @@ const UserManagement = () => {
             onClose={() => setViewUser(null)}
             sx={{}}
           >
-            <DialogTitle>User Details</DialogTitle>
+            <DialogTitle
+              sx={{
+                font: "bold",
+                fontSize: "50px",
+              }}
+            >
+              User Details
+            </DialogTitle>
             <DialogContent>
               {viewUser && (
                 <div>
@@ -424,10 +431,10 @@ const UserManagement = () => {
                     <strong>Updated at:</strong> {viewUser.updated_at}
                   </Typography>
                   <Typography>
-                    <strong>Is Blocked:</strong> {String(viewUser.is_blocked)}
+                    <strong>Status:</strong> {String(viewUser.is_blocked)}
                   </Typography>
                   <Typography>
-                    <strong>Is Verified:</strong> {String(viewUser.is_verified)}
+                    <strong>Verified:</strong> {String(viewUser.is_verified)}
                   </Typography>
                   <Typography>
                     <strong>Token:</strong> {String(viewUser.token_version)}
