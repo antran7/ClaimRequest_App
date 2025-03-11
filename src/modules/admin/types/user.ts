@@ -37,8 +37,8 @@ export interface Employee {
   salary: number;
   start_date: string;
   end_date: string;
-  updated_by: string;
-  created_at: string;
-  updated_at: string;
+  updated_by?: string;
+  created_at?: string;
+  updated_at?: string;
   is_deleted: boolean;
 }

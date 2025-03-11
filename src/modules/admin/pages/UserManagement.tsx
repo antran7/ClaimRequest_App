@@ -30,7 +30,10 @@ import {
   Typography,
   MenuItem,
 } from "@mui/material";
-import { User , Employee} from "../types/user";
+
+import Select, { SelectChangeEvent } from "@mui/material/Select";
+
+import { User, Employee } from "../types/user";
 import { Pagination } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { IconButton } from "@mui/material";
@@ -46,7 +49,7 @@ const UserManagement = () => {
   const [pageSize] = useState(5); //  Items per page
   const [totalPages, setTotalPages] = useState(1); // Total pages from API
   const [viewUser, setViewUser] = useState<User | null>(null); //View detail
-  const [userId, setUserId] = useState(""); 
+  const [userId, setUserId] = useState("");
   const [employeeData, setEmployeeData] = useState<Employee>({
     _id: "",
     user_id: "",
@@ -216,18 +219,18 @@ const UserManagement = () => {
 
     try {
       const response = await getEmployeeById(id);
-  
+
       console.log("API Raw Response:", response);
-      
+
       // Ensure response.data is correctly accessed
       const employee = response.data?.data ?? response.data ?? response;
-  
+
       console.log("Fixed Response Data:", employee);
-  
+
       if (!employee || Object.keys(employee).length === 0) {
         throw new Error("No employee data found");
       }
-  
+
       // Ensure all fields exist in state
       setEmployeeData({
         _id: employee._id ?? "",
@@ -237,46 +240,75 @@ const UserManagement = () => {
         address: employee.address ?? "",
         avatar_url: employee.avatar_url ?? "",
         department_code: employee.department_code ?? "",
-        created_at: employee.created_at ?? "",
         end_date: employee.end_date ?? "",
         full_name: employee.full_name ?? "",
         is_deleted: employee.is_deleted ?? false,
         phone: employee.phone ?? "",
         salary: employee.salary ?? 0,
         start_date: employee.start_date ?? "",
-        updated_at: employee.updated_at ?? "",
-        updated_by: employee.updated_by ?? "",
       });
-      console.log("Updated Employee Data:", employeeData);
       setPopupOpen2(true);
     } catch (error) {
       console.error("Error fetching employee details:", error);
       toast.error(error.message || "Error fetching employee details");
     }
   };
+
+
+  const handleSaveEmployeeDetails = async () => {
+    try {
+      if (!employeeData.created_at) {
+        console.error("Error: created_at is missing!");
+        return;
+      }
+
+      const updatedEmployeeData = {
+        ...employeeData,
+        created_at: new Date(employeeData.created_at), // Ensure it's a Date
+        updated_at: new Date(),
+      };
+
+      console.log(
+        "Sending to API:",
+        JSON.stringify(updatedEmployeeData, null, 2)
+      );
+
+      await updateEmployee(userId, updatedEmployeeData);
+      setPopupOpen2(false);
+    } catch (error) {
+      console.error("Error updating employee details:", error);
+      toast.error("Error updating employee details");
+    }
+  };
+
+  const handleRoleChange = async (userId: string, newRoleCode: string) => {
+    if (!userId) return;
+=======
   
  const handleSaveEmployeeDetails = async () => {
   try {
-    if (!employeeData.created_at) {
-      console.error("Error: created_at is missing!");
-      return;
-    }
 
     const updatedEmployeeData = {
       ...employeeData,
-      created_at: new Date(employeeData.created_at), // Ensure it's a Date
-      updated_at: new Date(),
     };
 
-    console.log("Sending to API:", JSON.stringify(updatedEmployeeData, null, 2));
 
-    await updateEmployee(userId, updatedEmployeeData);
-    setPopupOpen2(false);
-  } catch (error) {
-    console.error("Error updating employee details:", error);
-    toast.error("Error updating employee details");
-  }
-};
+    const userToUpdate = users.find((u) => u._id === userId);
+    if (!userToUpdate || userToUpdate.role_code === newRoleCode) return;
+
+    try {
+      await changeUserRole(userId, newRoleCode);
+
+      // Cập nhật state để UI phản ánh ngay lập tức
+      setUsers((prevUsers) =>
+        prevUsers.map((user) =>
+          user._id === userId ? { ...user, role_code: newRoleCode } : user
+        )
+      );
+    } catch (error) {
+      console.error("Lỗi khi cập nhật vai trò:", error);
+    }
+  };
 
   return (
     <Layout>
@@ -442,7 +474,7 @@ const UserManagement = () => {
             <DialogContent>
               {viewUser && (
                 <div>
-                   <Typography>
+                  <Typography>
                     <strong>UserID:</strong> {viewUser._id}
                   </Typography>
                   <Typography>
@@ -517,6 +549,7 @@ const UserManagement = () => {
               <TableRow>
                 <TableCell
                   sx={{
+                    width: "20%",
                     fontWeight: "bold",
                     fontSize: "17px",
                     borderRight: "2px solid #ffff",
@@ -528,6 +561,7 @@ const UserManagement = () => {
                 </TableCell>
                 <TableCell
                   sx={{
+                    width: "25%",
                     fontWeight: "bold",
                     fontSize: "17px",
                     borderRight: "2px solid #ffff",
@@ -539,6 +573,7 @@ const UserManagement = () => {
                 </TableCell>
                 <TableCell
                   sx={{
+                    width: "10%",
                     fontWeight: "bold",
                     fontSize: "17px",
                     borderRight: "2px solid #ffff",
@@ -550,6 +585,7 @@ const UserManagement = () => {
                 </TableCell>
                 <TableCell
                   sx={{
+                    width: "12%",
                     fontWeight: "bold",
                     fontSize: "17px",
                     borderRight: "2px solid #ffff",
@@ -561,6 +597,7 @@ const UserManagement = () => {
                 </TableCell>
                 <TableCell
                   sx={{
+                    width: "18%",
                     fontWeight: "bold",
                     fontSize: "17px",
                     textAlign: "center",
@@ -577,26 +614,13 @@ const UserManagement = () => {
                   key={user._id}
                   sx={{ borderBottom: "6px solid #90E0EF" }}
                 >
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {user.user_name}
-                  </TableCell>
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {user.email}
-                  </TableCell>
+                  <TableCell sx={{}}>{user.user_name}</TableCell>
+                  <TableCell sx={{ textAlign: "left" }}>{user.email}</TableCell>
                   <TableCell
                     sx={{
                       textAlign: "center",
-                      borderRadius: "6px",
-                      padding: "4px 4px ",
-                      margin: "15px",
-                      backgroundColor:
-                        user.role_code === "A001"
-                          ? "#FFEBEE" // Đỏ nhạt
-                          : user.role_code === "A002"
-                          ? "#FFF9C4" // Vàng nhạt
-                          : user.role_code === "A003"
-                          ? "#E8F5E9" // Xanh lá nhạt
-                          : "#F5F5F5", // Trắng
+                      borderRadius: "15px",
+
                       color:
                         user.role_code === "A001"
                           ? "#D32F2F" // Đỏ đậm
@@ -605,12 +629,33 @@ const UserManagement = () => {
                           : user.role_code === "A003"
                           ? "#388E3C" // Xanh lá đậm
                           : "#424242", // Xám đậm
-                      fontWeight: "bold",
-                      display: "inline-block",
-                      minWidth: "100px",
                     }}
                   >
-                    {roleMap[user.role_code] || "Unknown"}
+                    <Select
+                      value={user.role_code}
+                      onChange={(event) =>
+                        handleRoleChange(user._id, event.target.value)
+                      }
+                      sx={{
+                        fontWeight: "bold",
+                        color: "inherit",
+                        backgroundColor: "transparent",
+                        "& .MuiSelect-icon": { color: "inherit" },
+                      }}
+                    >
+                      <MenuItem value="A001" sx={{ color: "#D32F2F" }}>
+                        Admin
+                      </MenuItem>
+                      <MenuItem value="A002" sx={{ color: "#FBC02D" }}>
+                        Finance
+                      </MenuItem>
+                      <MenuItem value="A003" sx={{ color: "#388E3C" }}>
+                        Approval
+                      </MenuItem>
+                      <MenuItem value="A004" sx={{ color: "black" }}>
+                        Member
+                      </MenuItem>
+                    </Select>
                   </TableCell>
 
                   <TableCell sx={{ textAlign: "center" }}>
@@ -729,8 +774,198 @@ const UserManagement = () => {
         </DialogActions>
       </Dialog>
 
-
       {popupOpen2 && (
+
+        <Dialog open={popupOpen2} onClose={() => setPopupOpen2(false)}>
+          <DialogTitle>Employee Details</DialogTitle>
+          <DialogContent>
+            <TextField
+              label="User ID"
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
+              fullWidth
+              margin="dense"
+            />
+            <Button
+              onClick={() => handleOpenEmployeeDetails(userId)}
+              variant="contained"
+              color="primary"
+              sx={{ marginTop: "10px" }}
+            >
+              Fetch Employee
+            </Button>
+
+            {/* Employee Fields */}
+            {employeeData && (
+              <>
+                <TextField
+                  label="Full Name"
+                  value={employeeData.full_name}
+                  onChange={(e) =>
+                    setEmployeeData({
+                      ...employeeData,
+                      full_name: e.target.value,
+                    })
+                  }
+                  fullWidth
+                  margin="dense"
+                />
+                <TextField
+                  label="UserID"
+                  value={employeeData.user_id}
+                  onChange={(e) =>
+                    setEmployeeData({
+                      ...employeeData,
+                      user_id: e.target.value,
+                    })
+                  }
+                  fullWidth
+                  margin="dense"
+                />
+                <TextField
+                  label="Phone"
+                  value={employeeData.phone}
+                  onChange={(e) =>
+                    setEmployeeData({ ...employeeData, phone: e.target.value })
+                  }
+                  fullWidth
+                  margin="dense"
+                />
+                <TextField
+                  label="Address"
+                  value={employeeData.address}
+                  onChange={(e) =>
+                    setEmployeeData({
+                      ...employeeData,
+                      address: e.target.value,
+                    })
+                  }
+                  fullWidth
+                  margin="dense"
+                />
+                <TextField
+                  label="Job Rank"
+                  value={employeeData.job_rank}
+                  onChange={(e) =>
+                    setEmployeeData({
+                      ...employeeData,
+                      job_rank: e.target.value,
+                    })
+                  }
+                  fullWidth
+                  margin="dense"
+                />
+                <TextField
+                  label="Department Code"
+                  value={employeeData.department_code}
+                  onChange={(e) =>
+                    setEmployeeData({
+                      ...employeeData,
+                      department_code: e.target.value,
+                    })
+                  }
+                  fullWidth
+                  margin="dense"
+                />
+                <TextField
+                  label="Avatar URL"
+                  value={employeeData.avatar_url}
+                  onChange={(e) =>
+                    setEmployeeData({
+                      ...employeeData,
+                      avatar_url: e.target.value,
+                    })
+                  }
+                  fullWidth
+                  margin="dense"
+                  InputLabelProps={{ shrink: true }}
+                />
+                <TextField
+                  label="Contract Type"
+                  value={employeeData.contract_type}
+                  onChange={(e) =>
+                    setEmployeeData({
+                      ...employeeData,
+                      contract_type: e.target.value,
+                    })
+                  }
+                  fullWidth
+                  margin="dense"
+                />
+                <TextField
+                  label="Salary"
+                  type="number"
+                  value={employeeData.salary}
+                  onChange={(e) =>
+                    setEmployeeData({
+                      ...employeeData,
+                      salary: Number(e.target.value),
+                    })
+                  }
+                  fullWidth
+                  margin="dense"
+                />
+                <TextField
+                  label="Start Date"
+                  value={employeeData.start_date}
+                  onChange={(e) =>
+                    setEmployeeData({
+                      ...employeeData,
+                      start_date: e.target.value,
+                    })
+                  }
+                  fullWidth
+                  margin="dense"
+                  InputLabelProps={{ shrink: true }}
+                />
+                <TextField
+                  label="End Date"
+                  value={employeeData.end_date}
+                  onChange={(e) =>
+                    setEmployeeData({
+                      ...employeeData,
+                      end_date: e.target.value,
+                    })
+                  }
+                  fullWidth
+                  margin="dense"
+                  InputLabelProps={{ shrink: true }}
+                />
+                <TextField
+                  label="Created Date"
+                  value={employeeData.created_at}
+                  onChange={(e) =>
+                    setEmployeeData({
+                      ...employeeData,
+                      created_at: e.target.value,
+                    })
+                  }
+                  fullWidth
+                  margin="dense"
+                  InputLabelProps={{ shrink: true }}
+                />
+                <TextField
+                  label="Updated by :"
+                  value={employeeData._id}
+                  onChange={(e) =>
+                    setEmployeeData({ ...employeeData, _id: e.target.value })
+                  }
+                  fullWidth
+                  margin="dense"
+                />
+              </>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setPopupOpen2(false)} color="secondary">
+              Cancel
+            </Button>
+            <Button onClick={handleSaveEmployeeDetails} color="primary">
+              Save
+            </Button>
+          </DialogActions>
+        </Dialog>
+=======
   <Dialog open={popupOpen2} onClose={() => setPopupOpen2(false)}>
     <DialogTitle>Employee Details</DialogTitle>
     <DialogContent>
@@ -818,34 +1053,11 @@ const UserManagement = () => {
             margin="dense"
             InputLabelProps={{ shrink: true }}
           />
-          <TextField
-            label="Created Date"
-            value={employeeData.created_at}
-            onChange={(e) => setEmployeeData({ ...employeeData, created_at: e.target.value })}
-            fullWidth
-            margin="dense"
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            label="Updated by :"
-            value={employeeData._id}
-            onChange={(e) => setEmployeeData({ ...employeeData, _id: e.target.value })}
-            fullWidth
-            margin="dense"
-          />
+          
+          
         </>
+
       )}
-    </DialogContent>
-    <DialogActions>
-      <Button onClick={() => setPopupOpen2(false)} color="secondary">
-        Cancel
-      </Button>
-      <Button onClick={handleSaveEmployeeDetails} color="primary">
-        Save
-      </Button>
-    </DialogActions>
-  </Dialog>
-)}
     </Layout>
   );
 };

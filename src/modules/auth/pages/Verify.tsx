@@ -1,12 +1,29 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import toast, { Toaster } from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const Verify = () => {
   const [showEmailInput, setShowEmailInput] = useState(false);
+  const [urlToken, setUrlToken] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Extract token from URL on component mount
+  useEffect(() => {
+    // Get token from URL path (assuming format: /verify/{token})
+    const pathSegments = location.pathname.split('/');
+    if (pathSegments.length > 2 && pathSegments[1] === 'verify') {
+      const token = pathSegments[2];
+      setUrlToken(token);
+      
+      // Auto-verify if token is present
+      if (token) {
+        handleVerifyWithToken(token);
+      }
+    }
+  }, [location]);
 
   const emailSchema = Yup.object().shape({
     email: Yup.string().email("Invalid email").required("Email is required"),
@@ -34,26 +51,30 @@ const Verify = () => {
     }
   };
 
-  const handleVerify = async (values, { setSubmitting }) => {
+  const handleVerifyWithToken = async (token) => {
     try {
       const response = await fetch("https://management-claim-request.vercel.app/api/auth/verify-token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: values.code }),
+        body: JSON.stringify({ token }),
       });
   
       if (!response.ok) throw new Error("Invalid verification token");
   
       toast.success("Verification successful!");
       navigate("/login");
-
     } catch (error) {
       toast.error(error.message);
+    }
+  };
+
+  const handleVerify = async (values, { setSubmitting }) => {
+    try {
+      await handleVerifyWithToken(values.code);
     } finally {
       setSubmitting(false);
     }
   };
-  
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
@@ -63,9 +84,16 @@ const Verify = () => {
         <h2 className="text-2xl font-bold text-gray-800 mb-4">
           Verify Your Account
         </h2>
-        <p className="text-gray-600 text-sm mb-4">
-          Enter the verification code sent to your email.
-        </p>
+        
+        {urlToken ? (
+          <p className="text-gray-600 text-sm mb-4">
+            Verifying your account with the token from URL...
+          </p>
+        ) : (
+          <p className="text-gray-600 text-sm mb-4">
+            Enter the verification code sent to your email.
+          </p>
+        )}
 
         {showEmailInput && (
           <Formik
@@ -100,40 +128,42 @@ const Verify = () => {
           </Formik>
         )}
 
-        <Formik
-          initialValues={{ code: "" }}
-          validationSchema={codeSchema}
-          onSubmit={handleVerify}
-        >
-          {({ isSubmitting }) => (
-            <Form className="flex flex-col">
-              <Field
-                type="text"
-                name="code"
-                className="bg-gray-100 text-gray-800 border-0 rounded-md p-2 mb-2 
-                  focus:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500 
-                  transition ease-in-out duration-150"
-                placeholder="Enter verification code"
-              />
-              <ErrorMessage
-                name="code"
-                component="div"
-                className="text-red-500 text-sm mb-4"
-              />
+        {!urlToken && (
+          <Formik
+            initialValues={{ code: "" }}
+            validationSchema={codeSchema}
+            onSubmit={handleVerify}
+          >
+            {({ isSubmitting }) => (
+              <Form className="flex flex-col">
+                <Field
+                  type="text"
+                  name="code"
+                  className="bg-gray-100 text-gray-800 border-0 rounded-md p-2 mb-2 
+                    focus:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500 
+                    transition ease-in-out duration-150"
+                  placeholder="Enter verification code"
+                />
+                <ErrorMessage
+                  name="code"
+                  component="div"
+                  className="text-red-500 text-sm mb-4"
+                />
 
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="bg-gradient-to-r from-indigo-500 to-blue-500 text-white 
-                  font-bold py-2 px-4 rounded-md mt-2 
-                  hover:from-indigo-600 hover:to-blue-600 
-                  transition ease-in-out duration-150"
-              >
-                {isSubmitting ? "Verifying..." : "Verify"}
-              </button>
-            </Form>
-          )}
-        </Formik>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="bg-gradient-to-r from-indigo-500 to-blue-500 text-white 
+                    font-bold py-2 px-4 rounded-md mt-2 
+                    hover:from-indigo-600 hover:to-blue-600 
+                    transition ease-in-out duration-150"
+                >
+                  {isSubmitting ? "Verifying..." : "Verify"}
+                </button>
+              </Form>
+            )}
+          </Formik>
+        )}
 
         <div className="flex justify-center mt-4">
           <button
