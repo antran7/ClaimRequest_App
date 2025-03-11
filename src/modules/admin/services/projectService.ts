@@ -13,9 +13,7 @@ const getHeaders = () => {
   };
 };
 
-export const addProject = async (
-  project: Partial<Project>
-): Promise<Project> => {
+export const addProject = async (project: Partial<Project>): Promise<Project> => {
   try {
     const response = await fetch(`${API_URL}/projects`, {
       method: "POST",
@@ -80,10 +78,7 @@ export const fetchProjectById = async (projectId: string): Promise<Project> => {
   }
 };
 
-export const searchProject = async (
-  searchTerm: string = "",
-  pageNum: number = 1
-): Promise<ApiResponse> => {
+export const searchProject = async (searchTerm: string = "", pageNum: number = 1): Promise<ApiResponse> => {
   try {
     const bodyData = {
       searchCondition: {
