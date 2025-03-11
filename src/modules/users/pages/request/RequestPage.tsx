@@ -1,5 +1,13 @@
 import { useState, useEffect } from "react";
-import { Modal, Button, TextField, MenuItem, Select, InputLabel, FormControl } from "@mui/material";
+import {
+  Modal,
+  Button,
+  TextField,
+  MenuItem,
+  Select,
+  InputLabel,
+  FormControl,
+} from "@mui/material";
 import axios from "axios";
 import "./RequestPage.css";
 import moment from "moment";
@@ -7,56 +15,74 @@ import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
 import Layout from "../../../../shared/layouts/Layout";
 
-const API_REQUESTS = "https://67b5a06d07ba6e59083db637.mockapi.io/api/requests";
-const API_PROJECTS = "https://67aaae7465ab088ea7e73b54.mockapi.io/project";
+const API_URL = "https://management-claim-request.vercel.app/api";
 
 interface Request {
-  id: number;
-  name: string;
-  projectName: string;
-  status: string;
-  startDate: string;
-  endDate: string;
-  totalTimes: number;
-  submittedDate: string;
-  createDate: string;
-  userId: number;
-  userEmail: string;
-  reason: string;
+  _id: string;
+  user_id: string;
+  project_id: string;
+  approval_id: string;
+  claim_name: string;
+  claim_status: string;
+  claim_start_date: string;
+  claim_end_date: string;
+  total_work_time: number;
+  is_deleted: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 interface Project {
-  id: number;
-  name: string;
+  _id: string;
+  project_name: string;
+}
+
+interface Approver {
+  _id: string;
+  user_name: string;
 }
 
 const RequestPage = () => {
   const [requests, setRequests] = useState<Request[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [approvers, setApprovers] = useState<Approver[]>([]);
   const [search, setSearch] = useState("");
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [currentRequest, setCurrentRequest] = useState<Request | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [formValues, setFormValues] = useState<{
-    name: string;
-    projectName: string;
-    startDate: moment.Moment | null;
-    endDate: moment.Moment | null;
-    totalTimes: number;
+    claim_name: string;
+    project_id: string;
+    approval_id: string;
+    claim_start_date: moment.Moment | null;
+    claim_end_date: moment.Moment | null;
+    total_work_time: number;
   }>({
-    name: "",
-    projectName: "",
-    startDate: null,
-    endDate: null,
-    totalTimes: 0,
+    claim_name: "",
+    project_id: "",
+    approval_id: "",
+    claim_start_date: null,
+    claim_end_date: null,
+    total_work_time: 0,
   });
   const [userEmail, setUserEmail] = useState<string>("");
+  const [userId, setUserId] = useState<string | null>(null);
   const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false);
-  const [requestToApprove, setRequestToApprove] = useState<number | null>(null);
+  const [requestToApprove, setRequestToApprove] = useState<string | null>(null);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
-  const [requestToDelete, setRequestToDelete] = useState<number | null>(null);
+  const [requestToDelete, setRequestToDelete] = useState<string | null>(null);
   const [dateError, setDateError] = useState<string | null>(null);
+  const [token, setToken] = useState<string>("");
+
+  useEffect(() => {
+    const storedToken = localStorage.getItem("token");
+    if (storedToken) {
+      setToken(storedToken);
+    } else {
+      console.error("No token found in localStorage");
+    }
+  }, []);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -64,6 +90,8 @@ const RequestPage = () => {
         const currentUserEmail = localStorage.getItem("userEmail");
         if (currentUserEmail) {
           setUserEmail(currentUserEmail);
+          const response = await axios.get(`${API_URL}/users/${currentUserEmail}`);
+          setUserId(response.data.data._id);
         }
       } catch (error) {
         console.error("Error fetching user information:", error);
@@ -74,71 +102,167 @@ const RequestPage = () => {
   }, []);
 
   useEffect(() => {
-    if (!userEmail) return;
-
     const fetchRequests = async () => {
+      setLoading(true); // Ensure loading is set to true at the start
       try {
-        const response = await axios.get(API_REQUESTS);
-        const userRequests = response.data.filter(
-          (req: Request) => req.userEmail === userEmail
+        console.log("Fetching requests...");
+        const response = await axios.post(
+          `${API_URL}/claims/claimer-search`,
+          {
+            searchCondition: {
+              keyword: "",
+              claim_status: "",
+              claim_start_date: "",
+              claim_end_date: "",
+              is_delete: false,
+            },
+            pageInfo: {
+              pageNum: 1,
+              pageSize: 10,
+            },
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
-        setRequests(userRequests);
+        console.log("Response received:", response.data);
+        if (response.data.success) {
+          const userRequests = response.data.data.pageData.filter(
+            (req: Request) => req.user_id === userId
+          );
+          setRequests(userRequests);
+        } else {
+          console.error("Failed to fetch requests:", response.data.message);
+        }
       } catch (error) {
         console.error("Error fetching requests:", error);
       } finally {
-        setLoading(false);
+        setLoading(false); // Ensure loading is set to false at the end
       }
     };
 
     fetchRequests();
-  }, [userEmail]);
+  }, [userEmail, userId, token]);
 
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await axios.get(API_PROJECTS);
-        setProjects(response.data);
+        console.log("Fetching projects...");
+        const response = await axios.post(
+          `${API_URL}/projects/search`,
+          {
+            searchCondition: {
+              keyword: "",
+              project_start_date: "",
+              project_end_date: "",
+              is_delete: false,
+            },
+            pageInfo: {
+              pageNum: 1,
+              pageSize: 100,
+            },
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        console.log("Projects response received:", response.data);
+        if (response.data.success) {
+          setProjects(response.data.data.pageData);
+        } else {
+          console.error("Failed to fetch projects:", response.data.message);
+        }
       } catch (error) {
         console.error("Error fetching projects:", error);
       }
     };
 
     fetchProjects();
-  }, []);
+  }, [token]);
+
+  useEffect(() => {
+    const fetchApprovers = async () => {
+      try {
+        console.log("Fetching approvers...");
+        const response = await axios.post(
+          `${API_URL}/users/search`,
+          {
+            searchCondition: {
+              keyword: "",
+              role_code: "A003",
+              is_delete: false,
+            },
+            pageInfo: {
+              pageNum: 1,
+              pageSize: 100,
+            },
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        console.log("Approvers response received:", response.data);
+        if (response.data.success) {
+          setApprovers(response.data.data.pageData);
+        } else {
+          console.error("Failed to fetch approvers:", response.data.message);
+        }
+      } catch (error) {
+        console.error("Error fetching approvers:", error);
+      }
+    };
+
+    fetchApprovers();
+  }, [token]);
 
   const handleAddModalOk = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!userEmail) return;
+    if (!userEmail || !userId || !token) return;
 
-    if (formValues.endDate && formValues.startDate && formValues.endDate.isBefore(formValues.startDate)) {
+    if (
+      formValues.claim_end_date &&
+      formValues.claim_start_date &&
+      formValues.claim_end_date.isBefore(formValues.claim_start_date)
+    ) {
       setDateError("End date cannot be before start date");
       return;
     }
 
     try {
       const newRequest = {
-        name: formValues.name,
-        projectName: formValues.projectName,
-        status: "Draft",
-        startDate: formValues.startDate ? formValues.startDate.format("YYYY-MM-DD") : "",
-        endDate: formValues.endDate ? formValues.endDate.format("YYYY-MM-DD") : "",
-        totalTimes: formValues.totalTimes,
-        createDate: moment().format("YYYY-MM-DD"),
-        submittedDate: moment().format("YYYY-MM-DD"),
-        userEmail: userEmail,
-        userId: 1,
-        reason: "Draft",
+        project_id: formValues.project_id,
+        approval_id: formValues.approval_id,
+        claim_name: formValues.claim_name,
+        claim_start_date: formValues.claim_start_date
+          ? formValues.claim_start_date.toISOString()
+          : "",
+        claim_end_date: formValues.claim_end_date
+          ? formValues.claim_end_date.toISOString()
+          : "",
+        total_work_time: formValues.total_work_time,
+        remark: "",
       };
 
-      const response = await axios.post(API_REQUESTS, newRequest);
-      setRequests([...requests, response.data]);
+      const response = await axios.post(`${API_URL}/claims`, newRequest, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setRequests([...requests, response.data.data]);
       setIsAddModalVisible(false);
       setFormValues({
-        name: "",
-        projectName: "",
-        startDate: null,
-        endDate: null,
-        totalTimes: 0,
+        claim_name: "",
+        project_id: "",
+        approval_id: "",
+        claim_start_date: null,
+        claim_end_date: null,
+        total_work_time: 0,
       });
       setDateError(null);
     } catch (error) {
@@ -148,9 +272,13 @@ const RequestPage = () => {
 
   const handleEditModalOk = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!currentRequest) return;
+    if (!currentRequest || !token) return;
 
-    if (formValues.endDate && formValues.startDate && formValues.endDate.isBefore(formValues.startDate)) {
+    if (
+      formValues.claim_end_date &&
+      formValues.claim_start_date &&
+      formValues.claim_end_date.isBefore(formValues.claim_start_date)
+    ) {
       setDateError("End date cannot be before start date");
       return;
     }
@@ -158,16 +286,27 @@ const RequestPage = () => {
     try {
       const updatedRequest = {
         ...currentRequest,
-        name: formValues.name,
-        projectName: formValues.projectName,
-        startDate: formValues.startDate ? formValues.startDate.format("YYYY-MM-DD") : null,
-        endDate: formValues.endDate ? formValues.endDate.format("YYYY-MM-DD") : null,
-        totalTimes: formValues.totalTimes,
+        claim_name: formValues.claim_name,
+        project_id: formValues.project_id,
+        approval_id: formValues.approval_id,
+        claim_start_date: formValues.claim_start_date
+          ? formValues.claim_start_date.toISOString()
+          : null,
+        claim_end_date: formValues.claim_end_date
+          ? formValues.claim_end_date.toISOString()
+          : null,
+        total_work_time: formValues.total_work_time,
       };
-      await axios.put(`${API_REQUESTS}/${currentRequest.id}`, updatedRequest);
+      await axios.put(`${API_URL}/claims/${currentRequest._id}`, updatedRequest, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setRequests(
         requests.map((req) =>
-          req.id === currentRequest.id ? { ...updatedRequest, startDate: updatedRequest.startDate || "", endDate: updatedRequest.endDate || "" } : req
+          req._id === currentRequest._id
+            ? { ...updatedRequest, claim_start_date: updatedRequest.claim_start_date || "", claim_end_date: updatedRequest.claim_end_date || "" }
+            : req
         )
       );
       setIsEditModalVisible(false);
@@ -178,17 +317,29 @@ const RequestPage = () => {
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     setRequestToDelete(id);
     setIsDeleteModalVisible(true);
   };
 
   const handleConfirmDelete = async () => {
-    if (requestToDelete === null) return;
+    if (requestToDelete === null || !token) return;
 
     try {
-      await axios.delete(`${API_REQUESTS}/${requestToDelete}`);
-      setRequests(requests.filter((req) => req.id !== requestToDelete));
+      await axios.put(
+        `${API_URL}/claims/change-status`,
+        {
+          claim_id: requestToDelete,
+          claim_status: "Canceled",
+          comment: "Canceled by user",
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setRequests(requests.filter((req) => req._id !== requestToDelete));
       setIsDeleteModalVisible(false);
       setRequestToDelete(null);
     } catch (error) {
@@ -196,22 +347,31 @@ const RequestPage = () => {
     }
   };
 
-  const handleRequestApproval = async (id: number) => {
+  const handleRequestApproval = async (id: string) => {
     setRequestToApprove(id);
     setIsConfirmModalVisible(true);
   };
 
   const handleConfirmApproval = async () => {
-    if (requestToApprove === null) return;
+    if (requestToApprove === null || !token) return;
 
     try {
-      await axios.put(`${API_REQUESTS}/${requestToApprove}`, {
-        status: "Pending",
-        reason: "Draft",
-      });
+      await axios.put(
+        `${API_URL}/claims/change-status`,
+        {
+          claim_id: requestToApprove,
+          claim_status: "Pending Approval",
+          comment: "",
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       setRequests(
         requests.map((req) =>
-          req.id === requestToApprove ? { ...req, status: "Pending", reason: "Draft" } : req
+          req._id === requestToApprove ? { ...req, claim_status: "Pending Approval" } : req
         )
       );
       setIsConfirmModalVisible(false);
@@ -227,11 +387,12 @@ const RequestPage = () => {
     setIsDeleteModalVisible(false);
     setCurrentRequest(null);
     setFormValues({
-      name: "",
-      projectName: "",
-      startDate: null,
-      endDate: null,
-      totalTimes: 0,
+      claim_name: "",
+      project_id: "",
+      approval_id: "",
+      claim_start_date: null,
+      claim_end_date: null,
+      total_work_time: 0,
     });
     setDateError(null);
   };
@@ -241,276 +402,341 @@ const RequestPage = () => {
     setFormValues({ ...formValues, [name]: value });
   };
 
+  const handleSelectChange = (e: React.ChangeEvent<{ name?: string; value: unknown }>) => {
+    const { name, value } = e.target;
+    setFormValues({ ...formValues, [name as string]: value as string });
+  };
+
   const handleDateChange = (name: string, date: moment.Moment | null) => {
     setFormValues({ ...formValues, [name]: date });
   };
 
   return (
     <Layout>
-    <div
-      className={`request-container ${
-        isAddModalVisible || isEditModalVisible ? "blur-background" : ""
-      }`}
-    >
-      <div className="request-box">
-        <h1 className="request-title">Manage Claim Requests</h1>
+      <div
+        className={`request-container ${
+          isAddModalVisible || isEditModalVisible ? "blur-background" : ""
+        }`}
+      >
+        <div className="request-box">
+          <h1 className="request-title">Manage Claim Requests</h1>
 
-        <div className="search-container">
-          <TextField
-            type="text"
-            placeholder="Search requests..."
-            className="search-input"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <Button
-            onClick={() => setIsAddModalVisible(true)}
-            className="add-button"
-          >
-            + Add Request
-          </Button>
-        </div>
+          <div className="search-container">
+            <TextField
+              type="text"
+              placeholder="Search requests..."
+              className="search-input"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            <Button
+              onClick={() => setIsAddModalVisible(true)}
+              className="add-button"
+            >
+              + Add Request
+            </Button>
+          </div>
 
-        {loading ? (
-          <p>Loading...</p>
-        ) : (
-          <table className="request-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Request Name</th>
-                <th>Project Name</th>
-                <th>Status</th>
-                <th>Start Date</th>
-                <th>End Date</th>
-                <th>Total Times (Hours)</th>
-                <th>Reason</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {requests
-                .filter((req) =>
-                  req.name.toLowerCase().includes(search.toLowerCase())
-                )
-                .map((req) => (
-                  <tr key={req.id}>
-                    <td>{req.id}</td>
-                    <td>{req.name}</td>
-                    <td>{req.projectName}</td>
-                    <td className={`status-${req.status.toLowerCase()}`}>
-                      {req.status}
-                    </td>
-                    <td>{req.startDate}</td>
-                    <td>{req.endDate}</td>
-                    <td>{req.totalTimes}</td>
-                    <td>{req.reason}</td>
-                    <td>
-                      <Button
-                        onClick={() => {
-                          setCurrentRequest(req);
-                          setIsEditModalVisible(true);
-                          setFormValues({
-                            name: req.name,
-                            projectName: req.projectName,
-                            startDate: moment(req.startDate),
-                            endDate: moment(req.endDate),
-                            totalTimes: req.totalTimes,
-                          });
-                        }}
-                        className="edit-button"
-                        disabled={req.status !== "Draft" && req.status !== "Returned"}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        onClick={() => handleDelete(req.id)}
-                        className="delete-button"
-                        disabled={req.status !== "Draft"}
-                      >
-                        Delete
-                      </Button>
-                      {(req.status === "Draft" || req.status === "Returned") && (
+          {loading ? (
+            <p>Loading...</p>
+          ) : (
+            <table className="request-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Request Name</th>
+                  <th>Project Name</th>
+                  <th>Approver</th>
+                  <th>Status</th>
+                  <th>Start Date</th>
+                  <th>End Date</th>
+                  <th>Total Times (Hours)</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {requests
+                  .filter((req) =>
+                    req.claim_name.toLowerCase().includes(search.toLowerCase())
+                  )
+                  .map((req) => (
+                    <tr key={req._id}>
+                      <td>{req._id}</td>
+                      <td>{req.claim_name}</td>
+                      <td>
+                        {projects.find((project) => project._id === req.project_id)
+                          ?.project_name || "Unknown Project"}
+                      </td>
+                      <td className={`status-${req.claim_status.toLowerCase()}`}>
+                        {req.claim_status}
+                      </td>
+                      <td>{moment(req.claim_start_date).format("YYYY-MM-DD")}</td>
+                      <td>{moment(req.claim_end_date).format("YYYY-MM-DD")}</td>
+                      <td>{req.total_work_time}</td>
+                      <td>
                         <Button
-                          onClick={() => handleRequestApproval(req.id)}
-                          className="approve-button"
+                          onClick={() => {
+                            setCurrentRequest(req);
+                            setIsEditModalVisible(true);
+                            setFormValues({
+                              claim_name: req.claim_name,
+                              project_id: req.project_id,
+                              approval_id: req.approval_id,
+                              claim_start_date: moment(req.claim_start_date),
+                              claim_end_date: moment(req.claim_end_date),
+                              total_work_time: req.total_work_time,
+                            });
+                          }}
+                          className="edit-button"
+                          disabled={
+                            req.claim_status !== "Draft" &&
+                            req.claim_status !== "Returned"
+                          }
                         >
-                          Request Approval
+                          Edit
                         </Button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-        )}
+                        <Button
+                          onClick={() => handleDelete(req._id)}
+                          className="delete-button"
+                          disabled={req.claim_status !== "Draft"}
+                        >
+                          Delete
+                        </Button>
+                        {(req.claim_status === "Draft" ||
+                          req.claim_status === "Returned") && (
+                          <Button
+                            onClick={() => handleRequestApproval(req._id)}
+                            className="approve-button"
+                          >
+                            Request Approval
+                          </Button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        <Modal
+          open={isAddModalVisible}
+          onClose={handleModalCancel}
+          className="custom-modal"
+        >
+          <div className="modal-content">
+            <h2>Add Request</h2>
+            <form onSubmit={handleAddModalOk}>
+              <TextField
+                label="Request Name"
+                name="claim_name"
+                value={formValues.claim_name}
+                onChange={handleInputChange}
+                required
+                fullWidth
+                margin="normal"
+              />
+              <FormControl fullWidth margin="normal">
+                <InputLabel>Project Name</InputLabel>
+                <Select
+                  name="project_id"
+                  value={formValues.project_id}
+                  onChange={handleSelectChange}
+                  required
+                >
+                  {projects.map((project) => (
+                    <MenuItem key={project._id} value={project._id}>
+                      {project.project_name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl fullWidth margin="normal">
+                <InputLabel>Approver</InputLabel>
+                <Select
+                  name="approval_id"
+                  value={formValues.approval_id}
+                  onChange={handleSelectChange}
+                  required
+                >
+                  {approvers.map((approver) => (
+                    <MenuItem key={approver._id} value={approver._id}>
+                      {approver.user_name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <LocalizationProvider dateAdapter={AdapterMoment}>
+                <DatePicker
+                  label="Start Date"
+                  value={formValues.claim_start_date}
+                  onChange={(date) => handleDateChange("claim_start_date", date)}
+                  slotProps={{
+                    textField: { fullWidth: true, margin: "normal", required: true },
+                  }}
+                />
+                <DatePicker
+                  label="End Date"
+                  value={formValues.claim_end_date}
+                  onChange={(date) => handleDateChange("claim_end_date", date)}
+                  slotProps={{
+                    textField: { fullWidth: true, margin: "normal", required: true },
+                  }}
+                />
+              </LocalizationProvider>
+              {dateError && <p className="error-message">{dateError}</p>}
+              <TextField
+                label="Total Times"
+                name="total_work_time"
+                type="number"
+                value={formValues.total_work_time}
+                onChange={handleInputChange}
+                required
+                fullWidth
+                margin="normal"
+                inputProps={{ min: 1 }}
+              />
+              <Button type="submit" variant="contained" color="primary">
+                Add
+              </Button>
+            </form>
+          </div>
+        </Modal>
+
+        <Modal
+          open={isEditModalVisible}
+          onClose={handleModalCancel}
+          className="custom-modal"
+        >
+          <div className="modal-content">
+            <h2>Edit Request</h2>
+            <form onSubmit={handleEditModalOk}>
+              <TextField
+                label="Request Name"
+                name="claim_name"
+                value={formValues.claim_name}
+                onChange={handleInputChange}
+                required
+                fullWidth
+                margin="normal"
+              />
+              <FormControl fullWidth margin="normal">
+                <InputLabel>Project Name</InputLabel>
+                <Select
+                  name="project_id"
+                  value={formValues.project_id}
+                  onChange={handleSelectChange}
+                  required
+                >
+                  {projects.map((project) => (
+                    <MenuItem key={project._id} value={project._id}>
+                      {project.project_name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl fullWidth margin="normal">
+                <InputLabel>Approver</InputLabel>
+                <Select
+                  name="approval_id"
+                  value={formValues.approval_id}
+                  onChange={handleSelectChange}
+                  required
+                >
+                  {approvers.map((approver) => (
+                    <MenuItem key={approver._id} value={approver._id}>
+                      {approver.user_name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <LocalizationProvider dateAdapter={AdapterMoment}>
+                <DatePicker
+                  label="Start Date"
+                  value={formValues.claim_start_date}
+                  onChange={(date) => handleDateChange("claim_start_date", date)}
+                  slotProps={{
+                    textField: { fullWidth: true, margin: "normal", required: true },
+                  }}
+                />
+                <DatePicker
+                  label="End Date"
+                  value={formValues.claim_end_date}
+                  onChange={(date) => handleDateChange("claim_end_date", date)}
+                  slotProps={{
+                    textField: { fullWidth: true, margin: "normal", required: true },
+                  }}
+                />
+              </LocalizationProvider>
+              {dateError && <p className="error-message">{dateError}</p>}
+              <TextField
+                label="Total Times"
+                name="total_work_time"
+                type="number"
+                value={formValues.total_work_time}
+                onChange={handleInputChange}
+                required
+                fullWidth
+                margin="normal"
+                inputProps={{ min: 1 }}
+              />
+              <Button type="submit" variant="contained" color="primary">
+                Save
+              </Button>
+            </form>
+          </div>
+        </Modal>
+
+        <Modal
+          open={isConfirmModalVisible}
+          onClose={() => setIsConfirmModalVisible(false)}
+          className="custom-modal"
+        >
+          <div className="modal-content">
+            <h2>Confirm Approval</h2>
+            <p>Are you sure you want to approve this request?</p>
+            <Button
+              onClick={handleConfirmApproval}
+              variant="contained"
+              color="primary"
+            >
+              Confirm
+            </Button>
+            <Button
+              onClick={() => setIsConfirmModalVisible(false)}
+              variant="contained"
+              color="secondary"
+            >
+              Cancel
+            </Button>
+          </div>
+        </Modal>
+
+        <Modal
+          open={isDeleteModalVisible}
+          onClose={() => setIsDeleteModalVisible(false)}
+          className="custom-modal"
+        >
+          <div className="modal-content">
+            <h2>Confirm Delete</h2>
+            <p>Are you sure you want to delete this request?</p>
+            <Button
+              onClick={handleConfirmDelete}
+              variant="contained"
+              color="primary"
+            >
+              Confirm
+            </Button>
+            <Button
+              onClick={() => setIsDeleteModalVisible(false)}
+              variant="contained"
+              color="secondary"
+            >
+              Cancel
+            </Button>
+          </div>
+        </Modal>
       </div>
-
-      <Modal
-        open={isAddModalVisible}
-        onClose={handleModalCancel}
-        className="custom-modal"
-      >
-        <div className="modal-content">
-          <h2>Add Request</h2>
-          <form onSubmit={handleAddModalOk}>
-            <TextField
-              label="Request Name"
-              name="name"
-              value={formValues.name}
-              onChange={(e) => handleInputChange({ target: { name: e.target.name, value: e.target.value } } as React.ChangeEvent<HTMLInputElement>)}
-              required
-              fullWidth
-              margin="normal"
-            />
-            <FormControl fullWidth margin="normal">
-              <InputLabel>Project Name</InputLabel>
-                <Select
-                name="projectName"
-                value={formValues.projectName}
-                onChange={(e) => handleInputChange(e as React.ChangeEvent<HTMLInputElement>)}
-                required
-                >
-                {projects.map((project) => (
-                  <MenuItem key={project.id} value={project.name}>
-                  {project.name}
-                  </MenuItem>
-                ))}
-                </Select>
-            </FormControl>
-            <LocalizationProvider dateAdapter={AdapterMoment}>
-              <DatePicker
-              label="Start Date"
-              value={formValues.startDate}
-              onChange={(date) => handleDateChange("startDate", date)}
-              slotProps={{ textField: { fullWidth: true, margin: "normal", required: true } }}
-              />
-              <DatePicker
-              label="End Date"
-              value={formValues.endDate}
-              onChange={(date) => handleDateChange("endDate", date)}
-              slotProps={{ textField: { fullWidth: true, margin: "normal", required: true } }}
-              />
-            </LocalizationProvider>
-            {dateError && <p className="error-message">{dateError}</p>}
-            <TextField
-              label="Total Times"
-              name="totalTimes"
-              type="number"
-              value={formValues.totalTimes}
-              onChange={handleInputChange}
-              required
-              fullWidth
-              margin="normal"
-              inputProps={{ min: 1 }}
-            />
-            <Button type="submit" variant="contained" color="primary">
-              Add
-            </Button>
-          </form>
-        </div>
-      </Modal>
-
-      <Modal
-        open={isEditModalVisible}
-        onClose={handleModalCancel}
-        className="custom-modal"
-      >
-        <div className="modal-content">
-          <h2>Edit Request</h2>
-          <form onSubmit={handleEditModalOk}>
-            <TextField
-              label="Request Name"
-              name="name"
-              value={formValues.name}
-              onChange={handleInputChange}
-              required
-              fullWidth
-              margin="normal"
-            />
-            <FormControl fullWidth margin="normal">
-              <InputLabel>Project Name</InputLabel>
-                <Select
-                name="projectName"
-                value={formValues.projectName}
-                onChange={(e) => handleInputChange(e as React.ChangeEvent<HTMLInputElement>)}
-                required
-                >
-                {projects.map((project) => (
-                  <MenuItem key={project.id} value={project.name}>
-                  {project.name}
-                  </MenuItem>
-                ))}
-                </Select>
-            </FormControl>
-            <LocalizationProvider dateAdapter={AdapterMoment}>
-              <DatePicker
-              label="Start Date"
-              value={formValues.startDate}
-              onChange={(date) => handleDateChange("startDate", date)}
-              slotProps={{ textField: { fullWidth: true, margin: "normal", required: true } }}
-              />
-              <DatePicker
-              label="End Date"
-              value={formValues.endDate}
-              onChange={(date) => handleDateChange("endDate", date)}
-              slotProps={{ textField: { fullWidth: true, margin: "normal", required: true } }}
-              />
-            </LocalizationProvider>
-            {dateError && <p className="error-message">{dateError}</p>}
-            <TextField
-              label="Total Times"
-              name="totalTimes"
-              type="number"
-              value={formValues.totalTimes}
-              onChange={handleInputChange}
-              required
-              fullWidth
-              margin="normal"
-              inputProps={{ min: 1 }}
-            />
-            <Button type="submit" variant="contained" color="primary">
-              Save
-            </Button>
-          </form>
-        </div>
-      </Modal>
-
-      <Modal
-        open={isConfirmModalVisible}
-        onClose={() => setIsConfirmModalVisible(false)}
-        className="custom-modal"
-      >
-        <div className="modal-content">
-          <h2>Confirm Approval</h2>
-          <p>Are you sure you want to approve this request?</p>
-          <Button onClick={handleConfirmApproval} variant="contained" color="primary">
-            Confirm
-          </Button>
-          <Button onClick={() => setIsConfirmModalVisible(false)} variant="contained" color="secondary">
-            Cancel
-          </Button>
-        </div>
-      </Modal>
-
-      <Modal
-        open={isDeleteModalVisible}
-        onClose={() => setIsDeleteModalVisible(false)}
-        className="custom-modal"
-      >
-        <div className="modal-content">
-          <h2>Confirm Delete</h2>
-          <p>Are you sure you want to delete this request?</p>
-          <Button onClick={handleConfirmDelete} variant="contained" color="primary">
-            Confirm
-          </Button>
-          <Button onClick={() => setIsDeleteModalVisible(false)} variant="contained" color="secondary">
-            Cancel
-          </Button>
-        </div>
-      </Modal>
-      
-    </div>
     </Layout>
   );
 };

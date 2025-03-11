@@ -8,6 +8,8 @@ import {
   fetchUser,
   deleteUser,
   changeUserRole,
+  getEmployeeById,
+  updateEmployee,
 } from "../services/userService";
 import Layout from "../../../shared/layouts/Layout";
 import {
@@ -28,10 +30,9 @@ import {
   Typography,
   MenuItem,
 } from "@mui/material";
-import { User } from "../types/user";
+import { User , Employee} from "../types/user";
 import { Pagination } from "@mui/material";
 import { Pencil, CircleX, Plus, Search, Lock, Unlock, Eye } from "lucide-react";
-import Waves from "./Waves";
 
 const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -43,6 +44,32 @@ const UserManagement = () => {
   const [pageSize] = useState(5); //  Items per page
   const [totalPages, setTotalPages] = useState(1); // Total pages from API
   const [viewUser, setViewUser] = useState<User | null>(null); //View detail
+  const [userId, setUserId] = useState(""); 
+  const [employeeData, setEmployeeData] = useState<Employee>({
+    _id: "",
+    user_id: "",
+    job_rank: "",
+    contract_type: "",
+    address: "",
+    phone: "",
+    full_name: "",
+    avatar_url: "",
+    department_code: "",
+    salary: 0,
+    start_date: "",
+    end_date: "",
+    updated_by: "",
+    created_at: "",
+    updated_at: "",
+    is_deleted: false,
+  });
+
+  const roleMap: Record<string, string> = {
+    A001: "Admin",
+    A002: "Finance",
+    A003: "Approval",
+    A004: "Member",
+  };
 
   const [form, setForm] = useState<{
     email: string;
@@ -156,6 +183,71 @@ const UserManagement = () => {
     }
   };
 
+  const handleOpenEmployeeDetails = async (id: string) => {
+    try {
+      const response = await getEmployeeById(id);
+  
+      console.log("API Raw Response:", response);
+      
+      // Ensure response.data is correctly accessed
+      const employee = response.data?.data ?? response.data ?? response;
+  
+      console.log("Fixed Response Data:", employee);
+  
+      if (!employee || Object.keys(employee).length === 0) {
+        throw new Error("No employee data found");
+      }
+  
+      // Ensure all fields exist in state
+      setEmployeeData({
+        _id: employee._id ?? "",
+        user_id: employee.user_id ?? "",
+        job_rank: employee.job_rank ?? "",
+        contract_type: employee.contract_type ?? "",
+        address: employee.address ?? "",
+        avatar_url: employee.avatar_url ?? "",
+        department_code: employee.department_code ?? "",
+        created_at: employee.created_at ?? "",
+        end_date: employee.end_date ?? "",
+        full_name: employee.full_name ?? "",
+        is_deleted: employee.is_deleted ?? false,
+        phone: employee.phone ?? "",
+        salary: employee.salary ?? 0,
+        start_date: employee.start_date ?? "",
+        updated_at: employee.updated_at ?? "",
+        updated_by: employee.updated_by ?? "",
+      });
+  
+      setPopupOpen2(true);
+    } catch (error) {
+      console.error("Error fetching employee details:", error);
+      toast.error(error.message || "Error fetching employee details");
+    }
+  };
+  
+ const handleSaveEmployeeDetails = async () => {
+  try {
+    if (!employeeData.created_at) {
+      console.error("Error: created_at is missing!");
+      return;
+    }
+
+    const updatedEmployeeData = {
+      ...employeeData,
+      created_at: new Date(employeeData.created_at), // Ensure it's a Date
+      updated_at: new Date(),
+    };
+
+    console.log("Sending to API:", JSON.stringify(updatedEmployeeData, null, 2));
+
+    await updateEmployee(userId, updatedEmployeeData);
+    setPopupOpen2(false);
+  } catch (error) {
+    console.error("Error updating employee details:", error);
+    toast.error("Error updating employee details");
+  }
+};
+
   return (
     <Layout>
       <h1
@@ -166,16 +258,22 @@ const UserManagement = () => {
       </h1>
       <div className="p-4 " style={{ backgroundColor: "#90E0EF" }}>
         <div className="flex justify-end items-center gap-4 mb-4">
-          <div className="w-[250px] min-w-[150px]  ">
+          <div className="w-[250px] min-w-[150px] ">
             <div className="relative">
               <TextField
                 label="Search by Username...."
-                variant="outlined"
                 fullWidth
                 margin="dense"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 size="small"
+                variant="filled"
+                style={{
+                  border: "100px !important ",
+                  backgroundColor: "#fff",
+                  borderRadius: "20px",
+                  overflow: "hidden",
+                }}
               />
               <Search className="absolute right-3 top-4" />
             </div>
@@ -239,10 +337,10 @@ const UserManagement = () => {
                 }
                 sx={{ backgroundColor: "#E3F2FD", borderRadius: "6px" }}
               >
-                <MenuItem value="A001">A001</MenuItem>
-                <MenuItem value="A002">A002</MenuItem>
-                <MenuItem value="A003">A003</MenuItem>
-                <MenuItem value="A004">A004</MenuItem>
+                <MenuItem value="A001">Admin</MenuItem>
+                <MenuItem value="A002"> Finance</MenuItem>
+                <MenuItem value="A003">Approval</MenuItem>
+                <MenuItem value="A004">Member</MenuItem>
               </TextField>
               {/* Password Field (ONLY for Adding New User) */}
               <span style={{ visibility: editingUser ? "hidden" : "visible" }}>
@@ -281,6 +379,9 @@ const UserManagement = () => {
             <DialogContent>
               {viewUser && (
                 <div>
+                   <Typography>
+                    <strong>UserID:</strong> {viewUser._id}
+                  </Typography>
                   <Typography>
                     <strong>Username:</strong> {viewUser.user_name}
                   </Typography>
@@ -289,6 +390,21 @@ const UserManagement = () => {
                   </Typography>
                   <Typography>
                     <strong>Role:</strong> {viewUser.role_code}
+                  </Typography>
+                  <Typography>
+                    <strong>Created at:</strong> {viewUser.created_at}
+                  </Typography>
+                  <Typography>
+                    <strong>Updated at:</strong> {viewUser.updated_at}
+                  </Typography>
+                  <Typography>
+                    <strong>Is Blocked:</strong> {String(viewUser.is_blocked)}
+                  </Typography>
+                  <Typography>
+                    <strong>Is Verified:</strong> {String(viewUser.is_verified)}
+                  </Typography>
+                  <Typography>
+                    <strong>Token:</strong> {String(viewUser.token_version)}
                   </Typography>
                 </div>
               )}
@@ -331,6 +447,28 @@ const UserManagement = () => {
           >
             <Plus />
             Create Account
+          </Button>
+
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => setPopupOpen2(true)}
+            sx={{
+              backgroundColor: "blue",
+              color: "white",
+              fontWeight: "bold",
+              textTransform: "none",
+              borderRadius: "30px",
+              padding: "10px 20px",
+              fontSize: "16px",
+              "&:hover": { backgroundColor: "Navy" },
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <Plus />
+            Employees Details
           </Button>
         </div>
 
@@ -410,8 +548,34 @@ const UserManagement = () => {
                   <TableCell sx={{ textAlign: "center" }}>
                     {user.email}
                   </TableCell>
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {user.role_code}
+                  <TableCell
+                    sx={{
+                      textAlign: "center",
+                      borderRadius: "6px",
+                      padding: "4px 4px ",
+                      margin: "15px",
+                      backgroundColor:
+                        user.role_code === "A001"
+                          ? "#FFEBEE" // Đỏ nhạt
+                          : user.role_code === "A002"
+                          ? "#FFF9C4" // Vàng nhạt
+                          : user.role_code === "A003"
+                          ? "#E8F5E9" // Xanh lá nhạt
+                          : "#F5F5F5", // Trắng
+                      color:
+                        user.role_code === "A001"
+                          ? "#D32F2F" // Đỏ đậm
+                          : user.role_code === "A002"
+                          ? "#FBC02D" // Vàng đậm
+                          : user.role_code === "A003"
+                          ? "#388E3C" // Xanh lá đậm
+                          : "#424242", // Xám đậm
+                      fontWeight: "bold",
+                      display: "inline-block",
+                      minWidth: "100px",
+                    }}
+                  >
+                    {roleMap[user.role_code] || "Unknown"}
                   </TableCell>
 
                   <TableCell sx={{ textAlign: "center" }}>
@@ -518,19 +682,140 @@ const UserManagement = () => {
           </Button>
         </DialogActions>
       </Dialog>
-      {/* <Waves
-        lineColor="#fff"
-        backgroundColor="rgba(175, 96, 96, 0.2)"
-        waveSpeedX={0.02}
-        waveSpeedY={0.01}
-        waveAmpX={40}
-        waveAmpY={20}
-        friction={0.9}
-        tension={0.01}
-        maxCursorMove={120}
-        xGap={12}
-        yGap={36}
-      /> */}
+
+
+      {popupOpen2 && (
+  <Dialog open={popupOpen2} onClose={() => setPopupOpen2(false)}>
+    <DialogTitle>Employee Details</DialogTitle>
+    <DialogContent>
+      <TextField
+        label="User ID"
+        value={userId}
+        onChange={(e) => setUserId(e.target.value)}
+        fullWidth
+        margin="dense"
+      />
+      <Button 
+        onClick={() => handleOpenEmployeeDetails(userId)} 
+        variant="contained"
+        color="primary"
+        sx={{ marginTop: "10px" }}
+      >
+        Fetch Employee
+      </Button>
+
+      {/* Employee Fields */}
+      {employeeData && (
+        <>
+          <TextField
+            label="Full Name"
+            value={employeeData.full_name}
+            onChange={(e) => setEmployeeData({ ...employeeData, full_name: e.target.value })}
+            fullWidth
+            margin="dense"
+          />
+          <TextField
+            label="UserID"
+            value={employeeData.user_id}
+            onChange={(e) => setEmployeeData({ ...employeeData, user_id: e.target.value })}
+            fullWidth
+            margin="dense"
+          />
+          <TextField
+            label="Phone"
+            value={employeeData.phone}
+            onChange={(e) => setEmployeeData({ ...employeeData, phone: e.target.value })}
+            fullWidth
+            margin="dense"
+          />
+          <TextField
+            label="Address"
+            value={employeeData.address}
+            onChange={(e) => setEmployeeData({ ...employeeData, address: e.target.value })}
+            fullWidth
+            margin="dense"
+          />
+          <TextField
+            label="Job Rank"
+            value={employeeData.job_rank}
+            onChange={(e) => setEmployeeData({ ...employeeData, job_rank: e.target.value })}
+            fullWidth
+            margin="dense"
+          />
+          <TextField
+            label="Department Code"
+            value={employeeData.department_code}
+            onChange={(e) => setEmployeeData({ ...employeeData, department_code: e.target.value })}
+            fullWidth
+            margin="dense"
+          />
+          <TextField
+            label="Avatar URL"
+            value={employeeData.avatar_url}
+            onChange={(e) => setEmployeeData({ ...employeeData, avatar_url: e.target.value })}
+            fullWidth
+            margin="dense"
+            InputLabelProps={{ shrink: true }}
+          />
+          <TextField
+            label="Contract Type"
+            value={employeeData.contract_type}
+            onChange={(e) => setEmployeeData({ ...employeeData, contract_type: e.target.value })}
+            fullWidth
+            margin="dense"
+          />
+          <TextField
+            label="Salary"
+            type="number"
+            value={employeeData.salary}
+            onChange={(e) => setEmployeeData({ ...employeeData, salary: Number(e.target.value) })}
+            fullWidth
+            margin="dense"
+          />
+          <TextField
+            label="Start Date"
+            value={employeeData.start_date}
+            onChange={(e) => setEmployeeData({ ...employeeData, start_date: e.target.value })}
+            fullWidth
+            margin="dense"
+            InputLabelProps={{ shrink: true }}
+          />
+          <TextField
+            label="End Date"
+            value={employeeData.end_date}
+            onChange={(e) => setEmployeeData({ ...employeeData, end_date: e.target.value })}
+            fullWidth
+            margin="dense"
+            InputLabelProps={{ shrink: true }}
+          />
+          <TextField
+            label="Created Date"
+            value={employeeData.created_at}
+            onChange={(e) => setEmployeeData({ ...employeeData, created_at: e.target.value })}
+            fullWidth
+            margin="dense"
+            InputLabelProps={{ shrink: true }}
+          />
+          <TextField
+            label="Updated by :"
+            value={employeeData._id}
+            onChange={(e) => setEmployeeData({ ...employeeData, _id: e.target.value })}
+            fullWidth
+            margin="dense"
+          />
+        </>
+      )}
+    </DialogContent>
+    <DialogActions>
+      <Button onClick={() => setPopupOpen2(false)} color="secondary">
+        Cancel
+      </Button>
+      <Button onClick={handleSaveEmployeeDetails} color="primary">
+        Save
+      </Button>
+    </DialogActions>
+  </Dialog>
+)}
     </Layout>
   );
 };
