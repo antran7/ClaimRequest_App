@@ -58,6 +58,7 @@ const ApprovalPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
+  const [totalCount, setTotalCount] = useState<number>(0);
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -85,7 +86,7 @@ const ApprovalPage: React.FC = () => {
             is_delete: false,
           },
           pageInfo: {
-            pageNum: page + 1,
+            pageNum: page + 1, // API expects 1-based page numbers
             pageSize: rowsPerPage,
           },
         },
@@ -99,6 +100,9 @@ const ApprovalPage: React.FC = () => {
       if (response.data.success) {
         setClaims(response.data.data.pageData);
         setFilteredClaims(response.data.data.pageData);
+        setTotalCount(
+          response.data.data.total || response.data.data.pageData.length
+        ); // Add total count from API
       }
     } catch (error) {
       console.error("Error fetching claims:", error);
@@ -128,15 +132,14 @@ const ApprovalPage: React.FC = () => {
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
-    fetchClaims();
   };
 
+  // Update the rows per page change handler
   const handleChangeRowsPerPage = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
-    fetchClaims();
   };
 
   const handleDateChange = (type: "start" | "end", value: string) => {
@@ -394,11 +397,14 @@ const ApprovalPage: React.FC = () => {
             <TablePagination
               rowsPerPageOptions={[5, 10, 25]}
               component="div"
-              count={filteredClaims.length}
+              count={totalCount}
               rowsPerPage={rowsPerPage}
               page={page}
               onPageChange={handleChangePage}
               onRowsPerPageChange={handleChangeRowsPerPage}
+              labelDisplayedRows={({ from, to, count }) =>
+                `${from}-${to} of ${count}`
+              }
             />
           </>
         )}
