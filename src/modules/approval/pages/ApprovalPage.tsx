@@ -20,7 +20,6 @@ import {
   CircularProgress,
 } from "@mui/material";
 import moment from "moment";
-import Layout from "../../../shared/layouts/Layout";
 
 const API_URL = "https://management-claim-request.vercel.app/api";
 
@@ -57,6 +56,8 @@ const ApprovalPage: React.FC = () => {
   const [token, setToken] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("Pending Approval");
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -67,44 +68,44 @@ const ApprovalPage: React.FC = () => {
 
   useEffect(() => {
     if (!token) return;
-
-    const fetchClaims = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.post(
-          `${API_URL}/claims/approval-search`,
-          {
-            searchCondition: {
-              keyword: "",
-              claim_status: "",
-              claim_start_date: "",
-              claim_end_date: "",
-              is_delete: false,
-            },
-            pageInfo: {
-              pageNum: 1,
-              pageSize: 100, // Get more to handle client-side filtering
-            },
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (response.data.success) {
-          setClaims(response.data.data.pageData);
-        }
-      } catch (error) {
-        console.error("Error fetching claims:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchClaims();
-  }, [token]);
+  }, [token, statusFilter, searchTerm, startDate, endDate]);
+
+  const fetchClaims = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.post(
+        `${API_URL}/claims/approval-search`,
+        {
+          searchCondition: {
+            keyword: searchTerm || "",
+            claim_status: statusFilter === "All" ? "" : statusFilter,
+            claim_start_date: startDate || "",
+            claim_end_date: endDate || "",
+            is_delete: false,
+          },
+          pageInfo: {
+            pageNum: page + 1,
+            pageSize: rowsPerPage,
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        setClaims(response.data.data.pageData);
+        setFilteredClaims(response.data.data.pageData);
+      }
+    } catch (error) {
+      console.error("Error fetching claims:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     // Filter claims based on status and search term
@@ -122,11 +123,12 @@ const ApprovalPage: React.FC = () => {
     });
 
     setFilteredClaims(filtered);
-    setPage(0); // Reset to first page when filters change
+    setPage(0);
   }, [claims, statusFilter, searchTerm]);
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
+    fetchClaims();
   };
 
   const handleChangeRowsPerPage = (
@@ -134,6 +136,20 @@ const ApprovalPage: React.FC = () => {
   ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
+    fetchClaims();
+  };
+
+  const handleDateChange = (type: "start" | "end", value: string) => {
+    if (type === "start") {
+      setStartDate(value);
+    } else {
+      setEndDate(value);
+    }
+  };
+
+  const clearDateFilters = () => {
+    setStartDate("");
+    setEndDate("");
   };
 
   const handleApprove = (id: string) => {
@@ -248,6 +264,41 @@ const ApprovalPage: React.FC = () => {
               <MenuItem value="Returned">Returned</MenuItem>
             </Select>
           </FormControl>
+
+          <div className="date-filters">
+            <TextField
+              label="Start Date"
+              type="date"
+              variant="outlined"
+              size="small"
+              value={startDate}
+              onChange={(e) => handleDateChange("start", e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              className="date-field"
+            />
+
+            <TextField
+              label="End Date"
+              type="date"
+              variant="outlined"
+              size="small"
+              value={endDate}
+              onChange={(e) => handleDateChange("end", e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              className="date-field"
+            />
+
+            {(startDate || endDate) && (
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={clearDateFilters}
+                className="clear-date-btn"
+              >
+                Clear Dates
+              </Button>
+            )}
+          </div>
         </div>
 
         {loading ? (
