@@ -786,292 +786,120 @@ const UserManagement = () => {
         </DialogActions>
       </Dialog>
 
-      {popupOpen2 && (
-        <Dialog open={popupOpen2} onClose={() => setPopupOpen2(false)}>
-          <DialogTitle>Employee Details</DialogTitle>
-          <DialogContent>
-            <TextField
-              label="User ID"
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              fullWidth
-              margin="dense"
-            />
-            <Button
-              onClick={() => handleOpenEmployeeDetails(userId)}
-              variant="contained"
-              color="primary"
-              sx={{ marginTop: "10px" }}
-            >
-              Fetch Employee
-            </Button>
-
-            {/* Employee Fields */}
-            {employeeData && (
-              <>
-                <TextField
-                  label="Full Name"
-                  value={employeeData.full_name}
-                  onChange={(e) =>
-                    setEmployeeData({
-                      ...employeeData,
-                      full_name: e.target.value,
-                    })
-                  }
-                  fullWidth
-                  margin="dense"
-                />
-                <TextField
-                  label="UserID"
-                  value={employeeData.user_id}
-                  onChange={(e) =>
-                    setEmployeeData({
-                      ...employeeData,
-                      user_id: e.target.value,
-                    })
-                  }
-                  fullWidth
-                  margin="dense"
-                />
-                <TextField
-                  label="Phone"
-                  value={employeeData.phone}
-                  onChange={(e) =>
-                    setEmployeeData({ ...employeeData, phone: e.target.value })
-                  }
-                  fullWidth
-                  margin="dense"
-                />
-                <TextField
-                  label="Address"
-                  value={employeeData.address}
-                  onChange={(e) =>
-                    setEmployeeData({
-                      ...employeeData,
-                      address: e.target.value,
-                    })
-                  }
-                  fullWidth
-                  margin="dense"
-                />
-                <TextField
-                  label="Job Rank"
-                  value={employeeData.job_rank}
-                  onChange={(e) =>
-                    setEmployeeData({
-                      ...employeeData,
-                      job_rank: e.target.value,
-                    })
-                  }
-                  fullWidth
-                  margin="dense"
-                />
-                <TextField
-                  label="Department Code"
-                  value={employeeData.department_code}
-                  onChange={(e) =>
-                    setEmployeeData({
-                      ...employeeData,
-                      department_code: e.target.value,
-                    })
-                  }
-                  fullWidth
-                  margin="dense"
-                />
-                <TextField
-                  label="Avatar URL"
-                  value={employeeData.avatar_url}
-                  onChange={(e) =>
-                    setEmployeeData({
-                      ...employeeData,
-                      avatar_url: e.target.value,
-                    })
-                  }
-                  fullWidth
-                  margin="dense"
-                  InputLabelProps={{ shrink: true }}
-                />
-                <TextField
-                  label="Contract Type"
-                  value={employeeData.contract_type}
-                  onChange={(e) =>
-                    setEmployeeData({
-                      ...employeeData,
-                      contract_type: e.target.value,
-                    })
-                  }
-                  fullWidth
-                  margin="dense"
-                />
-                <TextField
-                  label="Salary"
-                  type="number"
-                  value={employeeData.salary}
-                  onChange={(e) =>
-                    setEmployeeData({
-                      ...employeeData,
-                      salary: Number(e.target.value),
-                    })
-                  }
-                  fullWidth
-                  margin="dense"
-                />
-                <TextField
-                  label="Start Date"
-                  value={employeeData.start_date}
-                  onChange={(e) =>
-                    setEmployeeData({
-                      ...employeeData,
-                      start_date: e.target.value,
-                    })
-                  }
-                  fullWidth
-                  margin="dense"
-                  InputLabelProps={{ shrink: true }}
-                />
-                <TextField
-                  label="End Date"
-                  value={employeeData.end_date}
-                  onChange={(e) =>
-                    setEmployeeData({
-                      ...employeeData,
-                      end_date: e.target.value,
-                    })
-                  }
-                  fullWidth
-                  margin="dense"
-                  InputLabelProps={{ shrink: true }}
-                />
-                <TextField
-                  label="Created Date"
-                  value={employeeData.created_at}
-                  onChange={(e) =>
-                    setEmployeeData({
-                      ...employeeData,
-                      created_at: e.target.value,
-                    })
-                  }
-                  fullWidth
-                  margin="dense"
-                  InputLabelProps={{ shrink: true }}
-                />
-                <TextField
-                  label="Updated by :"
-                  value={employeeData._id}
-                  onChange={(e) =>
-                    setEmployeeData({ ...employeeData, _id: e.target.value })
-                  }
-                  fullWidth
-                  margin="dense"
-                />
-              </>
-            )}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setPopupOpen2(false)} color="secondary">
-              Cancel
-            </Button>
-            <Button onClick={handleSaveEmployeeDetails} color="primary">
-              Save
-            </Button>
-          </DialogActions>
-        </Dialog>
-
-
-
-  <Dialog open={popupOpen2} onClose={() => setPopupOpen2(false)}>
-    <DialogTitle>Employee Details</DialogTitle>
-    <DialogContent>
-      {/* Employee Fields */}
-      {employeeData && (
-        <>
-          <TextField
-            label="Full Name"
-            value={employeeData.full_name}
-            onChange={(e) => setEmployeeData({ ...employeeData, full_name: e.target.value })}
-            fullWidth
-            margin="dense"
-          />
-          <TextField
-            label="UserID"
-            value={employeeData.user_id}
-            onChange={(e) => setEmployeeData({ ...employeeData, user_id: e.target.value })}
-            fullWidth
-            margin="dense"
-          />
-          <TextField
-            label="Phone"
-            value={employeeData.phone}
-            onChange={(e) => setEmployeeData({ ...employeeData, phone: e.target.value })}
-            fullWidth
-            margin="dense"
-          />
-          <TextField
-            label="Address"
-            value={employeeData.address}
-            onChange={(e) => setEmployeeData({ ...employeeData, address: e.target.value })}
-            fullWidth
-            margin="dense"
-          />
-          <TextField
-            label="Job Rank"
-            value={employeeData.job_rank}
-            onChange={(e) => setEmployeeData({ ...employeeData, job_rank: e.target.value })}
-            fullWidth
-            margin="dense"
-          />
-          <TextField
-            label="Department Code"
-            value={employeeData.department_code}
-            onChange={(e) => setEmployeeData({ ...employeeData, department_code: e.target.value })}
-            fullWidth
-            margin="dense"
-          />
-          <TextField
-            label="Avatar URL"
-            value={employeeData.avatar_url}
-            onChange={(e) => setEmployeeData({ ...employeeData, avatar_url: e.target.value })}
-            fullWidth
-            margin="dense"
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            label="Contract Type"
-            value={employeeData.contract_type}
-            onChange={(e) => setEmployeeData({ ...employeeData, contract_type: e.target.value })}
-            fullWidth
-            margin="dense"
-          />
-          <TextField
-            label="Salary"
-            type="number"
-            value={employeeData.salary}
-            onChange={(e) => setEmployeeData({ ...employeeData, salary: Number(e.target.value) })}
-            fullWidth
-            margin="dense"
-          />
-          <TextField
-            label="Start Date"
-            value={employeeData.start_date}
-            onChange={(e) => setEmployeeData({ ...employeeData, start_date: e.target.value })}
-            fullWidth
-            margin="dense"
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            label="End Date"
-            value={employeeData.end_date}
-            onChange={(e) => setEmployeeData({ ...employeeData, end_date: e.target.value })}
-            fullWidth
-            margin="dense"
-            InputLabelProps={{ shrink: true }}
-          />
-          
-          
-        </>
-
-
-      )}
+      <Dialog open={popupOpen2} onClose={() => setPopupOpen2(false)}>
+        <DialogTitle>Employee Details</DialogTitle>
+        <DialogContent>
+          {/* Employee Fields */}
+          {employeeData && (
+            <>
+              <TextField
+                label="Full Name"
+                value={employeeData.full_name}
+                onChange={(e) => setEmployeeData({ ...employeeData, full_name: e.target.value })}
+                fullWidth
+                margin="dense"
+              />
+              <TextField
+                label="UserID"
+                value={employeeData.user_id}
+                onChange={(e) => setEmployeeData({ ...employeeData, user_id: e.target.value })}
+                fullWidth
+                margin="dense"
+              />
+              <TextField
+                label="Phone"
+                value={employeeData.phone}
+                onChange={(e) => setEmployeeData({ ...employeeData, phone: e.target.value })}
+                fullWidth
+                margin="dense"
+              />
+              <TextField
+                label="Address"
+                value={employeeData.address}
+                onChange={(e) => setEmployeeData({ ...employeeData, address: e.target.value })}
+                fullWidth
+                margin="dense"
+              />
+              <TextField
+                label="Job Rank"
+                value={employeeData.job_rank}
+                onChange={(e) => setEmployeeData({ ...employeeData, job_rank: e.target.value })}
+                fullWidth
+                margin="dense"
+              />
+              <TextField
+                label="Department Code"
+                value={employeeData.department_code}
+                onChange={(e) => setEmployeeData({ ...employeeData, department_code: e.target.value })}
+                fullWidth
+                margin="dense"
+              />
+              <TextField
+                label="Avatar URL"
+                value={employeeData.avatar_url}
+                onChange={(e) => setEmployeeData({ ...employeeData, avatar_url: e.target.value })}
+                fullWidth
+                margin="dense"
+                InputLabelProps={{ shrink: true }}
+              />
+              <TextField
+                label="Contract Type"
+                value={employeeData.contract_type}
+                onChange={(e) => setEmployeeData({ ...employeeData, contract_type: e.target.value })}
+                fullWidth
+                margin="dense"
+              />
+              <TextField
+                label="Salary"
+                type="number"
+                value={employeeData.salary}
+                onChange={(e) => setEmployeeData({ ...employeeData, salary: Number(e.target.value) })}
+                fullWidth
+                margin="dense"
+              />
+              <TextField
+                label="Start Date"
+                value={employeeData.start_date}
+                onChange={(e) => setEmployeeData({ ...employeeData, start_date: e.target.value })}
+                fullWidth
+                margin="dense"
+                InputLabelProps={{ shrink: true }}
+              />
+              <TextField
+                label="End Date"
+                value={employeeData.end_date}
+                onChange={(e) => setEmployeeData({ ...employeeData, end_date: e.target.value })}
+                fullWidth
+                margin="dense"
+                InputLabelProps={{ shrink: true }}
+              />
+              <TextField
+                label="Created Date"
+                value={employeeData.created_at}
+                onChange={(e) => setEmployeeData({ ...employeeData, created_at: e.target.value })}
+                fullWidth
+                margin="dense"
+                InputLabelProps={{ shrink: true }}
+              />
+              <TextField
+                label="Updated by :"
+                value={employeeData._id}
+                onChange={(e) => setEmployeeData({ ...employeeData, _id: e.target.value })}
+                fullWidth
+                margin="dense"
+              />
+            </>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPopupOpen2(false)} color="secondary">
+            Cancel
+          </Button>
+          <Button onClick={handleSaveEmployeeDetails} color="primary">
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Layout>
   );
 };
