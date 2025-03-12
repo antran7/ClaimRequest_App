@@ -7,6 +7,7 @@ import {
   Select,
   InputLabel,
   FormControl,
+  Autocomplete,
 } from "@mui/material";
 import axios from "axios";
 import "./RequestPage.css";
@@ -35,6 +36,19 @@ interface Request {
 interface Project {
   _id: string;
   project_name: string;
+  project_code: string;
+  project_department: string;
+  project_description: string;
+  project_status: string;
+  project_start_date: string;
+  project_end_date: string;
+  project_members: {
+    project_role: string;
+    user_id: string;
+    employee_id: string;
+    user_name: string;
+    full_name: string;
+  }[];
 }
 
 interface Approver {
@@ -79,8 +93,19 @@ const RequestPage = () => {
     const storedToken = localStorage.getItem("token");
     if (storedToken) {
       setToken(storedToken);
-    } else {
-      console.error("No token found in localStorage");
+      // Decode token để lấy userId
+      try {
+        const tokenParts = storedToken.split(".");
+        const payload = JSON.parse(atob(tokenParts[1]));
+        console.log("Token payload:", payload);
+        if (payload.id) {
+          setUserId(payload.id);
+          localStorage.setItem("userId", payload.id);
+          console.log("Set userId from token:", payload.id);
+        }
+      } catch (error) {
+        console.error("Error decoding token:", error);
+      }
     }
   }, []);
 
@@ -149,8 +174,9 @@ const RequestPage = () => {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        console.log("Fetching projects...");
-        const response = await axios.post(
+        console.log("Fetching projects for userId:", userId);
+        // Fetch tất cả projects trước
+        const projectsResponse = await axios.post(
           `${API_URL}/projects/search`,
           {
             searchCondition: {
@@ -170,61 +196,79 @@ const RequestPage = () => {
             },
           }
         );
-        console.log("Projects response received:", response.data);
-        if (response.data.success) {
-          setProjects(response.data.data.pageData);
-        } else {
-          console.error("Failed to fetch projects:", response.data.message);
+
+        if (projectsResponse.data.success) {
+          const allProjects = projectsResponse.data.data.pageData;
+          console.log("All projects:", allProjects);
+
+          // Lọc projects mà user là thành viên
+          const userProjects = allProjects.filter((project: Project) => {
+            const isMember = project.project_members?.some(
+              (member) => member.user_id === userId
+            );
+            console.log(
+              `Project ${project.project_name} - User is member: ${isMember}`
+            );
+            return isMember;
+          });
+
+          console.log("Filtered user projects:", userProjects);
+          setProjects(userProjects);
         }
       } catch (error) {
         console.error("Error fetching projects:", error);
       }
     };
 
-    fetchProjects();
-  }, [token]);
+    if (userId) {
+      fetchProjects();
+    }
+  }, [token, userId]);
 
-  useEffect(() => {
-    const fetchApprovers = async () => {
-      try {
-        console.log("Fetching approvers...");
-        const response = await axios.post(
-          `${API_URL}/users/search`,
-          {
-            searchCondition: {
-              keyword: "",
-              role_code: "A003",
-              is_delete: false,
-            },
-            pageInfo: {
-              pageNum: 1,
-              pageSize: 100,
-            },
+  const fetchApprovers = async (keyword: string) => {
+    try {
+      console.log("Fetching approvers...");
+      const response = await axios.post(
+        `${API_URL}/users/search`,
+        {
+          searchCondition: {
+            keyword,
+            role_code: "A003",
+            is_delete: false,
           },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        console.log("Approvers response received:", response.data);
-        if (response.data.success) {
-          setApprovers(response.data.data.pageData);
-        } else {
-          console.error("Failed to fetch approvers:", response.data.message);
+          pageInfo: {
+            pageNum: 1,
+            pageSize: 100,
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      } catch (error) {
-        console.error("Error fetching approvers:", error);
+      );
+      console.log("Approvers response received:", response.data);
+      if (response.data.success) {
+        setApprovers(response.data.data.pageData);
+        console.log("Approvers set:", response.data.data.pageData);
+      } else {
+        console.error("Failed to fetch approvers:", response.data.message);
       }
-    };
-
-    fetchApprovers();
-  }, [token]);
+    } catch (error) {
+      console.error("Error fetching approvers:", error);
+    }
+  };
 
   const handleAddModalOk = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!userEmail || !userId || !token) return;
-
+    console.log("handleAddModalOk called");
+    console.log("formValues:", formValues);
+  
+    if (!userEmail || !userId || !token) {
+      console.error("Missing userEmail, userId, or token");
+      return;
+    }
+  
     if (
       formValues.claim_end_date &&
       formValues.claim_start_date &&
@@ -233,7 +277,7 @@ const RequestPage = () => {
       setDateError("End date cannot be before start date");
       return;
     }
-
+  
     try {
       const newRequest = {
         project_id: formValues.project_id,
@@ -248,27 +292,37 @@ const RequestPage = () => {
         total_work_time: formValues.total_work_time,
         remark: "",
       };
-
+  
+      console.log("newRequest:", newRequest);
+  
       const response = await axios.post(`${API_URL}/claims`, newRequest, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      setRequests([...requests, response.data.data]);
-      setIsAddModalVisible(false);
-      setFormValues({
-        claim_name: "",
-        project_id: "",
-        approval_id: "",
-        claim_start_date: null,
-        claim_end_date: null,
-        total_work_time: 0,
-      });
-      setDateError(null);
+  
+      console.log("response:", response.data);
+  
+      if (response.data.success) {
+        setRequests([...requests, response.data.data]);
+        setIsAddModalVisible(false);
+        setFormValues({
+          claim_name: "",
+          project_id: "",
+          approval_id: "",
+          claim_start_date: null,
+          claim_end_date: null,
+          total_work_time: 0,
+        });
+        setDateError(null);
+      } else {
+        console.error("Failed to add request:", response.data.message);
+      }
     } catch (error) {
       console.error("Error adding request:", error);
     }
   };
+  
 
   const handleEditModalOk = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -552,19 +606,36 @@ const RequestPage = () => {
                 </Select>
               </FormControl>
               <FormControl fullWidth margin="normal">
-                <InputLabel>Approver</InputLabel>
-                <Select
-                  name="approval_id"
-                  value={formValues.approval_id}
-                  onChange={handleSelectChange}
-                  required
-                >
-                  {approvers.map((approver) => (
-                    <MenuItem key={approver._id} value={approver._id}>
-                      {approver.user_name}
-                    </MenuItem>
-                  ))}
-                </Select>
+                <Autocomplete
+                  freeSolo
+                  options={approvers.map((approver) => approver.user_name)}
+                  onInputChange={(event, newInputValue) => {
+                    console.log("Autocomplete input changed:", newInputValue);
+                    if (newInputValue) {
+                      fetchApprovers(newInputValue);
+                    }
+                  }}
+                  onChange={(event, newValue) => {
+                    console.log("Autocomplete value changed:", newValue);
+                    const selectedApprover = approvers.find(
+                      (approver) => approver.user_name === newValue
+                    );
+                    if (selectedApprover) {
+                      setFormValues({
+                        ...formValues,
+                        approval_id: selectedApprover._id,
+                      });
+                    }
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Approver"
+                      margin="normal"
+                      required
+                    />
+                  )}
+                />
               </FormControl>
               <LocalizationProvider dateAdapter={AdapterMoment}>
                 <DatePicker
@@ -636,19 +707,34 @@ const RequestPage = () => {
                 </Select>
               </FormControl>
               <FormControl fullWidth margin="normal">
-                <InputLabel>Approver</InputLabel>
-                <Select
-                  name="approval_id"
-                  value={formValues.approval_id}
-                  onChange={handleSelectChange}
-                  required
-                >
-                  {approvers.map((approver) => (
-                    <MenuItem key={approver._id} value={approver._id}>
-                      {approver.user_name}
-                    </MenuItem>
-                  ))}
-                </Select>
+                <Autocomplete
+                  freeSolo
+                  options={approvers.map((approver) => approver.user_name)}
+                  onInputChange={(event, newInputValue) => {
+                    if (newInputValue) {
+                      fetchApprovers(newInputValue);
+                    }
+                  }}
+                  onChange={(event, newValue) => {
+                    const selectedApprover = approvers.find(
+                      (approver) => approver.user_name === newValue
+                    );
+                    if (selectedApprover) {
+                      setFormValues({
+                        ...formValues,
+                        approval_id: selectedApprover._id,
+                      });
+                    }
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Approver"
+                      margin="normal"
+                      required
+                    />
+                  )}
+                />
               </FormControl>
               <LocalizationProvider dateAdapter={AdapterMoment}>
                 <DatePicker
