@@ -18,9 +18,12 @@ import {
   Select,
   MenuItem,
   CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import moment from "moment";
-import Layout from "../../../shared/layouts/Layout";
 
 const API_URL = "https://management-claim-request.vercel.app/api";
 
@@ -57,6 +60,23 @@ const ApprovalPage: React.FC = () => {
   const [token, setToken] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("Pending Approval");
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+  const [totalCount, setTotalCount] = useState<number>(0);
+  const tableCellStyle = {
+    borderRight: "2px solid rgba(224, 224, 224, 1)",
+    borderBottom: "2px solid rgba(224, 224, 224, 1)",
+    "&:last-child": {
+      borderRight: "none",
+    },
+  };
+
+  const headerCellStyle = {
+    ...tableCellStyle,
+    borderBottom: "2px solid rgba(180, 180, 180, 1)",
+    backgroundColor: "#f3f4f6",
+    fontWeight: "bold",
+  };
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -67,47 +87,10 @@ const ApprovalPage: React.FC = () => {
 
   useEffect(() => {
     if (!token) return;
-
-    const fetchClaims = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.post(
-          `${API_URL}/claims/approval-search`,
-          {
-            searchCondition: {
-              keyword: "",
-              claim_status: "",
-              claim_start_date: "",
-              claim_end_date: "",
-              is_delete: false,
-            },
-            pageInfo: {
-              pageNum: 1,
-              pageSize: 100, // Get more to handle client-side filtering
-            },
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (response.data.success) {
-          setClaims(response.data.data.pageData);
-        }
-      } catch (error) {
-        console.error("Error fetching claims:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchClaims();
-  }, [token]);
+  }, [token, statusFilter, searchTerm, startDate, endDate, page, rowsPerPage]);
 
   useEffect(() => {
-    // Filter claims based on status and search term
     const filtered = claims.filter((claim) => {
       const matchesStatus =
         statusFilter === "All" || claim.claim_status === statusFilter;
@@ -122,7 +105,61 @@ const ApprovalPage: React.FC = () => {
     });
 
     setFilteredClaims(filtered);
-    setPage(0); // Reset to first page when filters change
+    setPage(0);
+  }, [claims, statusFilter, searchTerm]);
+
+  const fetchClaims = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.post(
+        `${API_URL}/claims/approval-search`,
+        {
+          searchCondition: {
+            keyword: searchTerm || "",
+            claim_status: statusFilter === "All" ? "" : statusFilter,
+            claim_start_date: startDate || "",
+            claim_end_date: endDate || "",
+            is_delete: false,
+          },
+          pageInfo: {
+            pageNum: page + 1,
+            pageSize: rowsPerPage,
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        setFilteredClaims(response.data.data.pageData);
+        setTotalCount(response.data.data.pageInfo.totalItems);
+      }
+    } catch (error) {
+      console.error("Error fetching claims:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const filtered = claims.filter((claim) => {
+      const matchesStatus =
+        statusFilter === "All" || claim.claim_status === statusFilter;
+      const matchesSearch =
+        claim.claim_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        claim.staff_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (claim.project_info?.project_name || "")
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase());
+
+      return matchesStatus && matchesSearch;
+    });
+
+    setFilteredClaims(filtered);
+    setPage(0);
   }, [claims, statusFilter, searchTerm]);
 
   const handleChangePage = (event: unknown, newPage: number) => {
@@ -134,6 +171,19 @@ const ApprovalPage: React.FC = () => {
   ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
+  };
+
+  const handleDateChange = (type: "start" | "end", value: string) => {
+    if (type === "start") {
+      setStartDate(value);
+    } else {
+      setEndDate(value);
+    }
+  };
+
+  const clearDateFilters = () => {
+    setStartDate("");
+    setEndDate("");
   };
 
   const handleApprove = (id: string) => {
@@ -178,7 +228,6 @@ const ApprovalPage: React.FC = () => {
       );
 
       if (response.data.success) {
-        // Update the local state to reflect the change
         setClaims((prevClaims) =>
           prevClaims.map((claim) =>
             claim._id === currentClaimId
@@ -213,95 +262,158 @@ const ApprovalPage: React.FC = () => {
 
   return (
     <div
-      className={`approval-container ${isModalOpen ? "blur-background" : ""}`}
+      className={`min-h-screen bg-gray-100 ${
+        isModalOpen ? "blur-background" : ""
+      }`}
     >
-      <div className="approval-content">
-        <h1 className="approval-title">Claim Approval Management</h1>
+      <div className="p-8">
+        <div className="approval-content">
+          <h1 className="approval-title">Claim Approval Management</h1>
 
-        <div className="approval-filters">
-          <TextField
-            label="Search"
-            variant="outlined"
-            size="small"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-field"
-            placeholder="Search by name, requester, project..."
-          />
+          <div className="approval-filters">
+            <TextField
+              label="Search"
+              variant="outlined"
+              size="small"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="search-field"
+              placeholder="Search by name, requester, project..."
+            />
 
-          <FormControl
-            variant="outlined"
-            size="small"
-            className="status-filter"
-          >
-            <InputLabel>Status</InputLabel>
-            <Select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              label="Status"
+            <FormControl
+              variant="outlined"
+              size="small"
+              className="status-filter"
             >
-              <MenuItem value="All">All</MenuItem>
-              <MenuItem value="Draft">Draft</MenuItem>
-              <MenuItem value="Pending Approval">Pending Approval</MenuItem>
-              <MenuItem value="Approved">Approved</MenuItem>
-              <MenuItem value="Rejected">Rejected</MenuItem>
-              <MenuItem value="Returned">Returned</MenuItem>
-            </Select>
-          </FormControl>
-        </div>
+              <InputLabel>Status</InputLabel>
+              <Select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                label="Status"
+              >
+                <MenuItem value="All">All</MenuItem>
+                <MenuItem value="Draft">Draft</MenuItem>
+                <MenuItem value="Pending Approval">Pending Approval</MenuItem>
+                <MenuItem value="Approved">Approved</MenuItem>
+                <MenuItem value="Rejected">Rejected</MenuItem>
+                <MenuItem value="Returned">Returned</MenuItem>
+              </Select>
+            </FormControl>
 
-        {loading ? (
-          <div className="loading-container">
-            <CircularProgress />
-            <p>Loading claims...</p>
+            <div className="date-filters">
+              <TextField
+                label="Start Date"
+                type="date"
+                variant="outlined"
+                size="small"
+                value={startDate}
+                onChange={(e) => handleDateChange("start", e.target.value)}
+                InputLabelProps={{ shrink: true }}
+                className="date-field"
+              />
+
+              <TextField
+                label="End Date"
+                type="date"
+                variant="outlined"
+                size="small"
+                value={endDate}
+                onChange={(e) => handleDateChange("end", e.target.value)}
+                InputLabelProps={{ shrink: true }}
+                className="date-field"
+              />
+
+              {(startDate || endDate) && (
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={clearDateFilters}
+                  sx={{ color: "gray", borderColor: "gray" }}
+                >
+                  Clear Dates
+                </Button>
+              )}
+            </div>
           </div>
-        ) : filteredClaims.length === 0 ? (
-          <div className="no-claims">
-            <p>No claims found matching your criteria.</p>
-          </div>
-        ) : (
-          <>
-            <TableContainer
-              component={Paper}
-              className="approval-table-container"
-            >
-              <Table stickyHeader aria-label="claims table">
-                <TableHead>
-                  <TableRow>
-                    {/* Đã xóa cột ID */}
-                    <TableCell>Claim Name</TableCell>
-                    <TableCell>Project</TableCell>
-                    <TableCell>Requester</TableCell>
-                    <TableCell>Role</TableCell>
-                    <TableCell>Start Date</TableCell>
-                    <TableCell>End Date</TableCell>
-                    <TableCell>Hours</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell>Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {filteredClaims
-                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                    .map((claim) => (
+
+          {loading ? (
+            <div className="loading-container">
+              <div className="flex justify-center flex-row gap-2">
+                <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce"></div>
+                <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce [animation-delay:-.3s]"></div>
+                <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce [animation-delay:-.5s]"></div>
+              </div>
+            </div>
+          ) : filteredClaims.length === 0 ? (
+            <div className="no-claims">
+              <p>No claims found matching your criteria.</p>
+            </div>
+          ) : (
+            <>
+              <TableContainer
+                component={Paper}
+                className="approval-table-container"
+              >
+                <Table stickyHeader aria-label="claims table">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell align="center" sx={headerCellStyle}>
+                        Claim Name
+                      </TableCell>
+                      <TableCell align="center" sx={headerCellStyle}>
+                        Project
+                      </TableCell>
+                      <TableCell align="center" sx={headerCellStyle}>
+                        Requester
+                      </TableCell>
+                      <TableCell align="center" sx={headerCellStyle}>
+                        Role
+                      </TableCell>
+                      <TableCell align="center" sx={headerCellStyle}>
+                        Start Date
+                      </TableCell>
+                      <TableCell align="center" sx={headerCellStyle}>
+                        End Date
+                      </TableCell>
+                      <TableCell align="center" sx={headerCellStyle}>
+                        Times
+                      </TableCell>
+                      <TableCell align="center" sx={headerCellStyle}>
+                        Status
+                      </TableCell>
+                      <TableCell align="center" sx={headerCellStyle}>
+                        Actions
+                      </TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {filteredClaims.map((claim) => (
                       <TableRow key={claim._id}>
-                        {/* Đã xóa cột ID */}
-                        <TableCell>{claim.claim_name}</TableCell>
-                        <TableCell>
+                        <TableCell sx={tableCellStyle}>
+                          {claim.claim_name}
+                        </TableCell>
+                        <TableCell sx={tableCellStyle}>
                           {claim.project_info
                             ? `${claim.project_info.project_name} (${claim.project_info.project_code})`
                             : "N/A"}
                         </TableCell>
-                        <TableCell>{claim.staff_name}</TableCell>
-                        <TableCell>{claim.role_in_project || "N/A"}</TableCell>
-                        <TableCell>
+                        <TableCell align="center" sx={tableCellStyle}>
+                          {claim.staff_name}
+                        </TableCell>
+                        <TableCell align="center" sx={tableCellStyle}>
+                          {claim.role_in_project || "N/A"}
+                        </TableCell>
+                        <TableCell align="center" sx={tableCellStyle}>
                           {formatDate(claim.claim_start_date)}
                         </TableCell>
-                        <TableCell>
+                        <TableCell align="center" sx={tableCellStyle}>
                           {formatDate(claim.claim_end_date)}
                         </TableCell>
-                        <TableCell>{claim.total_work_time}</TableCell>
-                        <TableCell>
+                        <TableCell align="center" sx={tableCellStyle}>
+                          {claim.total_work_time} (hours)
+                        </TableCell>
+                        <TableCell align="center" sx={tableCellStyle}>
                           <span
                             className={`status-badge status-${claim.claim_status
                               .toLowerCase()
@@ -310,102 +422,122 @@ const ApprovalPage: React.FC = () => {
                             {claim.claim_status}
                           </span>
                         </TableCell>
-                        <TableCell>
+                        <TableCell
+                          align="center"
+                          sx={{ ...tableCellStyle, minWidth: "250px" }}
+                        >
                           {claim.claim_status === "Pending Approval" && (
                             <div className="action-buttons">
-                              <button
-                                className="approve-button"
+                              <Button
+                                variant="contained"
+                                size="small"
+                                sx={{
+                                  backgroundColor: "gray",
+                                  color: "white",
+                                  "&:hover": { backgroundColor: "darkgray" },
+                                  mr: 1,
+                                }}
                                 onClick={() => handleApprove(claim._id)}
                               >
                                 Approve
-                              </button>
-                              <button
-                                className="reject-button"
+                              </Button>
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                color="error"
                                 onClick={() => handleReject(claim._id)}
+                                sx={{ mr: 1 }}
                               >
                                 Reject
-                              </button>
-                              <button
-                                className="return-button"
+                              </Button>
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                sx={{
+                                  color: "#d97706",
+                                  borderColor: "#d97706",
+                                }}
                                 onClick={() => handleReturn(claim._id)}
                               >
                                 Return
-                              </button>
+                              </Button>
                             </div>
                           )}
                         </TableCell>
                       </TableRow>
                     ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                  </TableBody>
+                </Table>
+              </TableContainer>
 
-            <TablePagination
-              rowsPerPageOptions={[5, 10, 25]}
-              component="div"
-              count={filteredClaims.length}
-              rowsPerPage={rowsPerPage}
-              page={page}
-              onPageChange={handleChangePage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-            />
-          </>
-        )}
-      </div>
+              <TablePagination
+                rowsPerPageOptions={[5, 10, 25]}
+                component="div"
+                count={totalCount}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+                labelDisplayedRows={({ from, to, count }) => {
+                  const computedFrom = page * rowsPerPage + 1;
+                  const computedTo = Math.min((page + 1) * rowsPerPage, count);
+                  return `${computedFrom}-${computedTo} of ${count}`;
+                }}
+                showFirstButton // Thêm nút về trang đầu
+                showLastButton // Thêm nút đến trang cuối
+              />
+            </>
+          )}
+        </div>
 
-      <Modal
-        open={isModalOpen}
-        onClose={handleCloseModal}
-        className="custom-modal"
-      >
-        <div className="modal-content">
-          <h2>
+        <Dialog open={isModalOpen} onClose={handleCloseModal}>
+          <DialogTitle className="bg-gray-300">
             {currentAction === "Approved"
               ? "Approve Claim"
               : currentAction === "Rejected"
               ? "Reject Claim"
               : "Return Claim"}
-          </h2>
+          </DialogTitle>
+          <DialogContent>
+            {currentAction !== "Approved" && (
+              <>
+                <p className="modal-instruction">
+                  Please provide a reason for this action:
+                </p>
+                <TextField
+                  multiline
+                  rows={4}
+                  value={modalReason}
+                  onChange={(e) => setModalReason(e.target.value)}
+                  fullWidth
+                  margin="normal"
+                  variant="outlined"
+                  placeholder="Enter your reason here..."
+                  required
+                />
+              </>
+            )}
 
-          {currentAction !== "Approved" && (
-            <>
+            {currentAction === "Approved" && (
               <p className="modal-instruction">
-                Please provide a reason for this action:
+                Are you sure you want to approve this claim?
               </p>
-              <TextField
-                multiline
-                rows={4}
-                value={modalReason}
-                onChange={(e) => setModalReason(e.target.value)}
-                fullWidth
-                margin="normal"
-                variant="outlined"
-                placeholder="Enter your reason here..."
-                required
-              />
-            </>
-          )}
+            )}
 
-          {currentAction === "Approved" && (
-            <p className="modal-instruction">
-              Are you sure you want to approve this claim?
-            </p>
-          )}
-
-          {error && <p className="error-message">{error}</p>}
-
-          <div className="modal-actions">
+            {error && <p className="error-message">{error}</p>}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseModal} sx={{ color: "gray" }}>
+              Cancel
+            </Button>
             <Button
               onClick={handleModalSubmit}
               variant="contained"
-              color={
-                currentAction === "Approved"
-                  ? "success"
-                  : currentAction === "Rejected"
-                  ? "error"
-                  : "warning"
-              }
-              className="action-button"
+              sx={{
+                backgroundColor: "gray",
+                color: "white",
+                "&:hover": { backgroundColor: "darkgray" },
+              }}
             >
               {currentAction === "Approved"
                 ? "Approve"
@@ -413,16 +545,9 @@ const ApprovalPage: React.FC = () => {
                 ? "Reject"
                 : "Return"}
             </Button>
-            <Button
-              onClick={handleCloseModal}
-              variant="outlined"
-              className="cancel-button"
-            >
-              Cancel
-            </Button>
-          </div>
-        </div>
-      </Modal>
+          </DialogActions>
+        </Dialog>
+      </div>
     </div>
   );
 };
