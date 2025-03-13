@@ -267,30 +267,20 @@ const UserManagement = () => {
 
   const handleSaveEmployeeDetails = async () => {
     try {
-      if (!employeeData.created_at) {
-        console.error("Error: created_at is missing!");
-        return;
-      }
-
-      const updatedEmployeeData = {
-        ...employeeData,
-        created_at: new Date(employeeData.created_at), // Ensure it's a Date
-        updated_at: new Date(),
-      };
-
-      console.log(
-        "Sending to API:",
-        JSON.stringify(updatedEmployeeData, null, 2)
-      );
-
-      await updateEmployee(userId, updatedEmployeeData);
-      setPopupOpen2(false);
+      const { created_at, updated_at, ...employeeDataToSend } = employeeData; // Exclude date fields
+  
+      console.log("Sending to API:", employeeDataToSend);
+  
+      await updateEmployee(employeeData.user_id, employeeDataToSend);
+  
+      console.log(" Employee updated successfully!");
     } catch (error) {
-      console.error("Error updating employee details:", error);
-      toast.error("Error updating employee details");
+      console.error(" Error updating employee details:", error);
     }
   };
-
+  
+  
+  
   const handleRoleChange = async (userId: string, newRoleCode: string) => {
     if (!userId) return;
 

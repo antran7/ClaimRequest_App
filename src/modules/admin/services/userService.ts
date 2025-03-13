@@ -90,9 +90,10 @@ export const getEmployeeById = async (userId: string) => {
 
 export const updateEmployee = async (userId: string, employeeData: object) => {
   try {
-    await apiService.put(`/employees/${userId}`, employeeData);
+    const response = await apiService.put(`/employees/${userId}`, employeeData);
+    console.log("API Response:", response);
   } catch (error) {
-    console.error(`Failed to update employee with ID: ${userId}`, error);
+    console.error("API Error:", error.response?.data || error);
     throw error;
   }
 };
