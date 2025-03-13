@@ -58,39 +58,53 @@ html, body {
     border-radius: 10px; 
 }
 
-
-.backgroud-banner {
-    width: 100%;
-    max-width: 1200px; 
-    height: 350px; 
+.chart-wrapper {
     display: flex;
+    justify-content: space-between; /* Căn đều hai biểu đồ */
+    align-items: center; /* Căn giữa theo chiều dọc */
+    gap: 20px; /* Tạo khoảng cách giữa hai biểu đồ */
+    width: 90%;
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Pie Chart */
+.chart-container {
+    flex: 1; /* Chia đều không gian */
+    max-width: 450px; /* Giới hạn kích thước */
+    height: 500px;
+    display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    background-color: #f5f5f5;
-    overflow: hidden;
-    margin-bottom: 20px;
-    border-radius: 10px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
 }
+
+/* Bar Chart */
 .bar-chart{
     width: 750px;
     height: 500px;
     margin-top: 30px;
     box-shadow:1px 1px 2px 1px rgba(0, 0, 0, 0.2);
   }
-
-
-
-@media (max-width: 768px) {
-    .swiper {
-        height: 350px; /* Adjusted for mobile */
-    }
-
-    .backgroud-banner {
-        height: 250px; /* Smaller banners */
-    }
-
-    .homeWidgets {
-        flex-direction: column;
-        align-items: center;
-    }
-}
+  .pie-chart-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    max-width: 500px;
+    height: auto;
+    margin: 40px auto;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+  }
+  
