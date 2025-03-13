@@ -24,6 +24,8 @@ import {
   DialogActions,
 } from "@mui/material";
 import moment from "moment";
+import { IconButton } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 
 const API_URL = "https://management-claim-request.vercel.app/api";
 
@@ -76,6 +78,10 @@ const ApprovalPage: React.FC = () => {
     borderBottom: "2px solid rgba(180, 180, 180, 1)",
     backgroundColor: "#f3f4f6",
     fontWeight: "bold",
+  };
+
+  const getDisplayStatus = (status: string) => {
+    return status === "Paid" ? "Approved" : status;
   };
 
   useEffect(() => {
@@ -134,8 +140,15 @@ const ApprovalPage: React.FC = () => {
       );
 
       if (response.data.success) {
-        setFilteredClaims(response.data.data.pageData);
-        setTotalCount(response.data.data.pageInfo.totalItems);
+        const processedClaims = response.data.data.pageData
+          .filter((claim: Claim) => claim.claim_status !== "Draft")
+          .map((claim: Claim) => ({
+            ...claim,
+            claim_status: getDisplayStatus(claim.claim_status),
+          }));
+
+        setFilteredClaims(processedClaims);
+        setTotalCount(processedClaims.length);
       }
     } catch (error) {
       console.error("Error fetching claims:", error);
@@ -205,21 +218,18 @@ const ApprovalPage: React.FC = () => {
   };
 
   const handleModalSubmit = async () => {
-    if (currentAction !== "Approved" && !modalReason.trim()) {
-      setError("Reason is required for reject or return actions.");
-      return;
-    }
-
     if (!currentClaimId || !currentAction) return;
 
     try {
+      const payload = {
+        _id: currentClaimId,
+        claim_status: currentAction,
+        comment: currentAction !== "Approved" ? modalReason : "",
+      };
+
       const response = await axios.put(
         `${API_URL}/claims/change-status`,
-        {
-          claim_id: currentClaimId,
-          claim_status: currentAction,
-          comment: modalReason,
-        },
+        payload,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -228,7 +238,7 @@ const ApprovalPage: React.FC = () => {
       );
 
       if (response.data.success) {
-        setClaims((prevClaims) =>
+        setFilteredClaims((prevClaims) =>
           prevClaims.map((claim) =>
             claim._id === currentClaimId
               ? { ...claim, claim_status: currentAction }
@@ -236,15 +246,19 @@ const ApprovalPage: React.FC = () => {
           )
         );
 
+        // Reset modal state
         setIsModalOpen(false);
         setModalReason("");
         setCurrentClaimId(null);
         setCurrentAction(null);
         setError(null);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error updating claim status:`, error);
-      setError("Failed to update claim status. Please try again.");
+      setError(
+        error.response?.data?.message ||
+          "Failed to update claim status. Please try again."
+      );
     }
   };
 
@@ -293,7 +307,6 @@ const ApprovalPage: React.FC = () => {
                 label="Status"
               >
                 <MenuItem value="All">All</MenuItem>
-                <MenuItem value="Draft">Draft</MenuItem>
                 <MenuItem value="Pending Approval">Pending Approval</MenuItem>
                 <MenuItem value="Approved">Approved</MenuItem>
                 <MenuItem value="Rejected">Rejected</MenuItem>
@@ -415,11 +428,13 @@ const ApprovalPage: React.FC = () => {
                         </TableCell>
                         <TableCell align="center" sx={tableCellStyle}>
                           <span
-                            className={`status-badge status-${claim.claim_status
+                            className={`status-badge status-${getDisplayStatus(
+                              claim.claim_status
+                            )
                               .toLowerCase()
                               .replace(/\s+/g, "-")}`}
                           >
-                            {claim.claim_status}
+                            {getDisplayStatus(claim.claim_status)}
                           </span>
                         </TableCell>
                         <TableCell
@@ -490,15 +505,41 @@ const ApprovalPage: React.FC = () => {
           )}
         </div>
 
-        <Dialog open={isModalOpen} onClose={handleCloseModal}>
-          <DialogTitle className="bg-gray-300">
+        <Dialog
+          open={isModalOpen}
+          onClose={handleCloseModal}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle
+            className="bg-gray-300"
+            sx={{
+              m: 0,
+              p: 2,
+              position: "relative",
+              fontSize: "1.25rem",
+            }}
+          >
             {currentAction === "Approved"
               ? "Approve Claim"
               : currentAction === "Rejected"
               ? "Reject Claim"
               : "Return Claim"}
+            <IconButton
+              aria-label="close"
+              onClick={handleCloseModal}
+              sx={{
+                position: "absolute",
+                right: 8,
+                top: 8,
+                color: (theme) => theme.palette.grey[500],
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
           </DialogTitle>
-          <DialogContent>
+          <DialogContent sx={{ p: 3 }}>
+            {" "}
             {currentAction !== "Approved" && (
               <>
                 <p className="modal-instruction">
@@ -506,7 +547,7 @@ const ApprovalPage: React.FC = () => {
                 </p>
                 <TextField
                   multiline
-                  rows={4}
+                  rows={6} // Tăng số dòng của TextField
                   value={modalReason}
                   onChange={(e) => setModalReason(e.target.value)}
                   fullWidth
@@ -514,19 +555,22 @@ const ApprovalPage: React.FC = () => {
                   variant="outlined"
                   placeholder="Enter your reason here..."
                   required
+                  sx={{ mt: 2 }} // Thêm margin top
                 />
               </>
             )}
-
             {currentAction === "Approved" && (
-              <p className="modal-instruction">
+              <p
+                className="modal-instruction"
+                style={{ marginTop: "40px", fontSize: "1.25rem" }}
+              >
                 Are you sure you want to approve this claim?
               </p>
             )}
-
             {error && <p className="error-message">{error}</p>}
           </DialogContent>
-          <DialogActions>
+          <DialogActions sx={{ p: 3 }}>
+            {" "}
             <Button onClick={handleCloseModal} sx={{ color: "gray" }}>
               Cancel
             </Button>
@@ -537,13 +581,10 @@ const ApprovalPage: React.FC = () => {
                 backgroundColor: "gray",
                 color: "white",
                 "&:hover": { backgroundColor: "darkgray" },
+                minWidth: "100px", // Tăng độ rộng tối thiểu của button
               }}
             >
-              {currentAction === "Approved"
-                ? "Approve"
-                : currentAction === "Rejected"
-                ? "Reject"
-                : "Return"}
+              {currentAction === "Approved" ? "Approve" : "Submit"}
             </Button>
           </DialogActions>
         </Dialog>

@@ -104,7 +104,7 @@ function ClaimRequestData() {
   };
   return (
     <div>
-      <div className="bar-chart">
+      <div className="bar-charts">
         <p style={{ textAlign: "center", margin: "20px", fontSize: "20px", color: "#418c9f" }}>Claim Request</p>
         <Bar data={claimRequestData} />
       </div>

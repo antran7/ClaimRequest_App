@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { toast } from "react-hot-toast";
+import { format } from "date-fns";
 import {
   searchUsers,
   createUser,
@@ -32,7 +33,6 @@ import {
   Card,
   Typography,
   MenuItem,
-  Input,
 } from "@mui/material";
 
 import Select, { SelectChangeEvent } from "@mui/material/Select";
@@ -42,6 +42,7 @@ import { Pagination } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { IconButton } from "@mui/material";
 import { Pencil, CircleX, Plus, Search, Lock, Unlock, Eye } from "lucide-react";
+import { debounce } from "lodash";
 
 const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -65,11 +66,11 @@ const UserManagement = () => {
     avatar_url: "",
     department_code: "",
     salary: 0,
-    start_date: "",
-    end_date: "",
+    end_date: new Date(),
     updated_by: "",
-    created_at: "",
-    updated_at: "",
+    start_date: new Date(),
+    created_at: new Date(),
+    updated_at: new Date(),
     is_deleted: false,
   });
 
@@ -121,10 +122,6 @@ const UserManagement = () => {
     user: null,
     action: null,
   });
-  useEffect(() => {
-    fetchUsers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageNum, searchTerm]);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -149,6 +146,16 @@ const UserManagement = () => {
       setLoading(false);
     }
   };
+  const debouncedFetchUsers = useCallback(debounce(fetchUsers, 800), [
+    searchTerm,
+    pageNum,
+  ]);
+  useEffect(() => {
+    debouncedFetchUsers();
+    return () => debouncedFetchUsers.cancel();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedFetchUsers]); // [pageNum, searchTerm]);
+
   const filteredUsers = users.filter(
     (user) =>
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -245,14 +252,20 @@ const UserManagement = () => {
         address: employee.address ?? "",
         avatar_url: employee.avatar_url ?? "",
         department_code: employee.department_code ?? "",
-        created_at: employee.created_at ?? "",
-        end_date: employee.end_date ?? "",
+        created_at: employee.created_at
+          ? new Date(employee.created_at)
+          : new Date(),
+        end_date: employee.end_date ? new Date(employee.end_date) : new Date(),
         full_name: employee.full_name ?? "",
         is_deleted: employee.is_deleted ?? false,
         phone: employee.phone ?? "",
         salary: employee.salary ?? 0,
-        start_date: employee.start_date ?? "",
-        updated_at: employee.updated_at ?? "",
+        start_date: employee.start_date
+          ? new Date(employee.start_date)
+          : new Date(),
+        updated_at: employee.updated_at
+          ? new Date(employee.updated_at)
+          : new Date(),
         updated_by: employee.updated_by ?? "",
       });
       setPopupOpen2(true);
@@ -600,10 +613,10 @@ const UserManagement = () => {
                     <strong>Role:</strong> {roleMap[viewUser.role_code]}
                   </Typography>
                   <Typography>
-                    <strong>Created at:</strong> {viewUser.created_at}
+                    <strong>Created at:</strong> {viewUser.created_at ? format(viewUser.created_at, "yyyy-MM-dd HH:mm:ss") : "N/A"}
                   </Typography>
                   <Typography>
-                    <strong>Updated at:</strong> {viewUser.updated_at}
+                    <strong>Updated at:</strong> {viewUser.updated_at ? format(viewUser.updated_at, "yyyy-MM-dd HH:mm:ss") : "N/A"}
                   </Typography>
                 </div>
               )}
