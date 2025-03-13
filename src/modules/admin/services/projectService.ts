@@ -117,9 +117,10 @@ interface SearchData {
   startDate?: string | "",
   endDate?: string | "",
   department?: string,
+  user_id?: string,
 }
 
-interface ProjectData {
+interface ProjectSearchResponse {
   pageData: [
     {
       _id: string,
@@ -133,7 +134,7 @@ interface ProjectData {
       updated_by: string,
       is_deleted: boolean,
       created_at: string,
-      updatedjeees: string,
+      updated_at: string,
       project_comment: string | null,
       project_members: [
         {
@@ -154,7 +155,7 @@ interface ProjectData {
   }
 }
 
-export const searchProjectWithData = async (searchData: SearchData, pageNum: number = 1): Promise<ProjectData> => {
+export const searchProjectWithData = async (searchData: SearchData, pageNum: number = 1): Promise<ProjectSearchResponse> => {
   try {
     const bodyData = {
       searchCondition: {
@@ -162,7 +163,7 @@ export const searchProjectWithData = async (searchData: SearchData, pageNum: num
         project_start_date: searchData?.startDate,
         project_end_date: searchData?.endDate,
         is_delete: false,
-        user_id: "",
+        user_id: searchData?.user_id,
       },
       pageInfo: {
         pageNum: pageNum,
@@ -170,7 +171,7 @@ export const searchProjectWithData = async (searchData: SearchData, pageNum: num
       },
     };
 
-    const response = await apiService.post<ProjectData>("/projects/search", bodyData);
+    const response = await apiService.post<ProjectSearchResponse>("/projects/search", bodyData);
     if (response && response.data) {
       return response.data;
     }
