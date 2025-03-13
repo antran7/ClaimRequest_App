@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { toast } from "react-hot-toast";
+import { format } from "date-fns";
 import {
   searchUsers,
   createUser,
@@ -29,6 +30,8 @@ import {
   Paper,
   Typography,
   MenuItem,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 
 import Select, { SelectChangeEvent } from "@mui/material/Select";
@@ -38,6 +41,8 @@ import { Pagination } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { IconButton } from "@mui/material";
 import { Pencil, CircleX, Plus, Search, Lock, Unlock, Eye } from "lucide-react";
+import { debounce } from "lodash";
+
 
 const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -61,11 +66,11 @@ const UserManagement = () => {
     avatar_url: "",
     department_code: "",
     salary: 0,
-    start_date: "",
-    end_date: "",
+    end_date: new Date(), 
     updated_by: "",
-    created_at: "",
-    updated_at: "",
+    start_date: new Date(), 
+    created_at: new Date(), 
+    updated_at: new Date(),
     is_deleted: false,
   });
 
@@ -116,10 +121,6 @@ const UserManagement = () => {
     user: null,
     action: null,
   });
-  useEffect(() => {
-    fetchUsers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageNum, searchTerm]);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -144,6 +145,13 @@ const UserManagement = () => {
       setLoading(false);
     }
   };
+  const debouncedFetchUsers = useCallback(debounce(fetchUsers, 800), [searchTerm, pageNum]);
+  useEffect(() => {
+    debouncedFetchUsers();
+    return () => debouncedFetchUsers.cancel();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedFetchUsers]); // [pageNum, searchTerm]);
+
   const filteredUsers = users.filter(
     (user) =>
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -240,14 +248,14 @@ const UserManagement = () => {
         address: employee.address ?? "",
         avatar_url: employee.avatar_url ?? "",
         department_code: employee.department_code ?? "",
-        created_at: employee.created_at ?? "",
-        end_date: employee.end_date ?? "",
+        created_at: employee.created_at ? new Date(employee.created_at) : new Date(),
+        end_date: employee.end_date ? new Date(employee.end_date) : new Date(),
         full_name: employee.full_name ?? "",
         is_deleted: employee.is_deleted ?? false,
         phone: employee.phone ?? "",
         salary: employee.salary ?? 0,
-        start_date: employee.start_date ?? "",
-        updated_at: employee.updated_at ?? "",
+        start_date: employee.start_date ? new Date(employee.start_date) : new Date(),
+        updated_at: employee.updated_at ? new Date(employee.updated_at) : new Date(),
         updated_by: employee.updated_by ?? "",
       });
       setPopupOpen2(true);
@@ -302,6 +310,7 @@ const UserManagement = () => {
       console.error("Lỗi khi cập nhật vai trò:", error);
     }
   };
+  
   
   
   
@@ -477,10 +486,10 @@ const UserManagement = () => {
                   <strong>Role:</strong> {roleMap[viewUser.role_code]}
                   </Typography>
                   <Typography>
-                    <strong>Created at:</strong> {viewUser.created_at}
+                    <strong>Created at:</strong> {viewUser.created_at ? format(viewUser.created_at, "yyyy-MM-dd HH:mm:ss") : "N/A"}
                   </Typography>
                   <Typography>
-                    <strong>Updated at:</strong> {viewUser.updated_at}
+                    <strong>Updated at:</strong> {viewUser.updated_at ? format(viewUser.updated_at, "yyyy-MM-dd HH:mm:ss") : "N/A"}
                   </Typography>
                 </div>
               )}
@@ -795,20 +804,49 @@ const UserManagement = () => {
             fullWidth
             margin="dense"
           />
-          <TextField
-            label="Job Rank"
-            value={employeeData.job_rank}
+          
+          <FormControl fullWidth margin="dense">
+          <InputLabel id="job-rank-label">Job Rank</InputLabel>
+          <Select
+            labelId="job-rank-label"
+            value={employeeData.job_rank || ""}
             onChange={(e) => setEmployeeData({ ...employeeData, job_rank: e.target.value })}
-            fullWidth
-            margin="dense"
-          />
-          <TextField
-            label="Department Code"
-            value={employeeData.department_code}
+            displayEmpty
+          >
+            <MenuItem value="" disabled>
+            </MenuItem>
+            {[
+              "TC3", "TC2", "TC1",
+              "TEST3", "TEST2", "TEST1",
+              "DEV3", "DEV2", "DEV1",
+              "QA3", "QA2", "QA1",
+              "BA3", "BA2", "BA1",
+              "TL3", "TL2", "TL1",
+              "PM3", "PM2", "PM1",
+              "BUL", "FI3", "FI2", "FI1",
+              "Admin"
+            ].map((job_rank) => (
+              <MenuItem key={job_rank} value={job_rank}>
+                {job_rank}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        <FormControl fullWidth margin="dense">
+          <InputLabel>Department Code</InputLabel>
+          <Select
+            value={employeeData.department_code || ""}
             onChange={(e) => setEmployeeData({ ...employeeData, department_code: e.target.value })}
-            fullWidth
-            margin="dense"
-          />
+            displayEmpty
+          >
+            <MenuItem value="" disabled></MenuItem>
+            {["DE01", "DE02", "DE03", "DE04"].map((dept) => (
+              <MenuItem key={dept} value={dept}>
+                {dept}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
           <TextField
             label="Avatar URL"
             value={employeeData.avatar_url}
@@ -832,29 +870,40 @@ const UserManagement = () => {
             fullWidth
             margin="dense"
           />
-          <TextField
+         <TextField
             label="Start Date"
-            value={employeeData.start_date}
-            onChange={(e) => setEmployeeData({ ...employeeData, start_date: e.target.value })}
+            type="date"
+            value={employeeData.start_date ? format(employeeData.start_date, "yyyy-MM-dd") : ""}
+            onChange={(e) =>
+              setEmployeeData({ ...employeeData, start_date: new Date(e.target.value) })
+            }
             fullWidth
             margin="dense"
             InputLabelProps={{ shrink: true }}
           />
+
           <TextField
             label="End Date"
-            value={employeeData.end_date}
-            onChange={(e) => setEmployeeData({ ...employeeData, end_date: e.target.value })}
+            type="date"
+            value={employeeData.end_date ? format(employeeData.end_date, "yyyy-MM-dd") : ""}
+            onChange={(e) =>
+              setEmployeeData({ ...employeeData, end_date: new Date(e.target.value) })
+            }
             fullWidth
             margin="dense"
             InputLabelProps={{ shrink: true }}
           />
-          
-          
         </>
-
-
       )}
       </DialogContent>
+      <DialogActions>
+      <Button onClick={() => setPopupOpen2(false)} color="secondary">
+        Cancel
+      </Button>
+      <Button onClick={handleSaveEmployeeDetails} color="primary" variant="contained">
+        Save
+      </Button>
+    </DialogActions>
       </Dialog>
 
   </Layout>

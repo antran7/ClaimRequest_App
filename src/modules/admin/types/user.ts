@@ -7,8 +7,8 @@ export interface User {
   is_verified?: boolean;
   is_blocked: boolean;
   is_deleted?: boolean;
-  created_at: string;
-  updated_at: string;
+  created_at: Date;
+  updated_at: Date;
   token_version?: number;
 }
 
@@ -35,10 +35,10 @@ export interface Employee {
   avatar_url: string;
   department_code: string;
   salary: number;
-  start_date: string;
-  end_date: string;
+  start_date: Date;
+  end_date: Date;
   updated_by?: string;
-  created_at?: string;
-  updated_at?: string;
+  created_at?: Date;
+  updated_at?: Date;
   is_deleted: boolean;
 }

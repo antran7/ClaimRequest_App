@@ -24,6 +24,7 @@
     "axios": "^1.7.9",
     "chart.js": "^4.4.7",
     "claim-request-app": "file:",
+    "date-fns": "^4.1.0",
     "formik": "^2.4.6",
     "lucide-react": "^0.477.0",
     "moment": "^2.30.1",
