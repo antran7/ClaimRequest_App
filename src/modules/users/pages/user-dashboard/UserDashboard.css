@@ -37,10 +37,10 @@ html, body {
     margin: 20px auto;
     border-radius: 10px; 
     overflow: hidden; 
-    position: relative; /* Ensures proper placement */
+    position: relative; 
 }
 
-/* Swiper Slide */
+
 .swiper-slide {
     text-align: center;
     display: flex;
@@ -49,7 +49,7 @@ html, body {
     background: #fff;
 }
 
-/* Swiper Images */
+
 .swiper-slide img {
     display: block;
     width: 100%;
@@ -58,11 +58,11 @@ html, body {
     border-radius: 10px; 
 }
 
-/* Background Banner */
+
 .backgroud-banner {
     width: 100%;
-    max-width: 1200px; /* Prevent it from becoming too large */
-    height: 350px; /* Adjusted height */
+    max-width: 1200px; 
+    height: 350px; 
     display: flex;
     justify-content: center;
     align-items: center;
@@ -79,7 +79,7 @@ html, body {
   }
 
 
-/* Responsive Adjustments */
+
 @media (max-width: 768px) {
     .swiper {
         height: 350px; /* Adjusted for mobile */
