@@ -96,3 +96,13 @@ export const updateEmployee = async (userId: string, employeeData: object) => {
     throw error;
   }
 };
+
+export const fetchJobRanks = async () => {
+  try {
+    const response = await apiService.get("/jobs/get-all"); 
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch job ranks:", error);
+    return [];
+  }
+};

@@ -3,12 +3,14 @@ import Layout from '../../../shared/layouts/Layout'
 import './ProfilePage.css'
 import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined';
 import { useForm } from 'react-hook-form';
-import { Avatar, Switch } from '@mui/material';
+import { Avatar, Button, CircularProgress, List, ListItem, ListItemText, Switch } from '@mui/material';
 import { updateInfo, updatePassword } from '../services/userApi';
 import toast from 'react-hot-toast';
 import { getEmployeeInfo } from '../../employee/services/employeeApi';
+import InfiniteScroll from "react-infinite-scroll-component";
 import Skeleton from 'react-loading-skeleton';
 import "react-loading-skeleton/dist/skeleton.css";
+import { searchProjectWithData } from '../../admin/services/projectService';
 
 type FormData = {
   username?: string;
@@ -22,6 +24,9 @@ const ProfilePage: React.FC = () => {
   const [employee, setEmployee] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isPasswordMode, setIsPasswordMode] = useState(false);
+  const [myProjects, setMyProjects] = useState([]);
+  const [pageNum, setPageNum] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
 
   const {
     register,
@@ -69,17 +74,45 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchEmploye = async () => {
-      const response = await getEmployeeInfo(user._id);
-      console.log(response);
-      console.log(user._id);
-      if (response) {
-        setEmployee(response);
-      }
+  const fetchEmployee = async () => {
+    const response = await getEmployeeInfo(user._id);
+    if (response) {
+      setEmployee(response);
     }
-    fetchEmploye();
+  }
+
+  const fetchProject = async () => {
+    if (!hasMore) return;
+    const projectData = {
+      searchTerm: "",
+      startDate: "",
+      endDate: "",
+      department: "",
+      user_id: user._id,
+    }
+    try {
+      const response = await searchProjectWithData(projectData, pageNum);
+      if (response?.pageData?.length > 0) {
+        setMyProjects([...myProjects, ...response.pageData]);
+        setPageNum(prevPageNum => prevPageNum + 1);
+      } else {
+        setHasMore(false);
+      }
+      console.log(myProjects, ' ', pageNum);
+    } catch (error) {
+      toast(error.toString(), {
+        icon: "❌",
+      });
+    }
+  }
+
+  useEffect(() => {
+    fetchEmployee();
   }, [])
+
+  useEffect(() => {
+    fetchProject();
+  }, [pageNum])
 
   return (
     <Layout>
@@ -105,7 +138,8 @@ const ProfilePage: React.FC = () => {
                       Windom 11 Pro Ho Chi Minh city (Viet Nam)
                     </p>
                   </div>
-                  <form onSubmit={handleSubmit(onSubmit)} className='update-form'>
+                  <form
+                    onSubmit={handleSubmit(onSubmit)} className='update-form'>
                     {!isPasswordMode ? (
                       <>
                         <input
@@ -268,6 +302,44 @@ const ProfilePage: React.FC = () => {
                   </div>
                 )}
               </div>
+                <div id='projectsScrollDiv' className='my-projects-list'>
+                  <InfiniteScroll
+                    dataLength={myProjects.length}
+                    next={fetchProject}
+                    hasMore={hasMore}
+                    loader={
+                      <div style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        rowGap: "20px",
+                        width: "100%",
+                      }}>
+                        <Skeleton height={40} width="100%" />
+                        <Skeleton height={40} width="100%" />
+                        <Skeleton height={40} width="100%" />
+                        <Skeleton height={40} width="100%" />
+                      </div>
+                    }
+                    endMessage={
+                      <p style={{ textAlign: "center", marginTop: 10 }}>
+                        Đã hiển thị tất cả project
+                      </p>
+                    }
+                    scrollableTarget="projectsScrollDiv"
+                  >
+                    <List>
+                      {myProjects.map((project, index) => (
+                        <ListItem key={index} divider>
+                          <ListItemText
+                            primary={project.project_name}
+                            secondary={`Code: ${project.project_code}`}
+                          />
+                          <Button className='view-project-btn'>View detail</Button>
+                        </ListItem>
+                      ))}
+                    </List>
+                  </InfiniteScroll>
+                </div>
             </div>
           </div>
         </div>
