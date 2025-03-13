@@ -74,7 +74,9 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
     },
   ];
 
-  const finaceItems = [{ text: "Paid Claims", icon: <PaidIcon />, path: "/#" }];
+  const finaceItems = [
+    { text: "Paid Claims", icon: <PaidIcon />, path: "/finance/claims" },
+  ];
 
   const handleNavigation = (path: string) => {
     if (path === "/my-requests") {
@@ -88,7 +90,7 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
         } else if (user?.role_code === "A003") {
           navigate("/approval/dashboard");
         } else {
-          navigate("/finance/claims");
+          navigate("/#");
         }
       } else {
         navigate(path);
@@ -96,9 +98,7 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
       toggleSidebar();
     }
   };
-  useEffect(() => {
-    
-  }, []);
+  useEffect(() => {}, []);
 
   return (
     <Drawer open={isOpen} onClose={toggleSidebar}>
