@@ -28,21 +28,21 @@ import {
   DialogContentText,
   DialogTitle,
   Paper,
+  Grid,
+  CardContent,
+  Card,
   Typography,
   MenuItem,
-  FormControl,
-  InputLabel,
 } from "@mui/material";
 
 import Select, { SelectChangeEvent } from "@mui/material/Select";
-import AccessibilityIcon from '@mui/icons-material/Accessibility';
+import AccessibilityIcon from "@mui/icons-material/Accessibility";
 import { User, Employee } from "../types/user";
 import { Pagination } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { IconButton } from "@mui/material";
 import { Pencil, CircleX, Plus, Search, Lock, Unlock, Eye } from "lucide-react";
 import { debounce } from "lodash";
-
 
 const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -66,10 +66,10 @@ const UserManagement = () => {
     avatar_url: "",
     department_code: "",
     salary: 0,
-    end_date: new Date(), 
+    end_date: new Date(),
     updated_by: "",
-    start_date: new Date(), 
-    created_at: new Date(), 
+    start_date: new Date(),
+    created_at: new Date(),
     updated_at: new Date(),
     is_deleted: false,
   });
@@ -86,7 +86,7 @@ const UserManagement = () => {
     user_name: string;
     role_code: string;
     password?: string;
-    confirmPassword?: "",
+    confirmPassword?: "";
   }>({
     email: "",
     user_name: "",
@@ -100,17 +100,18 @@ const UserManagement = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const validateForm = () => {
-  let newErrors = {};
+    let newErrors = {};
 
-  if (!form.email.trim()) newErrors.email = "Email is required";
-  if (!form.user_name.trim()) newErrors.user_name = "Username is required";
-  if (!editingUser && !form.password.trim()) newErrors.password = "Password is required";
-  if (!editingUser && form.password !== form.confirmPassword)
-    newErrors.confirmPassword = "Passwords do not match";
+    if (!form.email.trim()) newErrors.email = "Email is required";
+    if (!form.user_name.trim()) newErrors.user_name = "Username is required";
+    if (!editingUser && !form.password.trim())
+      newErrors.password = "Password is required";
+    if (!editingUser && form.password !== form.confirmPassword)
+      newErrors.confirmPassword = "Passwords do not match";
 
-  setErrors(newErrors);
-  return Object.keys(newErrors).length === 0; // Returns true if no errors
-};
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0; // Returns true if no errors
+  };
   const [searchTerm, setSearchTerm] = useState("");
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
@@ -145,7 +146,10 @@ const UserManagement = () => {
       setLoading(false);
     }
   };
-  const debouncedFetchUsers = useCallback(debounce(fetchUsers, 800), [searchTerm, pageNum]);
+  const debouncedFetchUsers = useCallback(debounce(fetchUsers, 800), [
+    searchTerm,
+    pageNum,
+  ]);
   useEffect(() => {
     debouncedFetchUsers();
     return () => debouncedFetchUsers.cancel();
@@ -219,11 +223,11 @@ const UserManagement = () => {
   const handleOpenEmployeeDetails = async (id: string) => {
     console.log("Fetching details for User ID:", id);
 
-  if (!id) {
-    toast.error("Invalid User ID");
-    console.error("Invalid User ID: ID is missing");
-    return; 
-  }
+    if (!id) {
+      toast.error("Invalid User ID");
+      console.error("Invalid User ID: ID is missing");
+      return;
+    }
 
     try {
       const response = await getEmployeeById(id);
@@ -248,14 +252,20 @@ const UserManagement = () => {
         address: employee.address ?? "",
         avatar_url: employee.avatar_url ?? "",
         department_code: employee.department_code ?? "",
-        created_at: employee.created_at ? new Date(employee.created_at) : new Date(),
+        created_at: employee.created_at
+          ? new Date(employee.created_at)
+          : new Date(),
         end_date: employee.end_date ? new Date(employee.end_date) : new Date(),
         full_name: employee.full_name ?? "",
         is_deleted: employee.is_deleted ?? false,
         phone: employee.phone ?? "",
         salary: employee.salary ?? 0,
-        start_date: employee.start_date ? new Date(employee.start_date) : new Date(),
-        updated_at: employee.updated_at ? new Date(employee.updated_at) : new Date(),
+        start_date: employee.start_date
+          ? new Date(employee.start_date)
+          : new Date(),
+        updated_at: employee.updated_at
+          ? new Date(employee.updated_at)
+          : new Date(),
         updated_by: employee.updated_by ?? "",
       });
       setPopupOpen2(true);
@@ -310,38 +320,36 @@ const UserManagement = () => {
       console.error("Lỗi khi cập nhật vai trò:", error);
     }
   };
-  
-  
-  
-  
+
   return (
     <Layout>
-      <h1
-        className="text-6xl p-4 font-mono bold "
-        style={{ backgroundColor: "#90E0EF" }}
-      >
+      <h1 className="text-6xl p-4 font-mono bold bg-gray-100">
         USER MANAGEMENT
       </h1>
-      <div className="p-4 " style={{ backgroundColor: "#90E0EF" }}>
+      <div className="p-4 bg-gray-100">
         <div className="flex justify-end items-center gap-4 mb-4">
           <div className="w-[250px] min-w-[150px] ">
             <div className="relative">
-              <TextField
-                label="Search by Username...."
-                fullWidth
-                margin="dense"
+              <input
+                placeholder="Search..."
+                className="input bg-white shadow-sm focus:border-2 border-gray-300 px-5 py-3 rounded-xl w-180 transition-all outline-none [&::-webkit-search-cancel-button]:hidden [&::-moz-search-clear-button]:hidden"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                size="small"
-                variant="filled"
                 style={{
+                  position: "absolute",
                   border: "100px !important ",
-                  backgroundColor: "#fff",
-                  borderRadius: "20px",
+                  backgroundColor: "white",
+                  boxShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
+
+                  transition: "ease-in-out",
+
+                  width: "28rem",
                   overflow: "hidden",
+                  left: "-200px",
+                  top: "-22px",
                 }}
               />
-              <Search className="absolute right-3 top-4" />
+              <Search className="absolute right-3 -top-2.5" />
             </div>
           </div>
           <Dialog
@@ -395,7 +403,6 @@ const UserManagement = () => {
                   color: "gray",
                 }}
               />
-    
               {/* Password Field (ONLY for Adding New User) */}
               <span style={{ visibility: editingUser ? "hidden" : "visible" }}>
                 Password
@@ -414,37 +421,50 @@ const UserManagement = () => {
                   sx={{ backgroundColor: "#E3F2FD", borderRadius: "6px" }}
                   InputProps={{
                     endAdornment: (
-                      <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
+                      <IconButton
+                        onClick={() => setShowPassword(!showPassword)}
+                        edge="end"
+                      >
                         {showPassword ? <VisibilityOff /> : <Visibility />}
                       </IconButton>
                     ),
                   }}
                 />
               )}
-               {/* Confirm Password Field */}
-               <span style={{ visibility: editingUser ? "hidden" : "visible" }}>
-                  Confirm Password
-                  </span>
-                  {!editingUser && (
-                  <TextField
-                    fullWidth
-                    margin="dense"
-                    type={showConfirmPassword ? "text" : "password"}
-                    value={form.confirmPassword}
-                    onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
-                    error={!!errors.confirmPassword}
-                    helperText={errors.confirmPassword}
-                    sx={{ backgroundColor: "#E3F2FD", borderRadius: "6px" }}
-                    InputProps={{
-                      endAdornment: (
-                        <IconButton onClick={() => setShowConfirmPassword(!showConfirmPassword)} edge="end">
-                          {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      ),
-                    }}
-                  />
-                )}
-
+              {/* Confirm Password Field */}
+              <span style={{ visibility: editingUser ? "hidden" : "visible" }}>
+                Confirm Password
+              </span>
+              {!editingUser && (
+                <TextField
+                  fullWidth
+                  margin="dense"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={form.confirmPassword}
+                  onChange={(e) =>
+                    setForm({ ...form, confirmPassword: e.target.value })
+                  }
+                  error={!!errors.confirmPassword}
+                  helperText={errors.confirmPassword}
+                  sx={{ backgroundColor: "#E3F2FD", borderRadius: "6px" }}
+                  InputProps={{
+                    endAdornment: (
+                      <IconButton
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                        edge="end"
+                      >
+                        {showConfirmPassword ? (
+                          <VisibilityOff />
+                        ) : (
+                          <Visibility />
+                        )}
+                      </IconButton>
+                    ),
+                  }}
+                />
+              )}
             </DialogContent>
 
             <DialogActions>
@@ -472,6 +492,113 @@ const UserManagement = () => {
             </DialogTitle>
             <DialogContent>
               {viewUser && (
+                <Grid container spacing={2}>
+                  {/* UserID */}
+                  <Grid item xs={12}>
+                    <Card sx={{ backgroundColor: "#EAF2FF" }}>
+                      <CardContent>
+                        <Typography
+                          fontWeight="bold"
+                          sx={{
+                            color: "#3EAEF4",
+                          }}
+                        >
+                          UserID
+                        </Typography>
+                        <Typography>{viewUser._id}</Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+
+                  {/* Username */}
+                  <Grid item xs={12} sm={6}>
+                    <Card sx={{ backgroundColor: "#EAF2FF" }}>
+                      <CardContent>
+                        <Typography
+                          fontWeight="bold"
+                          sx={{
+                            color: "#3EAEF4",
+                          }}
+                        >
+                          Username
+                        </Typography>
+                        <Typography>{viewUser.user_name}</Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+
+                  {/* Email */}
+                  <Grid item xs={12} sm={6}>
+                    <Card sx={{ backgroundColor: "#F5EFFF" }}>
+                      <CardContent>
+                        <Typography
+                          fontWeight="bold"
+                          sx={{
+                            color: "#FF99FF",
+                          }}
+                        >
+                          Email
+                        </Typography>
+                        <Typography>{viewUser.email}</Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+
+                  {/* Role */}
+                  <Grid item xs={12} sm={6}>
+                    <Card sx={{ backgroundColor: "#E6FAE6" }}>
+                      <CardContent>
+                        <Typography
+                          fontWeight="bold"
+                          sx={{
+                            color: "#00FF66",
+                          }}
+                        >
+                          Role
+                        </Typography>
+                        <Typography>{roleMap[viewUser.role_code]}</Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+
+                  {/* Created At */}
+                  <Grid item xs={12} sm={6}>
+                    <Card sx={{ backgroundColor: "#EAF2FF" }}>
+                      <CardContent>
+                        <Typography
+                          fontWeight="bold"
+                          sx={{
+                            color: "#3EAEF4",
+                          }}
+                        >
+                          Created At
+                        </Typography>
+                        <Typography>{viewUser.created_at}</Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+
+                  {/* Updated At */}
+                  <Grid item xs={12} sm={6}>
+                    <Card sx={{ backgroundColor: "#FFEAF2" }}>
+                      <CardContent>
+                        <Typography
+                          fontWeight="bold"
+                          sx={{
+                            color: "#FFCC99",
+                          }}
+                        >
+                          Updated At
+                        </Typography>
+                        <Typography>{viewUser.updated_at}</Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                </Grid>
+              )}
+            </DialogContent>
+            {/* <DialogContent>
+              {viewUser && (
                 <div>
                   <Typography>
                     <strong>UserID:</strong> {viewUser._id}
@@ -483,7 +610,7 @@ const UserManagement = () => {
                     <strong>Email:</strong> {viewUser.email}
                   </Typography>
                   <Typography>
-                  <strong>Role:</strong> {roleMap[viewUser.role_code]}
+                    <strong>Role:</strong> {roleMap[viewUser.role_code]}
                   </Typography>
                   <Typography>
                     <strong>Created at:</strong> {viewUser.created_at ? format(viewUser.created_at, "yyyy-MM-dd HH:mm:ss") : "N/A"}
@@ -493,7 +620,7 @@ const UserManagement = () => {
                   </Typography>
                 </div>
               )}
-            </DialogContent>
+            </DialogContent> */}
             <DialogActions>
               <Button onClick={() => setViewUser(null)} color="primary">
                 Close
@@ -511,7 +638,7 @@ const UserManagement = () => {
                 user_name: "",
                 role_code: "A001",
                 password: "",
-                confirmPassword:"",
+                confirmPassword: "",
               }); // Reset form
               setPopupOpen(true); // Open popup
             }}
@@ -536,69 +663,64 @@ const UserManagement = () => {
           </Button>
         </div>
 
-        <TableContainer
-          component={Paper}
-          className="mt-4"
-          sx={{ borderRadius: "12px" }}
-        >
+        <TableContainer>
           <Table>
-            <TableHead sx={{ backgroundColor: "#03045E" }}>
+            <TableHead>
               <TableRow>
                 <TableCell
                   sx={{
-                    width: "20%",
+                    color: "white",
                     fontWeight: "bold",
+                    backgroundColor: "#6B7280",
+                    width: "20%",
+
                     fontSize: "17px",
                     borderRight: "2px solid #ffff",
                     textAlign: "center",
-                    color: "white",
                   }}
                 >
                   Username
                 </TableCell>
                 <TableCell
                   sx={{
-                    width: "25%",
-                    fontWeight: "bold",
-                    fontSize: "17px",
-                    borderRight: "2px solid #ffff",
-                    textAlign: "center",
                     color: "white",
+                    fontWeight: "bold",
+                    backgroundColor: "#6B7280",
+                    borderRight: "2px solid #ffff",
+                    width: "30%",
+                    textAlign: "center",
                   }}
                 >
                   Email
                 </TableCell>
                 <TableCell
                   sx={{
-                    width: "10%",
+                    color: "white",
                     fontWeight: "bold",
-                    fontSize: "17px",
+                    backgroundColor: "#6B7280",
                     borderRight: "2px solid #ffff",
                     textAlign: "center",
-                    color: "white",
                   }}
                 >
                   Role
                 </TableCell>
                 <TableCell
                   sx={{
-                    width: "12%",
+                    color: "white",
                     fontWeight: "bold",
-                    fontSize: "17px",
+                    backgroundColor: "#6B7280",
                     borderRight: "2px solid #ffff",
                     textAlign: "center",
-                    color: "white",
                   }}
                 >
                   Blocked
                 </TableCell>
                 <TableCell
                   sx={{
-                    width: "18%",
-                    fontWeight: "bold",
-                    fontSize: "17px",
-                    textAlign: "center",
                     color: "white",
+                    fontWeight: "bold",
+                    backgroundColor: "#6B7280",
+                    textAlign: "center",
                   }}
                 >
                   Actions
@@ -607,12 +729,9 @@ const UserManagement = () => {
             </TableHead>
             <TableBody>
               {filteredUsers.map((user) => (
-                <TableRow
-                  key={user._id}
-                  sx={{ borderBottom: "6px solid #90E0EF" }}
-                >
-                  <TableCell sx={{}}>{user.user_name}</TableCell>
-                  <TableCell sx={{ textAlign: "left" }}>{user.email}</TableCell>
+                <TableRow>
+                  <TableCell>{user.user_name}</TableCell>
+                  <TableCell>{user.email}</TableCell>
                   <TableCell
                     sx={{
                       textAlign: "center",
@@ -655,7 +774,7 @@ const UserManagement = () => {
                     </Select>
                   </TableCell>
 
-                  <TableCell sx={{ textAlign: "center" }}>
+                  <TableCell>
                     <Button
                       onClick={() =>
                         setConfirmDialog({ open: true, user, action: "block" })
@@ -669,6 +788,7 @@ const UserManagement = () => {
                         )
                       }
                       sx={{
+                        textAlign: "center",
                         textTransform: "none", // Không viết hoa chữ
                         borderRadius: "12px", // Bo tròn góc
                         fontWeight: 600, // Chữ đậm
@@ -716,13 +836,13 @@ const UserManagement = () => {
                     </Button>
 
                     <Button
-                    onClick={() => {
-                      console.log("Selected User ID:", user._id); // ✅ Check if user.id exists
-                      handleOpenEmployeeDetails(user._id);
-                    }}
-                  >
-                   <AccessibilityIcon />
-                  </Button>
+                      onClick={() => {
+                        console.log("Selected User ID:", user._id); // ✅ Check if user.id exists
+                        handleOpenEmployeeDetails(user._id);
+                      }}
+                    >
+                      <AccessibilityIcon />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -758,7 +878,6 @@ const UserManagement = () => {
           <Button
             onClick={() =>
               setConfirmDialog({ open: false, user: null, action: null })
-              
             }
             color="error"
           >
@@ -770,145 +889,139 @@ const UserManagement = () => {
         </DialogActions>
       </Dialog>
 
-    <Dialog open={popupOpen2} onClose={() => setPopupOpen2(false)}>
-    <DialogTitle>Employee Details</DialogTitle>
-    <DialogContent>
-      {/* Employee Fields */}
-      {employeeData && (
-        <>
-          <TextField
-            label="Full Name"
-            value={employeeData.full_name}
-            onChange={(e) => setEmployeeData({ ...employeeData, full_name: e.target.value })}
-            fullWidth
-            margin="dense"
-          />
-          <TextField
-            label="UserID"
-            value={employeeData.user_id}
-            onChange={(e) => setEmployeeData({ ...employeeData, user_id: e.target.value })}
-            fullWidth
-            margin="dense"
-          />
-          <TextField
-            label="Phone"
-            value={employeeData.phone}
-            onChange={(e) => setEmployeeData({ ...employeeData, phone: e.target.value })}
-            fullWidth
-            margin="dense"
-          />
-          <TextField
-            label="Address"
-            value={employeeData.address}
-            onChange={(e) => setEmployeeData({ ...employeeData, address: e.target.value })}
-            fullWidth
-            margin="dense"
-          />
-          
-          <FormControl fullWidth margin="dense">
-          <InputLabel id="job-rank-label">Job Rank</InputLabel>
-          <Select
-            labelId="job-rank-label"
-            value={employeeData.job_rank || ""}
-            onChange={(e) => setEmployeeData({ ...employeeData, job_rank: e.target.value })}
-            displayEmpty
-          >
-            <MenuItem value="" disabled>
-            </MenuItem>
-            {[
-              "TC3", "TC2", "TC1",
-              "TEST3", "TEST2", "TEST1",
-              "DEV3", "DEV2", "DEV1",
-              "QA3", "QA2", "QA1",
-              "BA3", "BA2", "BA1",
-              "TL3", "TL2", "TL1",
-              "PM3", "PM2", "PM1",
-              "BUL", "FI3", "FI2", "FI1",
-              "Admin"
-            ].map((job_rank) => (
-              <MenuItem key={job_rank} value={job_rank}>
-                {job_rank}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <FormControl fullWidth margin="dense">
-          <InputLabel>Department Code</InputLabel>
-          <Select
-            value={employeeData.department_code || ""}
-            onChange={(e) => setEmployeeData({ ...employeeData, department_code: e.target.value })}
-            displayEmpty
-          >
-            <MenuItem value="" disabled></MenuItem>
-            {["DE01", "DE02", "DE03", "DE04"].map((dept) => (
-              <MenuItem key={dept} value={dept}>
-                {dept}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-          <TextField
-            label="Avatar URL"
-            value={employeeData.avatar_url}
-            onChange={(e) => setEmployeeData({ ...employeeData, avatar_url: e.target.value })}
-            fullWidth
-            margin="dense"
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            label="Contract Type"
-            value={employeeData.contract_type}
-            onChange={(e) => setEmployeeData({ ...employeeData, contract_type: e.target.value })}
-            fullWidth
-            margin="dense"
-          />
-          <TextField
-            label="Salary"
-            type="number"
-            value={employeeData.salary}
-            onChange={(e) => setEmployeeData({ ...employeeData, salary: Number(e.target.value) })}
-            fullWidth
-            margin="dense"
-          />
-         <TextField
-            label="Start Date"
-            type="date"
-            value={employeeData.start_date ? format(employeeData.start_date, "yyyy-MM-dd") : ""}
-            onChange={(e) =>
-              setEmployeeData({ ...employeeData, start_date: new Date(e.target.value) })
-            }
-            fullWidth
-            margin="dense"
-            InputLabelProps={{ shrink: true }}
-          />
-
-          <TextField
-            label="End Date"
-            type="date"
-            value={employeeData.end_date ? format(employeeData.end_date, "yyyy-MM-dd") : ""}
-            onChange={(e) =>
-              setEmployeeData({ ...employeeData, end_date: new Date(e.target.value) })
-            }
-            fullWidth
-            margin="dense"
-            InputLabelProps={{ shrink: true }}
-          />
-        </>
-      )}
-      </DialogContent>
-      <DialogActions>
-      <Button onClick={() => setPopupOpen2(false)} color="secondary">
-        Cancel
-      </Button>
-      <Button onClick={handleSaveEmployeeDetails} color="primary" variant="contained">
-        Save
-      </Button>
-    </DialogActions>
+      <Dialog open={popupOpen2} onClose={() => setPopupOpen2(false)}>
+        <DialogTitle>Employee Details</DialogTitle>
+        <DialogContent>
+          {/* Employee Fields */}
+          {employeeData && (
+            <>
+              <TextField
+                label="Full Name"
+                value={employeeData.full_name}
+                onChange={(e) =>
+                  setEmployeeData({
+                    ...employeeData,
+                    full_name: e.target.value,
+                  })
+                }
+                fullWidth
+                margin="dense"
+              />
+              <TextField
+                label="UserID"
+                value={employeeData.user_id}
+                onChange={(e) =>
+                  setEmployeeData({ ...employeeData, user_id: e.target.value })
+                }
+                fullWidth
+                margin="dense"
+              />
+              <TextField
+                label="Phone"
+                value={employeeData.phone}
+                onChange={(e) =>
+                  setEmployeeData({ ...employeeData, phone: e.target.value })
+                }
+                fullWidth
+                margin="dense"
+              />
+              <TextField
+                label="Address"
+                value={employeeData.address}
+                onChange={(e) =>
+                  setEmployeeData({ ...employeeData, address: e.target.value })
+                }
+                fullWidth
+                margin="dense"
+              />
+              <TextField
+                label="Job Rank"
+                value={employeeData.job_rank}
+                onChange={(e) =>
+                  setEmployeeData({ ...employeeData, job_rank: e.target.value })
+                }
+                fullWidth
+                margin="dense"
+              />
+              <TextField
+                label="Department Code"
+                value={employeeData.department_code}
+                onChange={(e) =>
+                  setEmployeeData({
+                    ...employeeData,
+                    department_code: e.target.value,
+                  })
+                }
+                fullWidth
+                margin="dense"
+              />
+              <TextField
+                label="Avatar URL"
+                value={employeeData.avatar_url}
+                onChange={(e) =>
+                  setEmployeeData({
+                    ...employeeData,
+                    avatar_url: e.target.value,
+                  })
+                }
+                fullWidth
+                margin="dense"
+                InputLabelProps={{ shrink: true }}
+              />
+              <TextField
+                label="Contract Type"
+                value={employeeData.contract_type}
+                onChange={(e) =>
+                  setEmployeeData({
+                    ...employeeData,
+                    contract_type: e.target.value,
+                  })
+                }
+                fullWidth
+                margin="dense"
+              />
+              <TextField
+                label="Salary"
+                type="number"
+                value={employeeData.salary}
+                onChange={(e) =>
+                  setEmployeeData({
+                    ...employeeData,
+                    salary: Number(e.target.value),
+                  })
+                }
+                fullWidth
+                margin="dense"
+              />
+              <TextField
+                label="Start Date"
+                value={employeeData.start_date}
+                onChange={(e) =>
+                  setEmployeeData({
+                    ...employeeData,
+                    start_date: e.target.value,
+                  })
+                }
+                fullWidth
+                margin="dense"
+                InputLabelProps={{ shrink: true }}
+              />
+              <TextField
+                label="End Date"
+                value={employeeData.end_date}
+                onChange={(e) =>
+                  setEmployeeData({ ...employeeData, end_date: e.target.value })
+                }
+                fullWidth
+                margin="dense"
+                InputLabelProps={{ shrink: true }}
+              />
+            </>
+          )}
+        </DialogContent>
       </Dialog>
-
-  </Layout>
+    </Layout>
   );
 };
-
 
 export default UserManagement;
