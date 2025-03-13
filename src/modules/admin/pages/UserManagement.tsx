@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { toast } from "react-hot-toast";
+import { format } from "date-fns";
 import {
   searchUsers,
   createUser,
@@ -29,10 +30,19 @@ import {
   Paper,
   Typography,
   MenuItem,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
-import { User , Employee} from "../types/user";
+
+import Select, { SelectChangeEvent } from "@mui/material/Select";
+import AccessibilityIcon from '@mui/icons-material/Accessibility';
+import { User, Employee } from "../types/user";
 import { Pagination } from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { IconButton } from "@mui/material";
 import { Pencil, CircleX, Plus, Search, Lock, Unlock, Eye } from "lucide-react";
+import { debounce } from "lodash";
+
 
 const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -44,7 +54,7 @@ const UserManagement = () => {
   const [pageSize] = useState(5); //  Items per page
   const [totalPages, setTotalPages] = useState(1); // Total pages from API
   const [viewUser, setViewUser] = useState<User | null>(null); //View detail
-  const [userId, setUserId] = useState(""); 
+  const [userId, setUserId] = useState("");
   const [employeeData, setEmployeeData] = useState<Employee>({
     _id: "",
     user_id: "",
@@ -56,11 +66,11 @@ const UserManagement = () => {
     avatar_url: "",
     department_code: "",
     salary: 0,
-    start_date: "",
-    end_date: "",
+    end_date: new Date(), 
     updated_by: "",
-    created_at: "",
-    updated_at: "",
+    start_date: new Date(), 
+    created_at: new Date(), 
+    updated_at: new Date(),
     is_deleted: false,
   });
 
@@ -76,12 +86,31 @@ const UserManagement = () => {
     user_name: string;
     role_code: string;
     password?: string;
+    confirmPassword?: "",
   }>({
     email: "",
     user_name: "",
     role_code: "A001",
     password: "",
+    confirmPassword: "",
   });
+
+  const [errors, setErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const validateForm = () => {
+  let newErrors = {};
+
+  if (!form.email.trim()) newErrors.email = "Email is required";
+  if (!form.user_name.trim()) newErrors.user_name = "Username is required";
+  if (!editingUser && !form.password.trim()) newErrors.password = "Password is required";
+  if (!editingUser && form.password !== form.confirmPassword)
+    newErrors.confirmPassword = "Passwords do not match";
+
+  setErrors(newErrors);
+  return Object.keys(newErrors).length === 0; // Returns true if no errors
+};
   const [searchTerm, setSearchTerm] = useState("");
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
@@ -92,10 +121,6 @@ const UserManagement = () => {
     user: null,
     action: null,
   });
-  useEffect(() => {
-    fetchUsers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageNum, searchTerm]);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -120,6 +145,13 @@ const UserManagement = () => {
       setLoading(false);
     }
   };
+  const debouncedFetchUsers = useCallback(debounce(fetchUsers, 800), [searchTerm, pageNum]);
+  useEffect(() => {
+    debouncedFetchUsers();
+    return () => debouncedFetchUsers.cancel();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedFetchUsers]); // [pageNum, searchTerm]);
+
   const filteredUsers = users.filter(
     (user) =>
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -129,6 +161,7 @@ const UserManagement = () => {
 
   const handleSave = async () => {
     try {
+      if (!validateForm()) return;
       if (editingUser) {
         // Check if role changed
         if (editingUser.role_code !== form.role_code) {
@@ -146,7 +179,7 @@ const UserManagement = () => {
           email: form.email,
           user_name: form.user_name,
           role_code: form.role_code,
-          password: form.password, // Password required for new users
+          password: form.password, // Password required for new user
         });
       }
 
@@ -184,20 +217,28 @@ const UserManagement = () => {
   };
 
   const handleOpenEmployeeDetails = async (id: string) => {
+    console.log("Fetching details for User ID:", id);
+
+  if (!id) {
+    toast.error("Invalid User ID");
+    console.error("Invalid User ID: ID is missing");
+    return; 
+  }
+
     try {
       const response = await getEmployeeById(id);
-  
+
       console.log("API Raw Response:", response);
-      
+
       // Ensure response.data is correctly accessed
       const employee = response.data?.data ?? response.data ?? response;
-  
+
       console.log("Fixed Response Data:", employee);
-  
+
       if (!employee || Object.keys(employee).length === 0) {
         throw new Error("No employee data found");
       }
-  
+
       // Ensure all fields exist in state
       setEmployeeData({
         _id: employee._id ?? "",
@@ -207,38 +248,72 @@ const UserManagement = () => {
         address: employee.address ?? "",
         avatar_url: employee.avatar_url ?? "",
         department_code: employee.department_code ?? "",
-        end_date: employee.end_date ?? "",
+        created_at: employee.created_at ? new Date(employee.created_at) : new Date(),
+        end_date: employee.end_date ? new Date(employee.end_date) : new Date(),
         full_name: employee.full_name ?? "",
         is_deleted: employee.is_deleted ?? false,
         phone: employee.phone ?? "",
         salary: employee.salary ?? 0,
-        start_date: employee.start_date ?? "",
+        start_date: employee.start_date ? new Date(employee.start_date) : new Date(),
+        updated_at: employee.updated_at ? new Date(employee.updated_at) : new Date(),
+        updated_by: employee.updated_by ?? "",
       });
-  
       setPopupOpen2(true);
     } catch (error) {
       console.error("Error fetching employee details:", error);
       toast.error(error.message || "Error fetching employee details");
     }
   };
+
+  const handleSaveEmployeeDetails = async () => {
+    try {
+      if (!employeeData.created_at) {
+        console.error("Error: created_at is missing!");
+        return;
+      }
+
+      const updatedEmployeeData = {
+        ...employeeData,
+        created_at: new Date(employeeData.created_at), // Ensure it's a Date
+        updated_at: new Date(),
+      };
+
+      console.log(
+        "Sending to API:",
+        JSON.stringify(updatedEmployeeData, null, 2)
+      );
+
+      await updateEmployee(userId, updatedEmployeeData);
+      setPopupOpen2(false);
+    } catch (error) {
+      console.error("Error updating employee details:", error);
+      toast.error("Error updating employee details");
+    }
+  };
+
+  const handleRoleChange = async (userId: string, newRoleCode: string) => {
+    if (!userId) return;
+
+    const userToUpdate = users.find((u) => u._id === userId);
+    if (!userToUpdate || userToUpdate.role_code === newRoleCode) return;
+
+    try {
+      await changeUserRole(userId, newRoleCode);
+
+      // Cập nhật state để UI phản ánh ngay lập tức
+      setUsers((prevUsers) =>
+        prevUsers.map((user) =>
+          user._id === userId ? { ...user, role_code: newRoleCode } : user
+        )
+      );
+    } catch (error) {
+      console.error("Lỗi khi cập nhật vai trò:", error);
+    }
+  };
   
- const handleSaveEmployeeDetails = async () => {
-  try {
-
-    const updatedEmployeeData = {
-      ...employeeData,
-    };
-
-    console.log("Sending to API:", JSON.stringify(updatedEmployeeData, null, 2));
-
-    await updateEmployee(userId, updatedEmployeeData);
-    setPopupOpen2(false);
-  } catch (error) {
-    console.error("Error updating employee details:", error);
-    toast.error("Error updating employee details");
-  }
-};
-
+  
+  
+  
   return (
     <Layout>
       <h1
@@ -295,6 +370,8 @@ const UserManagement = () => {
                 margin="dense"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
+                error={!!errors.email}
+                helperText={errors.email}
                 sx={{
                   backgroundColor: "#E3F2FD",
                   borderRadius: "6px",
@@ -310,29 +387,15 @@ const UserManagement = () => {
                 onChange={(e) =>
                   setForm({ ...form, user_name: e.target.value })
                 }
+                error={!!errors.user_name}
+                helperText={errors.user_name}
                 sx={{
                   backgroundColor: "#E3F2FD",
                   borderRadius: "6px",
                   color: "gray",
                 }}
               />
-              {/* Role Dropdown */}
-              Role
-              <TextField
-                select
-                fullWidth
-                margin="dense"
-                value={form.role_code}
-                onChange={(e) =>
-                  setForm({ ...form, role_code: e.target.value })
-                }
-                sx={{ backgroundColor: "#E3F2FD", borderRadius: "6px" }}
-              >
-                <MenuItem value="A001">Admin</MenuItem>
-                <MenuItem value="A002"> Finance</MenuItem>
-                <MenuItem value="A003">Approval</MenuItem>
-                <MenuItem value="A004">Member</MenuItem>
-              </TextField>
+    
               {/* Password Field (ONLY for Adding New User) */}
               <span style={{ visibility: editingUser ? "hidden" : "visible" }}>
                 Password
@@ -346,9 +409,42 @@ const UserManagement = () => {
                   onChange={(e) =>
                     setForm({ ...form, password: e.target.value })
                   }
+                  error={!!errors.password}
+                  helperText={errors.password}
                   sx={{ backgroundColor: "#E3F2FD", borderRadius: "6px" }}
+                  InputProps={{
+                    endAdornment: (
+                      <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    ),
+                  }}
                 />
               )}
+               {/* Confirm Password Field */}
+               <span style={{ visibility: editingUser ? "hidden" : "visible" }}>
+                  Confirm Password
+                  </span>
+                  {!editingUser && (
+                  <TextField
+                    fullWidth
+                    margin="dense"
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={form.confirmPassword}
+                    onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+                    error={!!errors.confirmPassword}
+                    helperText={errors.confirmPassword}
+                    sx={{ backgroundColor: "#E3F2FD", borderRadius: "6px" }}
+                    InputProps={{
+                      endAdornment: (
+                        <IconButton onClick={() => setShowConfirmPassword(!showConfirmPassword)} edge="end">
+                          {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      ),
+                    }}
+                  />
+                )}
+
             </DialogContent>
 
             <DialogActions>
@@ -366,11 +462,18 @@ const UserManagement = () => {
             onClose={() => setViewUser(null)}
             sx={{}}
           >
-            <DialogTitle>User Details</DialogTitle>
+            <DialogTitle
+              sx={{
+                font: "bold",
+                fontSize: "50px",
+              }}
+            >
+              User Details
+            </DialogTitle>
             <DialogContent>
               {viewUser && (
                 <div>
-                   <Typography>
+                  <Typography>
                     <strong>UserID:</strong> {viewUser._id}
                   </Typography>
                   <Typography>
@@ -380,22 +483,13 @@ const UserManagement = () => {
                     <strong>Email:</strong> {viewUser.email}
                   </Typography>
                   <Typography>
-                    <strong>Role:</strong> {viewUser.role_code}
+                  <strong>Role:</strong> {roleMap[viewUser.role_code]}
                   </Typography>
                   <Typography>
-                    <strong>Created at:</strong> {viewUser.created_at}
+                    <strong>Created at:</strong> {viewUser.created_at ? format(viewUser.created_at, "yyyy-MM-dd HH:mm:ss") : "N/A"}
                   </Typography>
                   <Typography>
-                    <strong>Updated at:</strong> {viewUser.updated_at}
-                  </Typography>
-                  <Typography>
-                    <strong>Is Blocked:</strong> {String(viewUser.is_blocked)}
-                  </Typography>
-                  <Typography>
-                    <strong>Is Verified:</strong> {String(viewUser.is_verified)}
-                  </Typography>
-                  <Typography>
-                    <strong>Token:</strong> {String(viewUser.token_version)}
+                    <strong>Updated at:</strong> {viewUser.updated_at ? format(viewUser.updated_at, "yyyy-MM-dd HH:mm:ss") : "N/A"}
                   </Typography>
                 </div>
               )}
@@ -417,6 +511,7 @@ const UserManagement = () => {
                 user_name: "",
                 role_code: "A001",
                 password: "",
+                confirmPassword:"",
               }); // Reset form
               setPopupOpen(true); // Open popup
             }}
@@ -439,28 +534,6 @@ const UserManagement = () => {
             <Plus />
             Create Account
           </Button>
-
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => setPopupOpen2(true)}
-            sx={{
-              backgroundColor: "blue",
-              color: "white",
-              fontWeight: "bold",
-              textTransform: "none",
-              borderRadius: "30px",
-              padding: "10px 20px",
-              fontSize: "16px",
-              "&:hover": { backgroundColor: "Navy" },
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
-            <Plus />
-            Employees Details
-          </Button>
         </div>
 
         <TableContainer
@@ -473,6 +546,7 @@ const UserManagement = () => {
               <TableRow>
                 <TableCell
                   sx={{
+                    width: "20%",
                     fontWeight: "bold",
                     fontSize: "17px",
                     borderRight: "2px solid #ffff",
@@ -484,6 +558,7 @@ const UserManagement = () => {
                 </TableCell>
                 <TableCell
                   sx={{
+                    width: "25%",
                     fontWeight: "bold",
                     fontSize: "17px",
                     borderRight: "2px solid #ffff",
@@ -495,6 +570,7 @@ const UserManagement = () => {
                 </TableCell>
                 <TableCell
                   sx={{
+                    width: "10%",
                     fontWeight: "bold",
                     fontSize: "17px",
                     borderRight: "2px solid #ffff",
@@ -506,6 +582,7 @@ const UserManagement = () => {
                 </TableCell>
                 <TableCell
                   sx={{
+                    width: "12%",
                     fontWeight: "bold",
                     fontSize: "17px",
                     borderRight: "2px solid #ffff",
@@ -517,6 +594,7 @@ const UserManagement = () => {
                 </TableCell>
                 <TableCell
                   sx={{
+                    width: "18%",
                     fontWeight: "bold",
                     fontSize: "17px",
                     textAlign: "center",
@@ -533,26 +611,13 @@ const UserManagement = () => {
                   key={user._id}
                   sx={{ borderBottom: "6px solid #90E0EF" }}
                 >
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {user.user_name}
-                  </TableCell>
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {user.email}
-                  </TableCell>
+                  <TableCell sx={{}}>{user.user_name}</TableCell>
+                  <TableCell sx={{ textAlign: "left" }}>{user.email}</TableCell>
                   <TableCell
                     sx={{
                       textAlign: "center",
-                      borderRadius: "6px",
-                      padding: "4px 4px ",
-                      margin: "15px",
-                      backgroundColor:
-                        user.role_code === "A001"
-                          ? "#FFEBEE" // Đỏ nhạt
-                          : user.role_code === "A002"
-                          ? "#FFF9C4" // Vàng nhạt
-                          : user.role_code === "A003"
-                          ? "#E8F5E9" // Xanh lá nhạt
-                          : "#F5F5F5", // Trắng
+                      borderRadius: "15px",
+
                       color:
                         user.role_code === "A001"
                           ? "#D32F2F" // Đỏ đậm
@@ -561,12 +626,33 @@ const UserManagement = () => {
                           : user.role_code === "A003"
                           ? "#388E3C" // Xanh lá đậm
                           : "#424242", // Xám đậm
-                      fontWeight: "bold",
-                      display: "inline-block",
-                      minWidth: "100px",
                     }}
                   >
-                    {roleMap[user.role_code] || "Unknown"}
+                    <Select
+                      value={user.role_code}
+                      onChange={(event) =>
+                        handleRoleChange(user._id, event.target.value)
+                      }
+                      sx={{
+                        fontWeight: "bold",
+                        color: "inherit",
+                        backgroundColor: "transparent",
+                        "& .MuiSelect-icon": { color: "inherit" },
+                      }}
+                    >
+                      <MenuItem value="A001" sx={{ color: "#D32F2F" }}>
+                        Admin
+                      </MenuItem>
+                      <MenuItem value="A002" sx={{ color: "#FBC02D" }}>
+                        Finance
+                      </MenuItem>
+                      <MenuItem value="A003" sx={{ color: "#388E3C" }}>
+                        Approval
+                      </MenuItem>
+                      <MenuItem value="A004" sx={{ color: "black" }}>
+                        Member
+                      </MenuItem>
+                    </Select>
                   </TableCell>
 
                   <TableCell sx={{ textAlign: "center" }}>
@@ -628,6 +714,15 @@ const UserManagement = () => {
                     >
                       <CircleX size={18} />
                     </Button>
+
+                    <Button
+                    onClick={() => {
+                      console.log("Selected User ID:", user._id); // ✅ Check if user.id exists
+                      handleOpenEmployeeDetails(user._id);
+                    }}
+                  >
+                   <AccessibilityIcon />
+                  </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -663,6 +758,7 @@ const UserManagement = () => {
           <Button
             onClick={() =>
               setConfirmDialog({ open: false, user: null, action: null })
+              
             }
             color="error"
           >
@@ -674,27 +770,9 @@ const UserManagement = () => {
         </DialogActions>
       </Dialog>
 
-
-      {popupOpen2 && (
-  <Dialog open={popupOpen2} onClose={() => setPopupOpen2(false)}>
+    <Dialog open={popupOpen2} onClose={() => setPopupOpen2(false)}>
     <DialogTitle>Employee Details</DialogTitle>
     <DialogContent>
-      <TextField
-        label="User ID"
-        value={userId}
-        onChange={(e) => setUserId(e.target.value)}
-        fullWidth
-        margin="dense"
-      />
-      <Button 
-        onClick={() => handleOpenEmployeeDetails(userId)} 
-        variant="contained"
-        color="primary"
-        sx={{ marginTop: "10px" }}
-      >
-        Fetch Employee
-      </Button>
-
       {/* Employee Fields */}
       {employeeData && (
         <>
@@ -726,20 +804,49 @@ const UserManagement = () => {
             fullWidth
             margin="dense"
           />
-          <TextField
-            label="Job Rank"
-            value={employeeData.job_rank}
+          
+          <FormControl fullWidth margin="dense">
+          <InputLabel id="job-rank-label">Job Rank</InputLabel>
+          <Select
+            labelId="job-rank-label"
+            value={employeeData.job_rank || ""}
             onChange={(e) => setEmployeeData({ ...employeeData, job_rank: e.target.value })}
-            fullWidth
-            margin="dense"
-          />
-          <TextField
-            label="Department Code"
-            value={employeeData.department_code}
+            displayEmpty
+          >
+            <MenuItem value="" disabled>
+            </MenuItem>
+            {[
+              "TC3", "TC2", "TC1",
+              "TEST3", "TEST2", "TEST1",
+              "DEV3", "DEV2", "DEV1",
+              "QA3", "QA2", "QA1",
+              "BA3", "BA2", "BA1",
+              "TL3", "TL2", "TL1",
+              "PM3", "PM2", "PM1",
+              "BUL", "FI3", "FI2", "FI1",
+              "Admin"
+            ].map((job_rank) => (
+              <MenuItem key={job_rank} value={job_rank}>
+                {job_rank}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        <FormControl fullWidth margin="dense">
+          <InputLabel>Department Code</InputLabel>
+          <Select
+            value={employeeData.department_code || ""}
             onChange={(e) => setEmployeeData({ ...employeeData, department_code: e.target.value })}
-            fullWidth
-            margin="dense"
-          />
+            displayEmpty
+          >
+            <MenuItem value="" disabled></MenuItem>
+            {["DE01", "DE02", "DE03", "DE04"].map((dept) => (
+              <MenuItem key={dept} value={dept}>
+                {dept}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
           <TextField
             label="Avatar URL"
             value={employeeData.avatar_url}
@@ -763,39 +870,45 @@ const UserManagement = () => {
             fullWidth
             margin="dense"
           />
-          <TextField
+         <TextField
             label="Start Date"
-            value={employeeData.start_date}
-            onChange={(e) => setEmployeeData({ ...employeeData, start_date: e.target.value })}
+            type="date"
+            value={employeeData.start_date ? format(employeeData.start_date, "yyyy-MM-dd") : ""}
+            onChange={(e) =>
+              setEmployeeData({ ...employeeData, start_date: new Date(e.target.value) })
+            }
             fullWidth
             margin="dense"
             InputLabelProps={{ shrink: true }}
           />
+
           <TextField
             label="End Date"
-            value={employeeData.end_date}
-            onChange={(e) => setEmployeeData({ ...employeeData, end_date: e.target.value })}
+            type="date"
+            value={employeeData.end_date ? format(employeeData.end_date, "yyyy-MM-dd") : ""}
+            onChange={(e) =>
+              setEmployeeData({ ...employeeData, end_date: new Date(e.target.value) })
+            }
             fullWidth
             margin="dense"
             InputLabelProps={{ shrink: true }}
           />
-          
-          
         </>
       )}
-    </DialogContent>
-    <DialogActions>
+      </DialogContent>
+      <DialogActions>
       <Button onClick={() => setPopupOpen2(false)} color="secondary">
         Cancel
       </Button>
-      <Button onClick={handleSaveEmployeeDetails} color="primary">
+      <Button onClick={handleSaveEmployeeDetails} color="primary" variant="contained">
         Save
       </Button>
     </DialogActions>
-  </Dialog>
-)}
-    </Layout>
+      </Dialog>
+
+  </Layout>
   );
 };
+
 
 export default UserManagement;

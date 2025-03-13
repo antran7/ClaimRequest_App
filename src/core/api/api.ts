@@ -3,7 +3,7 @@ import axios, {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from "axios";
-import { ResponseModel } from "../../../shared/models/responseModel";
+import { ResponseModel } from "../../shared/constants/responseModel";
 
 const api = axios.create({
   baseURL: "https://management-claim-request.vercel.app/api",

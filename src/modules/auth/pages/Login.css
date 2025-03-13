@@ -144,3 +144,41 @@
     box-shadow: 40px 0 100px #4e46e570, -40px 0 100px #00ffdd8f;
     color: #eee;
 }
+
+.login-verify-link {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #000;
+    border-radius: 1000px;
+    font-family: 'Segoe UI', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+    border: none;
+    background: none;
+}
+
+.login-verify-link::before,
+.login-verify-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0; 
+    width: 0;
+    height: 2px;
+    background: #f44336;
+    transition: width 0.5s ease; 
+}
+
+.login-verify-link::before {
+    left: 0; 
+}
+
+.login-verify-link:hover::before
+ {
+    width: 100%;
+}
