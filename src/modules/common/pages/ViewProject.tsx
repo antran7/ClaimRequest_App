@@ -158,17 +158,17 @@ const ViewProject: React.FC = () => {
                 setTotalItems(response.pageInfo.totalItems);
                 setResults(response.pageData);
             }
-            results.map((project) => {
-                project.project_members.map(async (member) => {
-                    const employeeInfo = await getEmployeeInfo(member.user_id);
-                    if (employeeInfo && employeeInfo.avatar_url) {
-                        member.avatar_url = employeeInfo.avatar_url;
-                    } else {
-                        member.avatar_url = "";
-                    }
-                })
-            })
-            // setAvatars((prevAvatars) => [...prevAvatars, employeeInfo.avatar_url]);
+            // results.map((project) => {
+            //     project.project_members.map(async (member) => {
+            //         const employeeInfo = await getEmployeeInfo(member.user_id);
+            //         if (employeeInfo && employeeInfo.avatar_url) {
+            //             member.avatar_url = employeeInfo.avatar_url;
+            //         } else {
+            //             member.avatar_url = "";
+            //         }
+            //         console.log(member.avatar_url);
+            //     })
+            // })
         } catch (error) {
             console.error("Error: ", error);
             throw error;
@@ -179,8 +179,15 @@ const ViewProject: React.FC = () => {
 
     useEffect(() => {
         handleSubmitSearch();
-        console.log(getValues());
     }, [currPage])
+
+    useEffect(() => {
+        results.map((project) => {
+            project.project_members.map((member) => {
+                console.log(member.avatar_url);
+            })
+        })
+    })
 
     return (
         <Layout>
@@ -376,7 +383,6 @@ const ViewProject: React.FC = () => {
                                         <TableCell>{formatDateToUTC7(project.project_start_date)}</TableCell>
                                         <TableCell>{formatDateToUTC7(project.project_end_date)}</TableCell>
                                         <TableCell>
-                                            
                                             <Typography
                                                 variant="body2"
                                                 sx={{
@@ -387,14 +393,15 @@ const ViewProject: React.FC = () => {
                                                 {project.project_status}
                                             </Typography>
                                         </TableCell>
-                                        <TableCell sx={{ display: "flex", justifyContent: "center" }}>
-                                            <AvatarGroup
+                                        <TableCell sx={{ textAlign: "center" }}>
+                                            {/* <AvatarGroup
                                                 total={project.project_members.length}
                                             >
                                                 {project.project_members.map((member) => (
-                                                    <Avatar alt={member.avatar_url}></Avatar>
+                                                    <Avatar src={member.avatar_url} />
                                                 ))}
-                                            </AvatarGroup>
+                                            </AvatarGroup> */}
+                                            Members
                                         </TableCell>
                                         <TableCell>{formatDateToUTC7(project.updated_at)}</TableCell>
                                         <TableCell><MoreHorizIcon /></TableCell>
