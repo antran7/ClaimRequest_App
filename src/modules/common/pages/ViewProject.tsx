@@ -387,7 +387,7 @@ const ViewProject: React.FC = () => {
                                                 {project.project_status}
                                             </Typography>
                                         </TableCell>
-                                        <TableCell sx={{ textAlign: "center" }}>
+                                        <TableCell sx={{ display: "flex", justifyContent: "center" }}>
                                             <AvatarGroup
                                                 total={project.project_members.length}
                                             >
