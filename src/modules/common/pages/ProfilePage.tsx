@@ -92,13 +92,13 @@ const ProfilePage: React.FC = () => {
     }
     try {
       const response = await searchProjectWithData(projectData, pageNum);
-      if (response?.pageData?.length > 0) {
-        setMyProjects([...myProjects, ...response.pageData]);
+      setMyProjects([...myProjects, ...response.pageData]);
+      if (response.pageData?.totalPages > pageNum) {
+        console.log("Co ne troi");
         setPageNum(prevPageNum => prevPageNum + 1);
       } else {
         setHasMore(false);
       }
-      console.log(myProjects, ' ', pageNum);
     } catch (error) {
       toast(error.toString(), {
         icon: "❌",
@@ -112,7 +112,7 @@ const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     fetchProject();
-  }, [pageNum])
+  }, [])
 
   return (
     <Layout>
