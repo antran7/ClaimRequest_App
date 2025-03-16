@@ -140,15 +140,15 @@ const ApprovalPage: React.FC = () => {
       );
 
       if (response.data.success) {
-        const processedClaims = response.data.data.pageData
-          .filter((claim: Claim) => claim.claim_status !== "Draft")
-          .map((claim: Claim) => ({
+        const processedClaims = response.data.data.pageData.map(
+          (claim: Claim) => ({
             ...claim,
             claim_status: getDisplayStatus(claim.claim_status),
-          }));
+          })
+        );
 
         setFilteredClaims(processedClaims);
-        setTotalCount(processedClaims.length);
+        setTotalCount(response.data.data.pageInfo.totalItems);
       }
     } catch (error) {
       console.error("Error fetching claims:", error);
