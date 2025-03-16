@@ -2,14 +2,16 @@ import React, { useCallback, useEffect } from 'react'
 import './ViewProjects.css'
 import Layout from '../../../shared/layouts/Layout'
 import Search from '../../../shared/components/searchComponent/Search'
-import { Avatar, AvatarGroup, Button, debounce, Grid, InputLabel, Pagination, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableSortLabel, TextField, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material'
+import { Autocomplete, Avatar, AvatarGroup, Button, Grid, InputLabel, Pagination, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableSortLabel, TextField, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material'
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { useForm } from 'react-hook-form'
 import { searchProjectWithData } from '../../admin/services/projectService'
 import { getEmployeeInfo } from '../../employee/services/employeeApi'
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
+import { debounce } from "lodash";
 import Footer from '../../../shared/components/Footer'
+import { searchUsers } from '../../admin/services/userService'
 
 
 interface SearchFormInputs {
@@ -45,17 +47,35 @@ interface ProjectData {
     ]
 }
 
+interface UserData {
+    _id: string,
+    email: string,
+    user_name: string,
+    role_code: string,
+    is_verified: boolean,
+    is_blocked: boolean,
+    is_deleted: boolean,
+    created_at: string,
+    updated_at: string,
+    _v: number,
+    token_version: number
+}
+
 type Order = "asc" | "desc";
 
 const ViewProject: React.FC = () => {
     const [alignment, setAlignment] = React.useState('basic');
     const [loading, setLoading] = React.useState(true);
     const [results, setResults] = React.useState<ProjectData[]>([]);
-    const [currPage, setCurrPage] = React.useState(1);
+    const [curPage, setCurPage] = React.useState(1);
     const [totalPages, setTotalPages] = React.useState(1);
     const [totalItems, setTotalItems] = React.useState(0);
     const [order, setOrder] = React.useState<Order>("asc");
     const [orderBy, setOrderBy] = React.useState<{ key: keyof ProjectData, order: "asc" | "dsc" }[]>([]);
+    // dành cho tìm user
+    const [inputValue, setInputValue] = React.useState("");
+    const [selectedUser, setSelectedUser] = React.useState<UserData>(null);
+    const [filteredUsers, setFilteredUsers] = React.useState<UserData[]>([]);
 
     const {
         register,
@@ -124,6 +144,14 @@ const ViewProject: React.FC = () => {
         return 0;
     });
 
+    const debounceSearchProject = useCallback(debounce(() => handleSubmitSearch(), 1000), []);
+    const debounceSearchUser = useCallback(debounce((text) => handleSearchUsers(text), 1000), []);
+
+    const handleSearch = async (searchTerm: string) => {
+        setValue("searchTerm", searchTerm);
+        debounceSearchProject();
+    }
+
     const handleClearFilters = () => {
         reset({
             searchTerm: "",
@@ -131,13 +159,45 @@ const ViewProject: React.FC = () => {
             endDate: "",
             user_id: "",
         });
+        setSelectedUser(null);
+        setFilteredUsers([]);
+        handleSubmitSearch();
     }
 
-    const debounceSearch = useCallback(debounce(() => handleSubmitSearch(), 1000), []);
-
-    const handleSearch = async (searchTerm: string) => {
-        setValue("searchTerm", searchTerm);
-        debounceSearch();
+    const handleSearchUsers = async (searchText: string) => {
+        if (searchText === "") return;
+        let currentPage = 1;
+        let moreData = true;
+        setFilteredUsers([]);
+        while (moreData) {
+            const searchData = {
+                keyword: searchText,
+                role_code: "",
+                is_blocked: false,
+                is_deleted: false,
+                is_verified: "",
+            }
+            const pageData = {
+                pageNum: currentPage,
+                pageSize: 10,
+            }
+            try {
+                const response = await searchUsers(searchData, pageData);
+                response.pageData.map(user => {
+                    if (user.user_name.includes(searchText)) {
+                        setFilteredUsers(prevUsers => [...prevUsers, user]);
+                    }
+                });
+                if (response.pageInfo.totalItems > currentPage * 8) {
+                    currentPage++;
+                } else {
+                    moreData = false;
+                }
+            } catch (error) {
+                console.error("Error: ", error);
+                moreData = false;
+            }
+        }
     }
 
     const handleSubmitSearch = async () => {
@@ -152,7 +212,7 @@ const ViewProject: React.FC = () => {
         };
         console.log(formattedData);
         try {
-            const response = await searchProjectWithData(formattedData, currPage);
+            const response = await searchProjectWithData(formattedData, curPage);
             if (response) {
                 setTotalPages(response.pageInfo.totalPages);
                 setTotalItems(response.pageInfo.totalItems);
@@ -171,7 +231,6 @@ const ViewProject: React.FC = () => {
             // })
         } catch (error) {
             console.error("Error: ", error);
-            throw error;
         } finally {
             setLoading(false);
         }
@@ -179,15 +238,7 @@ const ViewProject: React.FC = () => {
 
     useEffect(() => {
         handleSubmitSearch();
-    }, [currPage])
-
-    useEffect(() => {
-        results.map((project) => {
-            project.project_members.map((member) => {
-                console.log(member.avatar_url);
-            })
-        })
-    })
+    }, [curPage]);
 
     return (
         <Layout>
@@ -212,15 +263,31 @@ const ViewProject: React.FC = () => {
                             <InputLabel>Username:</InputLabel>
                         </Grid>
                         <Grid item xs={2.25}>
-                            <TextField
-                                fullWidth
-                                id="outlined-basic"
-                                variant="outlined"
-                            // {...register("department")}
-                            // onChange={(e) => {
-                            //     setValue("department", e.target.value);
-                            //     handleSubmitSearch();
-                            // }}
+                            <Autocomplete
+                                options={filteredUsers}
+                                getOptionLabel={(option) => option.user_name}
+                                value={selectedUser}
+                                onChange={(event, newValue) => {
+                                    setSelectedUser(newValue);
+                                    setValue("user_id", newValue ? newValue._id : "");
+                                    trigger("user_id");
+                                    handleSubmitSearch();
+                                }}
+                                inputValue={inputValue}
+                                onInputChange={(event, newInputValue) => {
+                                    setInputValue(newInputValue);
+                                    debounceSearchUser(newInputValue);
+                                }}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        fullWidth
+                                        id="outlined-basic"
+                                        variant="outlined"
+                                        error={!!errors.user_id}
+                                        helperText={errors.user_id?.message}
+                                    />
+                                )}
                             />
                         </Grid>
 
@@ -288,7 +355,7 @@ const ViewProject: React.FC = () => {
                     </Grid>
                 )}
                 <div className='filter-results-display'>
-                    <h3>{`${currPage * 10 - 9}-${currPage * 10} of ${totalItems} results`}</h3>
+                    <h3>{`${Math.min(curPage * 10 - 9, totalItems)}-${Math.min(curPage * 10, totalItems)} of ${totalItems} results`}</h3>
                 </div>
                 <TableContainer className='results-table-display' sx={{ width: "90%", margin: "auto" }} component={Paper}>
                     <Table>
@@ -377,7 +444,7 @@ const ViewProject: React.FC = () => {
                                         className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"
                                             } hover:bg-gray-200 transition-colors`}
                                     >
-                                        <TableCell>{(currPage - 1) * 10 + index + 1}</TableCell>
+                                        <TableCell>{(curPage - 1) * 10 + index + 1}</TableCell>
                                         <TableCell>{project.project_name}</TableCell>
                                         <TableCell>{project.project_code}</TableCell>
                                         <TableCell>{formatDateToUTC7(project.project_start_date)}</TableCell>
@@ -393,7 +460,7 @@ const ViewProject: React.FC = () => {
                                                 {project.project_status}
                                             </Typography>
                                         </TableCell>
-                                        <TableCell sx={{ textAlign: "center" }}>
+                                        <TableCell sx={{ display: "flex", justifyContent: "center" }}>
                                             {/* <AvatarGroup
                                                 total={project.project_members.length}
                                             >
@@ -414,9 +481,9 @@ const ViewProject: React.FC = () => {
                 <div className='pagination-results'>
                     <Pagination
                         count={totalPages}
-                        page={currPage}
+                        page={curPage}
                         variant="outlined"
-                        onChange={(_, value) => setCurrPage(value)}
+                        onChange={(_, value) => setCurPage(value)}
                     />
                 </div>
             </div>

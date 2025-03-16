@@ -241,7 +241,7 @@
       flex-direction: column;
       row-gap: 20px;
       width: 100%;
-      padding: 0 50px;
+      padding: 0 40px 0 50px;
       height: 230px;
       overflow: auto;
 
@@ -261,7 +261,7 @@
         background: linear-gradient(to bottom, #00FFCC, #07FC13);
         border-radius: 30px;
         color: #fff;
-        padding: 8px 20px;
+        padding: 7px 15px;
         position: relative;
         overflow: hidden;
         cursor: pointer;
