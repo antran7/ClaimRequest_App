@@ -37,6 +37,7 @@ import BackButton from "../components/BackButton";
 import Search from "../../../shared/components/searchComponent/Search";
 import { searchUsers } from "../services/userService";
 import DepartmentSelect from "../components/DepartmentSelect";
+import useDebounce from "../../../shared/hooks/useDebounce";
 //Import service, interface, and types
 import {
   searchProject,
@@ -59,6 +60,8 @@ const ProjectManagementPage: React.FC = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 500); // 500ms delay
   const itemPerPage = 10;
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
@@ -69,7 +72,7 @@ const ProjectManagementPage: React.FC = () => {
     const fetchProjects = async () => {
       setLoading(true);
       try {
-        const response = await searchProject("", page);
+        const response = await searchProject(debouncedSearchTerm, page);
         if (response.success && response.data) {
           setProjects(response.data.pageData);
           setTotalPages(response.data.pageInfo.totalPages);
@@ -84,7 +87,7 @@ const ProjectManagementPage: React.FC = () => {
     };
 
     fetchProjects();
-  }, [page]);
+  }, [page, debouncedSearchTerm]);
 
   const fetchUsers = async () => {
     try {
@@ -231,20 +234,9 @@ const ProjectManagementPage: React.FC = () => {
     }
   };
 
-  const handleSearch = async (searchTerm: string) => {
-    setLoading(true);
-    try {
-      const response = await searchProject(searchTerm, 1);
-      if (response.success && response.data) {
-        setProjects(response.data.pageData);
-        setTotalPages(response.data.pageInfo.totalPages);
-        setPage(1);
-      }
-    } catch (error) {
-      toast.error("Failed to search projects");
-    } finally {
-      setLoading(false);
-    }
+  const handleSearch = (searchTerm: string) => {
+    setSearchTerm(searchTerm);
+    setPage(1); // Reset to first page when searching
   };
 
   const formatDate = (dateString: string) => {
@@ -258,7 +250,7 @@ const ProjectManagementPage: React.FC = () => {
         <div className="p-8">
           <BackButton to="/admin/dashboard" />
           <div className="flex justify-between items-center mb-6 ">
-            <Typography variant="h5 text-4xl">Project Management</Typography>
+            <Typography variant="h5" className="text-4xl">Project Management</Typography>
             <Search onSearch={handleSearch} />
             <button
               title="Add New"
@@ -390,6 +382,9 @@ const ProjectManagementPage: React.FC = () => {
                       </TableCell>
                       <TableCell sx={{ textAlign: "center" }}>
                         <Button
+                          sx={{
+                            color: "gray" 
+                          }}
                           startIcon={<Eye />}
                           onClick={() => handleViewProject(project._id)}
                         ></Button>
@@ -426,8 +421,8 @@ const ProjectManagementPage: React.FC = () => {
           maxWidth="md"
           classes={{ paper: "rounded-lg" }}
         >
-          <DialogTitle className="bg-gray-100 border-b border-gray-200 py-4">
-            <h2 className="text-xl font-semibold text-gray-800">Add Project</h2>
+          <DialogTitle className="bg-gray-500 border-b border-gray-200 py-4">
+            <h2 className="text-xl font-semibold text-gray-50">Add Project</h2>
           </DialogTitle>
           <DialogContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
@@ -581,8 +576,11 @@ const ProjectManagementPage: React.FC = () => {
                   Project Members
                 </Typography>
                 <Button
-                  variant="outlined"
-                  color="primary"
+                  sx={{
+                    color: "white",
+                    backgroundColor: "gray",
+                    "&:hover": { backgroundColor: "darkgray" },
+                  }}
                   onClick={handleAddMember}
                   className="rounded-md"
                   size="small"
@@ -680,6 +678,9 @@ const ProjectManagementPage: React.FC = () => {
           <DialogActions className="bg-gray-100 border-t border-gray-200 p-4 flex justify-end gap-2">
             <Button
               onClick={handleCloseDialog}
+              sx={{
+                color: "gray",
+              }}
               className="bg-white text-gray-700 hover:bg-gray-200 px-4 py-2 rounded-md border border-gray-300"
             >
               Cancel
@@ -687,7 +688,12 @@ const ProjectManagementPage: React.FC = () => {
             <Button
               onClick={() => formik.handleSubmit()}
               variant="contained"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md"
+              sx={{
+                color: "white",
+                backgroundColor: "gray",
+                "&:hover": { backgroundColor: "darkgray" },
+              }}
+              className="text-white px-6 py-2 rounded-md"
             >
               Save Project
             </Button>
