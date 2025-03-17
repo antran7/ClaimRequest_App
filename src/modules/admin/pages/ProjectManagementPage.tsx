@@ -5,6 +5,7 @@ import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 //Import từ thư viện bên ngoài
+import { CircleX, Eye } from "lucide-react";
 import {
   Button,
   Typography,
@@ -144,28 +145,28 @@ const ProjectManagementPage: React.FC = () => {
           ...values,
           project_start_date: new Date(values.project_start_date).toISOString(),
           project_end_date: new Date(values.project_end_date).toISOString(),
-          project_members: values.project_members.map(member => {
-            const user = users.find(u => u._id === member.user_id);
+          project_members: values.project_members.map((member) => {
+            const user = users.find((u) => u._id === member.user_id);
             return {
               user_id: member.user_id,
               project_role: member.project_role,
               user_name: user?.user_name || "",
               email: user?.email || "",
-              _id: member.user_id
+              _id: member.user_id,
             } as ProjectUser;
-          })
+          }),
         };
-  
+
         await addProject(projectData);
         toast.success("Project added successfully!");
-        
-        const response = await searchProject("", 1); 
+
+        const response = await searchProject("", 1);
         if (response.success && response.data) {
           setProjects(response.data.pageData);
           setTotalPages(response.data.pageInfo.totalPages);
-          setPage(1); 
+          setPage(1);
         }
-  
+
         handleCloseDialog();
       } catch (error) {
         toast.error("Failed to save project");
@@ -188,7 +189,10 @@ const ProjectManagementPage: React.FC = () => {
 
   const handleMemberChange = (index: number, field: string, value: string) => {
     const updatedMembers = [...formik.values.project_members];
-    updatedMembers[index] = { ...updatedMembers[index], [field]: value } as ProjectMember;
+    updatedMembers[index] = {
+      ...updatedMembers[index],
+      [field]: value,
+    } as ProjectMember;
     formik.setFieldValue("project_members", updatedMembers);
   };
 
@@ -253,8 +257,8 @@ const ProjectManagementPage: React.FC = () => {
       <div className="min-h-screen bg-gray-100">
         <div className="p-8">
           <BackButton to="/admin/dashboard" />
-          <div className="flex justify-between items-center mb-6">
-            <Typography variant="h5">Project Management</Typography>
+          <div className="flex justify-between items-center mb-6 ">
+            <Typography variant="h5 text-4xl">Project Management</Typography>
             <Search onSearch={handleSearch} />
             <button
               title="Add New"
@@ -282,12 +286,77 @@ const ProjectManagementPage: React.FC = () => {
             <Table>
               <TableHead>
                 <TableRow className="bg-gray-300">
-                  <TableCell>Project Name</TableCell>
-                  <TableCell>Project Code</TableCell>
-                  <TableCell>Department</TableCell>
-                  <TableCell>Start Date</TableCell>
-                  <TableCell>End Date</TableCell>
-                  <TableCell>Actions</TableCell>
+                  <TableCell
+                    sx={{
+                      color: "white",
+                      fontWeight: "bold",
+                      backgroundColor: "#6B7280",
+                      width: "25%",
+
+                      fontSize: "17px",
+                      borderRight: "2px solid #ffff",
+                      textAlign: "center",
+                    }}
+                  >
+                    Project Name
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      color: "white",
+                      fontWeight: "bold",
+                      backgroundColor: "#6B7280",
+                      borderRight: "2px solid #ffff",
+                      width: "15%",
+                      textAlign: "center",
+                    }}
+                  >
+                    Project Code
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      color: "white",
+                      fontWeight: "bold",
+                      backgroundColor: "#6B7280",
+                      borderRight: "2px solid #ffff",
+                      textAlign: "center",
+                    }}
+                  >
+                    Department
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      color: "white",
+                      fontWeight: "bold",
+                      backgroundColor: "#6B7280",
+                      borderRight: "2px solid #ffff",
+                      textAlign: "center",
+                    }}
+                  >
+                    Start Date
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      color: "white",
+                      fontWeight: "bold",
+                      backgroundColor: "#6B7280",
+                      borderRight: "2px solid #ffff",
+                      textAlign: "center",
+                    }}
+                  >
+                    End Date
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      color: "white",
+                      fontWeight: "bold",
+                      backgroundColor: "#6B7280",
+                      borderRight: "2px solid #ffff",
+                      textAlign: "center",
+                      width: "18%",
+                    }}
+                  >
+                    Actions
+                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -313,34 +382,23 @@ const ProjectManagementPage: React.FC = () => {
                       <TableCell>{project.project_name}</TableCell>
                       <TableCell>{project.project_code}</TableCell>
                       <TableCell>{project.project_department}</TableCell>
-                      <TableCell>
+                      <TableCell sx={{ textAlign: "center" }}>
                         {formatDate(project.project_start_date)}
                       </TableCell>
-                      <TableCell>
+                      <TableCell sx={{ textAlign: "center" }}>
                         {formatDate(project.project_end_date)}
                       </TableCell>
-                      <TableCell>
+                      <TableCell sx={{ textAlign: "center" }}>
                         <Button
-                          variant="contained"
-                          sx={{
-                            backgroundColor: "gray",
-                            color: "white",
-                            "&:hover": { backgroundColor: "darkgray" },
-                            mr: 1,
-                          }}
-                          startIcon={<VisibilityIcon />}
+                          startIcon={<Eye />}
                           onClick={() => handleViewProject(project._id)}
-                        >
-                          View
-                        </Button>
+                        ></Button>
+
                         <Button
-                          variant="outlined"
-                          color="error"
-                          startIcon={<DeleteIcon />}
+                          color="warning"
+                          startIcon={<CircleX />}
                           onClick={() => handleOpenConfirmDialog(project._id)}
-                        >
-                          Delete
-                        </Button>
+                        ></Button>
                       </TableCell>
                     </TableRow>
                   ))
@@ -387,7 +445,7 @@ const ProjectManagementPage: React.FC = () => {
                   }
                   className="bg-white"
                   InputProps={{
-                    className: "rounded-md"
+                    className: "rounded-md",
                   }}
                 />
               </div>
@@ -406,32 +464,44 @@ const ProjectManagementPage: React.FC = () => {
                   }
                   className="bg-white"
                   InputProps={{
-                    className: "rounded-md"
+                    className: "rounded-md",
                   }}
                 />
               </div>
 
               <div className="space-y-1">
-                <FormControl 
-                  fullWidth 
-                  error={formik.touched.project_department && Boolean(formik.errors.project_department)}
+                <FormControl
+                  fullWidth
+                  error={
+                    formik.touched.project_department &&
+                    Boolean(formik.errors.project_department)
+                  }
                   className="bg-white rounded-md"
                 >
-                  <InputLabel shrink id="department-select-label" className="bg-white px-1 text-gray-600">
+                  <InputLabel
+                    shrink
+                    id="department-select-label"
+                    className="bg-white px-1 text-gray-600"
+                  >
                     Department
                   </InputLabel>
                   <div className="mt-2">
                     <DepartmentSelect
                       value={formik.values.project_department}
-                      onChange={(value) => formik.setFieldValue("project_department", value)}
+                      onChange={(value) =>
+                        formik.setFieldValue("project_department", value)
+                      }
                       required
                       className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       placeholder="Select Department"
                     />
                   </div>
-                  {formik.touched.project_department && formik.errors.project_department && (
-                    <p className="text-red-500 text-xs mt-1">{formik.errors.project_department as string}</p>
-                  )}
+                  {formik.touched.project_department &&
+                    formik.errors.project_department && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {formik.errors.project_department as string}
+                      </p>
+                    )}
                 </FormControl>
               </div>
 
@@ -452,7 +522,7 @@ const ProjectManagementPage: React.FC = () => {
                   }
                   className="bg-white"
                   InputProps={{
-                    className: "rounded-md"
+                    className: "rounded-md",
                   }}
                 />
               </div>
@@ -474,7 +544,7 @@ const ProjectManagementPage: React.FC = () => {
                   }
                   className="bg-white"
                   InputProps={{
-                    className: "rounded-md"
+                    className: "rounded-md",
                   }}
                 />
               </div>
@@ -496,7 +566,7 @@ const ProjectManagementPage: React.FC = () => {
                   }
                   className="bg-white"
                   InputProps={{
-                    className: "rounded-md"
+                    className: "rounded-md",
                   }}
                 />
               </div>
@@ -504,7 +574,12 @@ const ProjectManagementPage: React.FC = () => {
 
             <div className="mt-8">
               <div className="flex justify-between items-center mb-4 border-b border-gray-200 pb-2">
-                <Typography variant="h6" className="text-gray-700 font-semibold">Project Members</Typography>
+                <Typography
+                  variant="h6"
+                  className="text-gray-700 font-semibold"
+                >
+                  Project Members
+                </Typography>
                 <Button
                   variant="outlined"
                   color="primary"
@@ -517,9 +592,15 @@ const ProjectManagementPage: React.FC = () => {
               </div>
 
               {formik.values.project_members.map((member, index) => (
-                <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <div
+                  key={index}
+                  className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200"
+                >
                   <FormControl fullWidth className="bg-white rounded-md">
-                    <InputLabel id={`user-select-label-${index}`} className="bg-white px-1">
+                    <InputLabel
+                      id={`user-select-label-${index}`}
+                      className="bg-white px-1"
+                    >
                       User
                     </InputLabel>
                     <Select
@@ -597,8 +678,8 @@ const ProjectManagementPage: React.FC = () => {
             </div>
           </DialogContent>
           <DialogActions className="bg-gray-100 border-t border-gray-200 p-4 flex justify-end gap-2">
-            <Button 
-              onClick={handleCloseDialog} 
+            <Button
+              onClick={handleCloseDialog}
               className="bg-white text-gray-700 hover:bg-gray-200 px-4 py-2 rounded-md border border-gray-300"
             >
               Cancel
