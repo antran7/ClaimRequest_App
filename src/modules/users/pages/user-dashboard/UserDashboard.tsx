@@ -1,12 +1,8 @@
 import React, { useState } from "react";
 import "./UserDashboard.css";
-import { LineChart } from "@mui/x-charts/LineChart";
-import Stack from "@mui/material/Stack";
-import ToggleButton from "@mui/material/ToggleButton";
-import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
-import { Bar } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js";
-
+import ClaimRequestData from "./ClaimRequestData";
+import PieChartComponent from "./PieChartComponent";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Autoplay, Pagination } from "swiper/modules";
 
@@ -14,7 +10,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import Layout from "../../../../shared/layouts/Layout"; // Ensure the correct path
-import ClaimRequestData from "./ClaimRequestData";
+
 
 
 // Register ChartJS components
@@ -73,36 +69,24 @@ export default function UserDashboard() {
             </Swiper>
           </div>
 
-          {/* Charts */}
-          <div className="chart-section">
-            <Stack direction="column" spacing={2} alignItems="center" sx={{ width: "100%" }}>
-              <LineChart {...chartsParams} series={[{ data: [15, 23, 18, 19, 13], label: "Claim Request", color }]} />
-              <ToggleButtonGroup value={color} exclusive onChange={handleChange}>
-                {Tableau10.map((value) => (
-                  <ToggleButton key={value} value={value} sx={{ p: 1 }}>
-                    <div
-                      style={{
-                        width: 15,
-                        height: 15,
-                        backgroundColor: value,
-                        display: "inline-block",
-                      }}
-                    />
-                  </ToggleButton>
-                ))}
-              </ToggleButtonGroup>
-            </Stack>
-          </div>
+          {/* PieChartComponent */}
+          <div className="chart-wrapper">
 
-          {/* Bar Chart */}
-          <div className="bar-chart">
+            <div className="chart-container ">
 
-           <ClaimRequestData/>
+              <PieChartComponent />
+            </div>
+
+            {/* ClaimRequestData*/}
+            <div className="bar-chart">
+              <ClaimRequestData />
+            </div>
           </div>
         </div>
-        
+
+
       </Layout>
-      
+
     </div>
   );
 }

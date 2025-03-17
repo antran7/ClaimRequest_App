@@ -1,27 +1,81 @@
-import React from 'react'
+import React, { useCallback, useEffect } from 'react'
 import './ViewProjects.css'
 import Layout from '../../../shared/layouts/Layout'
 import Search from '../../../shared/components/searchComponent/Search'
-import { Button, Card, CardActions, CardContent, FormControl, Grid, InputLabel, MenuItem, Select, TextField, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material'
+import { Autocomplete, Avatar, AvatarGroup, Button, Grid, InputLabel, Pagination, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableSortLabel, TextField, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material'
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { useForm } from 'react-hook-form'
 import { searchProjectWithData } from '../../admin/services/projectService'
 import { getEmployeeInfo } from '../../employee/services/employeeApi'
+import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
+import { debounce } from "lodash";
+import Footer from '../../../shared/components/Footer'
+import { searchUsers } from '../../admin/services/userService'
 
 
 interface SearchFormInputs {
     searchTerm: string;
-    department: string;
     startDate: string;
     endDate: string;
+    user_id: string;
 }
+
+interface ProjectData {
+    _id: string,
+    project_name: string,
+    project_code: string,
+    project_department: string,
+    project_description: string,
+    project_status: string,
+    project_start_date: string,
+    project_end_date: string,
+    updated_by: string,
+    is_deleted: boolean,
+    created_at: string,
+    updated_at: string,
+    project_comment: string | null,
+    project_members: [
+        {
+            project_code: string,
+            user_id: string,
+            employee_id: string,
+            user_name: string,
+            full_name: string,
+            avatar_url: string;
+        }
+    ]
+}
+
+interface UserData {
+    _id: string,
+    email: string,
+    user_name: string,
+    role_code: string,
+    is_verified: boolean,
+    is_blocked: boolean,
+    is_deleted: boolean,
+    created_at: string,
+    updated_at: string,
+    _v: number,
+    token_version: number
+}
+
+type Order = "asc" | "desc";
 
 const ViewProject: React.FC = () => {
     const [alignment, setAlignment] = React.useState('basic');
     const [loading, setLoading] = React.useState(true);
-    const [filterType, setFilterType] = React.useState('');
-    const [results, setResults] = React.useState([]);
-    const [avatars, setAvatars] = React.useState([]);
+    const [results, setResults] = React.useState<ProjectData[]>([]);
+    const [curPage, setCurPage] = React.useState(1);
+    const [totalPages, setTotalPages] = React.useState(1);
+    const [totalItems, setTotalItems] = React.useState(0);
+    const [order, setOrder] = React.useState<Order>("asc");
+    const [orderBy, setOrderBy] = React.useState<{ key: keyof ProjectData, order: "asc" | "dsc" }[]>([]);
+    // dành cho tìm user
+    const [inputValue, setInputValue] = React.useState("");
+    const [selectedUser, setSelectedUser] = React.useState<UserData>(null);
+    const [filteredUsers, setFilteredUsers] = React.useState<UserData[]>([]);
 
     const {
         register,
@@ -32,47 +86,124 @@ const ViewProject: React.FC = () => {
         formState: { errors },
     } = useForm<SearchFormInputs>();
 
-    const formatDateToUTC7 = (isoString?: string) => {
-        return isoString
-            ? new Date(isoString).toLocaleDateString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })
-            : "N/A";
-    };
-
     const statusColors: Record<string, string> = {
         "New": "blue",
-        "Pending": "gray",
-        "Complete": "green",
-        "Processing": "orange",
-        "Cancelled": "red",
+        "Active": "green",
+        "Pending": "orange",
+        "Close": "red",
+    };
+
+    const formatDateToUTC7 = (isoString?: string) => {
+        if (!isoString) return "N/A";
+
+        const date = new Date(isoString);
+        const today = new Date();
+        const yesterday = new Date();
+        if (date.toDateString() === today.toDateString()) {
+            return "Today";
+        } else if (date.toDateString() === yesterday.toDateString()) {
+            return "Yesterday";
+        }
+
+        const formattedDate = new Date(isoString).toLocaleDateString("en-US", {
+            timeZone: "Asia/Ho_Chi_Minh",
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+        });
+
+        return formattedDate;
+    };
+
+    const handleSort = (property: keyof ProjectData) => {
+        setOrderBy((prev) => {
+            const existingIndex = prev.findIndex((col) => col.key === property);
+            let newOrderBy = [...prev];
+
+            if (existingIndex !== -1) {
+                newOrderBy[existingIndex] = {
+                    key: property,
+                    order: newOrderBy[existingIndex].order === "asc" ? "desc" : "asc",
+                };
+            } else {
+                newOrderBy.push({ key: property, order: "asc" });
+            }
+            return newOrderBy;
+        });
     };
 
     const handleChange = (event, newAlignment: string) => {
         setAlignment(newAlignment);
-        handleSubmitSearch();
     };
+
+    const sortedRows = [...results].sort((a, b) => {
+        for (const sortRule of orderBy) {
+            if (a[sortRule.key] < b[sortRule.key]) return sortRule.order === "asc" ? -1 : 1;
+            if (a[sortRule.key] > b[sortRule.key]) return sortRule.order === "asc" ? 1 : -1;
+        }
+        return 0;
+    });
+
+    const debounceSearchProject = useCallback(debounce(() => handleSubmitSearch(), 1000), []);
+    const debounceSearchUser = useCallback(debounce((text) => handleSearchUsers(text), 1000), []);
+
+    const handleSearch = async (searchTerm: string) => {
+        setValue("searchTerm", searchTerm);
+        debounceSearchProject();
+    }
 
     const handleClearFilters = () => {
         reset({
             searchTerm: "",
-            department: "",
             startDate: "",
             endDate: "",
+            user_id: "",
         });
-    }
-
-    const handleFilterResults = (event) => {
-        setFilterType(event.target.value);
-    }
-
-    const handleSearch = async (searchTerm: string) => {
-        setValue("searchTerm", searchTerm);
+        setSelectedUser(null);
+        setFilteredUsers([]);
         handleSubmitSearch();
+    }
+
+    const handleSearchUsers = async (searchText: string) => {
+        if (searchText === "") return;
+        let currentPage = 1;
+        let moreData = true;
+        setFilteredUsers([]);
+        while (moreData) {
+            const searchData = {
+                keyword: searchText,
+                role_code: "",
+                is_blocked: false,
+                is_deleted: false,
+                is_verified: "",
+            }
+            const pageData = {
+                pageNum: currentPage,
+                pageSize: 10,
+            }
+            try {
+                const response = await searchUsers(searchData, pageData);
+                response.pageData.map(user => {
+                    if (user.user_name.includes(searchText)) {
+                        setFilteredUsers(prevUsers => [...prevUsers, user]);
+                    }
+                });
+                if (response.pageInfo.totalItems > currentPage * 8) {
+                    currentPage++;
+                } else {
+                    moreData = false;
+                }
+            } catch (error) {
+                console.error("Error: ", error);
+                moreData = false;
+            }
+        }
     }
 
     const handleSubmitSearch = async () => {
         const isValid = await trigger();
         if (!isValid) return;
-        setLoading(false);
+        setLoading(true);
         const data = getValues();
         const formattedData = {
             ...data,
@@ -81,25 +212,33 @@ const ViewProject: React.FC = () => {
         };
         console.log(formattedData);
         try {
-            const response = await searchProjectWithData(formattedData, 1);
+            const response = await searchProjectWithData(formattedData, curPage);
             if (response) {
+                setTotalPages(response.pageInfo.totalPages);
+                setTotalItems(response.pageInfo.totalItems);
                 setResults(response.pageData);
             }
-            const members = response.pageData;
-            console.log(members);
-            if (members) {
-                members.map(async (member) => {
-                    const employeeInfo = await getEmployeeInfo(member.employee_id);
-                    console.log(employeeInfo);
-                    setAvatars((prevAvatars) => [...prevAvatars, employeeInfo.avatar_url]);
-                })
-            }
-            console.log(avatars);
+            // results.map((project) => {
+            //     project.project_members.map(async (member) => {
+            //         const employeeInfo = await getEmployeeInfo(member.user_id);
+            //         if (employeeInfo && employeeInfo.avatar_url) {
+            //             member.avatar_url = employeeInfo.avatar_url;
+            //         } else {
+            //             member.avatar_url = "";
+            //         }
+            //         console.log(member.avatar_url);
+            //     })
+            // })
         } catch (error) {
             console.error("Error: ", error);
-            throw error;
+        } finally {
+            setLoading(false);
         }
     }
+
+    useEffect(() => {
+        handleSubmitSearch();
+    }, [curPage]);
 
     return (
         <Layout>
@@ -112,7 +251,7 @@ const ViewProject: React.FC = () => {
                         exclusive
                         onChange={handleChange}
                         aria-label="Platform"
-                        style={{ backgroundColor: "white" }}
+                        className='search-filter-toggle'
                     >
                         <ToggleButton value="basic">Basic Filtering</ToggleButton>
                         <ToggleButton value="advanced">Advanced Filtering</ToggleButton>
@@ -121,18 +260,34 @@ const ViewProject: React.FC = () => {
                 {alignment === "advanced" && (
                     <Grid container spacing={2} className='search-bar-filter'>
                         <Grid item xs={0.75} sx={{ mr: -10 }}>
-                            <InputLabel>Department:</InputLabel>
+                            <InputLabel>Username:</InputLabel>
                         </Grid>
                         <Grid item xs={2.25}>
-                            <TextField
-                                fullWidth
-                                id="outlined-basic"
-                                variant="outlined"
-                                {...register("department")}
-                                onChange={(e) => {
-                                    setValue("department", e.target.value);
+                            <Autocomplete
+                                options={filteredUsers}
+                                getOptionLabel={(option) => option.user_name}
+                                value={selectedUser}
+                                onChange={(event, newValue) => {
+                                    setSelectedUser(newValue);
+                                    setValue("user_id", newValue ? newValue._id : "");
+                                    trigger("user_id");
                                     handleSubmitSearch();
                                 }}
+                                inputValue={inputValue}
+                                onInputChange={(event, newInputValue) => {
+                                    setInputValue(newInputValue);
+                                    debounceSearchUser(newInputValue);
+                                }}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        fullWidth
+                                        id="outlined-basic"
+                                        variant="outlined"
+                                        error={!!errors.user_id}
+                                        helperText={errors.user_id?.message}
+                                    />
+                                )}
                             />
                         </Grid>
 
@@ -157,7 +312,7 @@ const ViewProject: React.FC = () => {
                                 helperText={errors.startDate?.message}
                                 onChange={(e) => {
                                     setValue("startDate", e.target.value);
-                                    trigger("endDate"); // Kiểm tra lại endDate
+                                    trigger("endDate");
                                     handleSubmitSearch();
                                 }}
                             />
@@ -200,61 +355,139 @@ const ViewProject: React.FC = () => {
                     </Grid>
                 )}
                 <div className='filter-results-display'>
-                    <h3>1-5 of 4 054 results</h3>
-                    <FormControl sx={{ m: 1, minWidth: 120 }}>
-                        <Select
-                            value={filterType}
-                            onChange={handleFilterResults}
-                            displayEmpty
-                            inputProps={{ 'aria-label': 'Without label' }}
-                            sx={{ p: 0 }}
-                        >
-                            <MenuItem value="">
-                                <em>None</em>
-                            </MenuItem>
-                            <MenuItem value={10}>Project Name</MenuItem>
-                            <MenuItem value={20}>Start date</MenuItem>
-                            <MenuItem value={30}>End date</MenuItem>
-                        </Select>
-                    </FormControl>
+                    <h3>{`${Math.min(curPage * 10 - 9, totalItems)}-${Math.min(curPage * 10, totalItems)} of ${totalItems} results`}</h3>
                 </div>
-                <Grid container spacing={2} className='results-card-container'>
-                    {results.map((project) => (
-                        <Grid item xs={12} sm={6} md={2} key={project._id}>
-                            <Card sx={{ maxWidth: 345, boxShadow: 3, display: "flex", flexDirection: "column", height: "100%" }}>
-                                <CardContent sx={{ flexGrow: 1 }}>
-                                    <Typography
-                                        variant="h5"
-                                        style={{
-                                            textAlign: "center",
-                                            marginBottom: "5px",
+                <TableContainer className='results-table-display' sx={{ width: "90%", margin: "auto" }} component={Paper}>
+                    <Table>
+                        <TableHead sx={{ "& th": { fontSize: "18px", color: "#040938" } }}>
+                            <TableRow>
+                                <TableCell sx={{ width: "5%" }}>No.</TableCell>
+                                <TableCell sx={{ width: "15%" }}>
+                                    <TableSortLabel
+                                        IconComponent={UnfoldMoreIcon}
+                                        active={orderBy === "project_name"}
+                                        direction={orderBy === "project_name" ? order : "asc"}
+                                        onClick={() => handleSort("project_name")}
+                                        sx={{
+                                            "& .MuiTableSortLabel-icon": { opacity: 1 },
                                         }}
                                     >
-                                        {project.project_name}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        Code: {project.project_code}
-                                    </Typography>
-                                    <Typography
-                                        variant="body2"
-                                        sx={{ color: statusColors[project.project_status] || "black" }}
+                                        Project Name
+                                    </TableSortLabel>
+                                </TableCell>
+                                <TableCell sx={{ width: "15%" }}>
+                                    <TableSortLabel
+                                        IconComponent={UnfoldMoreIcon}
+                                        active={orderBy === "project_code"}
+                                        direction={orderBy === "project_code" ? order : "asc"}
+                                        onClick={() => handleSort("project_code")}
+                                        sx={{
+                                            "& .MuiTableSortLabel-icon": { opacity: 1 },
+                                        }}
                                     >
-                                        Status: {project.project_status}
-                                    </Typography>
-                                    <Typography variant="body2">
-                                        Duration: {formatDateToUTC7(project?.project_start_date)} - {formatDateToUTC7(project?.project_end_date)}
-                                    </Typography>
-                                </CardContent>
-                                <CardActions>
-                                    <Button size="small" color="primary">
-                                        View Details
-                                    </Button>
-                                </CardActions>
-                            </Card>
-                        </Grid>
-                    ))}
-                </Grid>
+                                        Project Code
+                                    </TableSortLabel>
+                                </TableCell>
+                                <TableCell sx={{ width: "10%" }}>
+                                    <TableSortLabel
+                                        IconComponent={UnfoldMoreIcon}
+                                        active={orderBy === "project_start_date"}
+                                        direction={orderBy === "project_start_date" ? order : "asc"}
+                                        onClick={() => handleSort("project_start_date")}
+                                        sx={{
+                                            "& .MuiTableSortLabel-icon": { opacity: 1 },
+                                        }}
+                                    >
+                                        Start Date
+                                    </TableSortLabel>
+                                </TableCell>
+                                <TableCell sx={{ width: "10%" }}>
+                                    <TableSortLabel
+                                        IconComponent={UnfoldMoreIcon}
+                                        active={orderBy === "project_end_date"}
+                                        direction={orderBy === "project_end_date" ? order : "asc"}
+                                        onClick={() => handleSort("project_end_date")}
+                                        sx={{
+                                            "& .MuiTableSortLabel-icon": { opacity: 1 },
+                                        }}
+                                    >
+                                        End Date
+                                    </TableSortLabel>
+                                </TableCell>
+                                <TableCell sx={{ width: "10%", textAlign: "center" }}>Status</TableCell>
+                                <TableCell sx={{ width: "20%", textAlign: "center" }}>Members</TableCell>
+                                <TableCell sx={{ width: "10%" }}>Last updated</TableCell>
+                                <TableCell sx={{ width: "5%" }}></TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {loading ? (
+                                <TableRow>
+                                    <TableCell colSpan={9} align="center">
+                                        <div className="flex justify-center flex-row gap-2">
+                                            <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce"></div>
+                                            <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce [animation-delay:-.3s]"></div>
+                                            <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce [animation-delay:-.5s]"></div>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ) : sortedRows.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={9} align="center">
+                                        No projects found
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                sortedRows.map((project, index) => (
+                                    <TableRow
+                                        key={index}
+                                        className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                                            } hover:bg-gray-200 transition-colors`}
+                                    >
+                                        <TableCell>{(curPage - 1) * 10 + index + 1}</TableCell>
+                                        <TableCell>{project.project_name}</TableCell>
+                                        <TableCell>{project.project_code}</TableCell>
+                                        <TableCell>{formatDateToUTC7(project.project_start_date)}</TableCell>
+                                        <TableCell>{formatDateToUTC7(project.project_end_date)}</TableCell>
+                                        <TableCell>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{
+                                                    color: statusColors[project.project_status] || "black",
+                                                    textAlign: "center",
+                                                }}
+                                            >
+                                                {project.project_status}
+                                            </Typography>
+                                        </TableCell>
+                                        <TableCell sx={{ display: "flex", justifyContent: "center" }}>
+                                            {/* <AvatarGroup
+                                                total={project.project_members.length}
+                                            >
+                                                {project.project_members.map((member) => (
+                                                    <Avatar src={member.avatar_url} />
+                                                ))}
+                                            </AvatarGroup> */}
+                                            Members
+                                        </TableCell>
+                                        <TableCell>{formatDateToUTC7(project.updated_at)}</TableCell>
+                                        <TableCell><MoreHorizIcon /></TableCell>
+                                    </TableRow>
+                                ))
+                            )}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+                <div className='pagination-results'>
+                    <Pagination
+                        count={totalPages}
+                        page={curPage}
+                        variant="outlined"
+                        onChange={(_, value) => setCurPage(value)}
+                    />
+                </div>
             </div>
+            <Footer />
         </Layout>
     )
 }

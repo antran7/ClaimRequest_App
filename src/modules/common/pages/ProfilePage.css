@@ -98,7 +98,6 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      row-gap: 20px;
       width: 80%;
       margin: 50px auto 25px;
 
@@ -107,6 +106,7 @@
         border-bottom: 1px solid #ccc;
         padding: 5px 0;
         width: 100%;
+        margin-bottom: 20px;
       }
 
       input:focus {
@@ -151,7 +151,7 @@
   .profile-right-top-panel {
     grid-area: date;
     margin: 40px 40px 0 0;
-    box-shadow: 0px 10px 13px 3px rgba(0,0,0,0.1);
+    box-shadow: 0px 10px 13px 3px rgba(0, 0, 0, 0.1);
 
     .create-update-title {
       display: flex;
@@ -201,7 +201,7 @@
   .profile-right-bottom-panel {
     grid-area: groups;
     margin: 0 40px 40px 0;
-    box-shadow: 0px 10px 13px 3px rgba(0,0,0,0.1);
+    box-shadow: 0px 10px 13px 3px rgba(0, 0, 0, 0.1);
 
     .my-projects-title {
       display: flex;
@@ -234,6 +234,56 @@
       position: absolute;
       left: 0;
       top: 60px;
+    }
+
+    .my-projects-list {
+      display: flex;
+      flex-direction: column;
+      row-gap: 20px;
+      width: 100%;
+      padding: 0 40px 0 50px;
+      height: 230px;
+      overflow: auto;
+
+      .infinite-scroll-component {
+        overflow: hidden !important;
+      }
+
+      .MuiList-padding,
+      .MuiListItem-padding {
+        padding: 0;
+      }
+      .MuiListItemText-primary {
+        font-size: 18px;
+      }
+
+      .view-project-btn {
+        background: linear-gradient(to bottom, #00FFCC, #07FC13);
+        border-radius: 30px;
+        color: #fff;
+        padding: 7px 15px;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+      }
+
+      .view-project-btn::before {
+        content: '';
+        position: absolute;
+        height: 100px;
+        width: 20px;
+        background: #f3f3f3;
+        box-shadow: 0 0 10px #fff;
+        filter: blur(1px);
+        opacity: 0.9;
+        top: -30px;
+        transition: 0.7s;
+        transform: rotate(-20deg) translateX(-75px);
+      }
+
+      .view-project-btn:hover::before {
+        transform: rotate(-20deg) translate(140px, 70px);
+      }
     }
   }
 }

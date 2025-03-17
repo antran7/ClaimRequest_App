@@ -9,12 +9,14 @@ import {
   ListItemIcon,
   ListItemText,
   Collapse,
+  patch,
 } from "@mui/material";
 import HouseIcon from "@mui/icons-material/House";
 import BadgeIcon from "@mui/icons-material/Badge";
 import RequestPageIcon from "@mui/icons-material/RequestPage";
 import BusinessRoundedIcon from "@mui/icons-material/BusinessRounded";
 import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
+import TaskIcon from "@mui/icons-material/Task";
 import AssignmentTurnedInRoundedIcon from "@mui/icons-material/AssignmentTurnedInRounded";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
@@ -39,6 +41,11 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
       text: "Dashboard",
       icon: <BadgeIcon />,
       path: "/dashboard",
+    },
+    {
+      text: "View Project",
+      icon: <TaskIcon />,
+      path: "/viewprojects",
     },
     {
       text: "My Claims",
@@ -74,7 +81,9 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
     },
   ];
 
-  const finaceItems = [{ text: "Paid Claims", icon: <PaidIcon />, path: "/#" }];
+  const finaceItems = [
+    { text: "Paid Claims", icon: <PaidIcon />, path: "/finance/claims" },
+  ];
 
   const handleNavigation = (path: string) => {
     if (path === "/my-requests") {
@@ -88,7 +97,7 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
         } else if (user?.role_code === "A003") {
           navigate("/approval/dashboard");
         } else {
-          navigate("/finance/claims");
+          navigate("/#");
         }
       } else {
         navigate(path);
@@ -96,9 +105,7 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
       toggleSidebar();
     }
   };
-  useEffect(() => {
-    
-  }, []);
+  useEffect(() => {}, []);
 
   return (
     <Drawer open={isOpen} onClose={toggleSidebar}>

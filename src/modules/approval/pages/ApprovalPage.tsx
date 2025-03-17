@@ -80,6 +80,10 @@ const ApprovalPage: React.FC = () => {
     fontWeight: "bold",
   };
 
+  const getDisplayStatus = (status: string) => {
+    return status === "Paid" ? "Approved" : status;
+  };
+
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
     if (storedToken) {
@@ -136,7 +140,14 @@ const ApprovalPage: React.FC = () => {
       );
 
       if (response.data.success) {
-        setFilteredClaims(response.data.data.pageData);
+        const processedClaims = response.data.data.pageData.map(
+          (claim: Claim) => ({
+            ...claim,
+            claim_status: getDisplayStatus(claim.claim_status),
+          })
+        );
+
+        setFilteredClaims(processedClaims);
         setTotalCount(response.data.data.pageInfo.totalItems);
       }
     } catch (error) {
@@ -210,11 +221,10 @@ const ApprovalPage: React.FC = () => {
     if (!currentClaimId || !currentAction) return;
 
     try {
-      // Tạo payload theo đúng format API yêu cầu
       const payload = {
-        _id: currentClaimId, // Thay claim_id thành _id
+        _id: currentClaimId,
         claim_status: currentAction,
-        comment: currentAction !== "Approved" ? modalReason : "", // Luôn gửi comment, để trống nếu là Approve
+        comment: currentAction !== "Approved" ? modalReason : "",
       };
 
       const response = await axios.put(
@@ -228,8 +238,13 @@ const ApprovalPage: React.FC = () => {
       );
 
       if (response.data.success) {
-        // Refresh data sau khi update thành công
-        fetchClaims();
+        setFilteredClaims((prevClaims) =>
+          prevClaims.map((claim) =>
+            claim._id === currentClaimId
+              ? { ...claim, claim_status: currentAction }
+              : claim
+          )
+        );
 
         // Reset modal state
         setIsModalOpen(false);
@@ -292,7 +307,6 @@ const ApprovalPage: React.FC = () => {
                 label="Status"
               >
                 <MenuItem value="All">All</MenuItem>
-                <MenuItem value="Draft">Draft</MenuItem>
                 <MenuItem value="Pending Approval">Pending Approval</MenuItem>
                 <MenuItem value="Approved">Approved</MenuItem>
                 <MenuItem value="Rejected">Rejected</MenuItem>
@@ -414,11 +428,13 @@ const ApprovalPage: React.FC = () => {
                         </TableCell>
                         <TableCell align="center" sx={tableCellStyle}>
                           <span
-                            className={`status-badge status-${claim.claim_status
+                            className={`status-badge status-${getDisplayStatus(
+                              claim.claim_status
+                            )
                               .toLowerCase()
                               .replace(/\s+/g, "-")}`}
                           >
-                            {claim.claim_status}
+                            {getDisplayStatus(claim.claim_status)}
                           </span>
                         </TableCell>
                         <TableCell

@@ -1,64 +1,117 @@
-.paid-page {
-  background-color: #f5f5f5;
-  min-height: 100vh;
-  padding: 24px;
+.finance-content {
+  width: 100%;
+  max-width: 1800px;
+  background: white;
+  padding: 32px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-.page-header {
-  background-color: white;
-  padding: 24px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 24px;
-}
-
-.page-title {
-  color: #1a1a1a;
-  font-size: 24px;
+.finance-title {
+  font-size: 28px;
   font-weight: 600;
-  margin: 0;
+  color: #374151;
+  text-align: center;
+  margin-bottom: 32px;
 }
 
-.search-input {
-  max-width: 400px;
-  border-radius: 6px;
-}
-
-.table-container {
-  background-color: white;
-  padding: 24px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.amount-cell {
-  font-family: "Roboto Mono", monospace;
-  font-weight: 500;
-}
-
-.status-tag {
-  padding: 4px 12px;
-  border-radius: 4px;
-  font-weight: 500;
-}
-
-.status-tag.paid {
-  background-color: #52c41a;
-  color: white;
-}
-
-.status-tag.approved {
-  background-color: #faad14;
-  color: white;
-}
-
-.header-top {
+.finance-filters {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 24px;
+  gap: 16px;
 }
 
-.logout-button {
-  min-width: 100px;
+.search-field {
+  flex: 1;
+}
+
+.status-filter {
+  min-width: 200px;
+}
+
+.finance-table-container {
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  width: 100%;
+}
+
+.action-buttons .MuiButton-root,
+.action-buttons .MuiIconButton-root {
+  white-space: nowrap;
+  min-width: auto;
+  padding: 4px 8px;
+}
+
+.action-buttons .MuiButton-root {
+  font-size: 0.75rem;
+}
+
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.status-approved {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.status-paid {
+  background-color: #dbeafe;
+  color: #2563eb;
+}
+
+.status-rejected {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.status-returned {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  gap: 16px;
+}
+
+.no-claims {
+  text-align: center;
+  padding: 48px;
+  color: #6b7280;
+  font-size: 1.1rem;
+}
+
+.date-filters {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.date-field {
+  min-width: 200px;
+}
+
+.MuiTableHead-root .MuiTableRow-root {
+  background-color: #f3f4f6;
 }
