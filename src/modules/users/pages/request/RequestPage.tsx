@@ -15,6 +15,11 @@ import {
   TableHead,
   TableRow,
   Paper,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
 } from "@mui/material";
 import axios from "axios";
 import "./RequestPage.css";
@@ -22,13 +27,32 @@ import moment from "moment";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
 import Layout from "../../../../shared/layouts/Layout";
+import { SelectChangeEvent } from "@mui/material/Select";
+import CloseIcon from "@mui/icons-material/Close";
+import TablePagination from "@mui/material/TablePagination";
 
 const API_URL = "https://management-claim-request.vercel.app/api";
 
-// Interfaces remain unchanged
+const tableCellStyle = {
+  borderRight: "2px solid rgba(224, 224, 224, 1)",
+  borderBottom: "2px solid rgba(224, 224, 224, 1)",
+  "&:last-child": {
+    borderRight: "none",
+  },
+};
+
+const headerCellStyle = {
+  ...tableCellStyle,
+  borderBottom: "2px solid rgba(180, 180, 180, 1)",
+  backgroundColor: "#f3f4f6",
+  fontWeight: "bold",
+};
+
 interface Request {
   _id: string;
-  user_id: string;
+  staff_id: string;
+  staff_name: string;
+  staff_email: string;
   project_id: string;
   approval_id: string;
   claim_name: string;
@@ -39,6 +63,16 @@ interface Request {
   is_deleted: boolean;
   created_at: string;
   updated_at: string;
+  project_info?: {
+    _id: string;
+    project_name: string;
+    project_code: string;
+  };
+  approval_info?: {
+    _id: string;
+    user_name: string;
+    email: string;
+  };
 }
 
 interface Project {
@@ -88,6 +122,8 @@ const RequestPage = () => {
     claim_end_date: null,
     total_work_time: 0,
   });
+  const [selectedApproverName, setSelectedApproverName] = useState<string>(""); // New state for approver display
+  const [selectedProjectName, setSelectedProjectName] = useState<string>(""); // New state for project display
   const [userEmail, setUserEmail] = useState<string>("");
   const [userId, setUserId] = useState<string | null>(null);
   const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false);
@@ -96,8 +132,10 @@ const RequestPage = () => {
   const [requestToDelete, setRequestToDelete] = useState<string | null>(null);
   const [dateError, setDateError] = useState<string | null>(null);
   const [token, setToken] = useState<string>("");
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
 
-  // useEffect hooks remain unchanged
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
     if (storedToken) {
@@ -130,7 +168,6 @@ const RequestPage = () => {
         console.error("Error fetching user information:", error);
       }
     };
-
     fetchUser();
   }, []);
 
@@ -150,8 +187,8 @@ const RequestPage = () => {
               is_delete: false,
             },
             pageInfo: {
-              pageNum: 1,
-              pageSize: 10,
+              pageNum: page + 1,
+              pageSize: rowsPerPage,
             },
           },
           {
@@ -162,10 +199,8 @@ const RequestPage = () => {
         );
         console.log("Response received:", response.data);
         if (response.data.success) {
-          const userRequests = response.data.data.pageData.filter(
-            (req: Request) => req.user_id === userId
-          );
-          setRequests(userRequests);
+          setRequests(response.data.data.pageData);
+          setTotalCount(response.data.data.pageInfo.totalItems);
         } else {
           console.error("Failed to fetch requests:", response.data.message);
         }
@@ -175,9 +210,8 @@ const RequestPage = () => {
         setLoading(false);
       }
     };
-
     fetchRequests();
-  }, [userEmail, userId, token]);
+  }, [userEmail, userId, token, page, rowsPerPage]);
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -244,6 +278,15 @@ const RequestPage = () => {
     }
   }, [requests]);
 
+  useEffect(() => {
+    const fetchDataForEdit = async () => {
+      if (currentRequest && (!projects.length || !approvers.length)) {
+        await Promise.all([fetchProjects(), fetchApprovers("")]);
+      }
+    };
+    fetchDataForEdit();
+  }, [currentRequest, projects.length, approvers.length]);
+
   const fetchApprovers = async (keyword: string) => {
     try {
       console.log("Fetching approvers...");
@@ -278,12 +321,10 @@ const RequestPage = () => {
     }
   };
 
-  // Updated handleAddModalOk function
   const handleAddModalOk = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     console.log("handleAddModalOk called with formValues:", formValues);
 
-    // Validate required fields
     if (
       !formValues.claim_name ||
       !formValues.project_id ||
@@ -292,11 +333,12 @@ const RequestPage = () => {
       !formValues.claim_end_date ||
       formValues.total_work_time <= 0
     ) {
-      console.error("All fields are required and total work time must be positive");
+      console.error(
+        "All fields are required and total work time must be positive"
+      );
       return;
     }
 
-    // Validate date logic
     if (
       formValues.claim_end_date &&
       formValues.claim_start_date &&
@@ -307,7 +349,6 @@ const RequestPage = () => {
       return;
     }
 
-    // Ensure userId and token are available
     if (!userId || !token) {
       console.error("Missing userId or token");
       return;
@@ -315,14 +356,14 @@ const RequestPage = () => {
 
     try {
       const newRequest = {
-        user_id: userId, // Include user_id in the request
+        user_id: userId,
         project_id: formValues.project_id,
         approval_id: formValues.approval_id,
         claim_name: formValues.claim_name,
         claim_start_date: formValues.claim_start_date.toISOString(),
         claim_end_date: formValues.claim_end_date.toISOString(),
-        total_work_time: Number(formValues.total_work_time), // Ensure it's a number
-        claim_status: "Draft", // Default status
+        total_work_time: Number(formValues.total_work_time),
+        claim_status: "Draft",
         remark: "",
       };
 
@@ -340,7 +381,7 @@ const RequestPage = () => {
       if (response.data.success) {
         const updatedRequests = [...requests, response.data.data];
         setRequests(updatedRequests);
-        localStorage.setItem("requests", JSON.stringify(updatedRequests)); // Save to localStorage
+        localStorage.setItem("requests", JSON.stringify(updatedRequests));
         setIsAddModalVisible(false);
         setFormValues({
           claim_name: "",
@@ -353,17 +394,32 @@ const RequestPage = () => {
         setDateError(null);
       } else {
         console.error("Failed to add request:", response.data.message);
-        alert(response.data.message); // Display error message to user
+        alert(response.data.message);
       }
     } catch (error) {
       console.error("Error adding request:", error);
     }
   };
 
-  // Other functions remain unchanged
   const handleEditModalOk = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!currentRequest || !token) return;
+    if (!currentRequest || !token) {
+      console.error("Missing currentRequest or token");
+      return;
+    }
+
+    if (
+      !formValues.claim_name ||
+      !formValues.project_id ||
+      !formValues.approval_id ||
+      !formValues.claim_start_date ||
+      !formValues.claim_end_date ||
+      formValues.total_work_time <= 0
+    ) {
+      console.error("All fields are required and total work time must be positive");
+      alert("Please fill in all fields and ensure total work time is positive.");
+      return;
+    }
 
     if (
       formValues.claim_end_date &&
@@ -371,40 +427,64 @@ const RequestPage = () => {
       formValues.claim_end_date.isBefore(formValues.claim_start_date)
     ) {
       setDateError("End date cannot be before start date");
+      console.error("Date validation failed:", dateError);
       return;
     }
 
     try {
       const updatedRequest = {
-        ...currentRequest,
-        claim_name: formValues.claim_name,
+        _id: currentRequest._id,
+        user_id: userId,
         project_id: formValues.project_id,
         approval_id: formValues.approval_id,
-        claim_start_date: formValues.claim_start_date
-          ? formValues.claim_start_date.toISOString()
-          : null,
-        claim_end_date: formValues.claim_end_date
-          ? formValues.claim_end_date.toISOString()
-          : null,
-        total_work_time: formValues.total_work_time,
+        claim_name: formValues.claim_name,
+        claim_start_date: formValues.claim_start_date?.toISOString() || "",
+        claim_end_date: formValues.claim_end_date?.toISOString() || "",
+        total_work_time: Number(formValues.total_work_time),
+        claim_status: currentRequest.claim_status,
       };
-      await axios.put(`${API_URL}/claims/${currentRequest._id}`, updatedRequest, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setRequests(
-        requests.map((req) =>
-          req._id === currentRequest._id
-            ? { ...updatedRequest, claim_start_date: updatedRequest.claim_start_date || "", claim_end_date: updatedRequest.claim_end_date || "" }
-            : req
-        )
+
+      console.log("Submitting updated request:", updatedRequest);
+
+      const response = await axios.put(
+        `${API_URL}/claims/${currentRequest._id}`,
+        updatedRequest,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
-      setIsEditModalVisible(false);
-      setCurrentRequest(null);
-      setDateError(null);
+
+      if (response.data.success) {
+        setRequests(
+          requests.map((req) =>
+            req._id === currentRequest._id
+              ? {
+                  ...req,
+                  ...updatedRequest,
+                  claim_start_date: updatedRequest.claim_start_date,
+                  claim_end_date: updatedRequest.claim_end_date,
+                }
+              : req
+          )
+        );
+        setIsEditModalVisible(false);
+        setCurrentRequest(null);
+        setDateError(null);
+        alert("Request updated successfully!");
+      } else {
+        console.error("Failed to update request:", response.data.message);
+        alert(`Failed to update request: ${response.data.message}`);
+      }
     } catch (error) {
       console.error("Error editing request:", error);
+      if (axios.isAxiosError(error) && error.response) {
+        alert(`Error: ${error.response.data.message || "Failed to update request"}`);
+      } else {
+        alert("An unexpected error occurred. Please try again.");
+      }
     }
   };
 
@@ -462,7 +542,9 @@ const RequestPage = () => {
       );
       setRequests(
         requests.map((req) =>
-          req._id === requestToApprove ? { ...req, claim_status: "Pending Approval" } : req
+          req._id === requestToApprove
+            ? { ...req, claim_status: "Pending Approval" }
+            : req
         )
       );
       setIsConfirmModalVisible(false);
@@ -485,6 +567,8 @@ const RequestPage = () => {
       claim_end_date: null,
       total_work_time: 0,
     });
+    setSelectedApproverName("");
+    setSelectedProjectName("");
     setDateError(null);
   };
 
@@ -493,377 +577,598 @@ const RequestPage = () => {
     setFormValues({ ...formValues, [name]: value });
   };
 
-  const handleSelectChange = (e: React.ChangeEvent<{ name?: string; value: unknown }>) => {
+  const handleSelectChange = (e: SelectChangeEvent<string>) => {
     const { name, value } = e.target;
     setFormValues({ ...formValues, [name as string]: value as string });
+    const project = projects.find((p) => p._id === value);
+    setSelectedProjectName(project?.project_name || "");
   };
 
   const handleDateChange = (name: string, date: moment.Moment | null) => {
     setFormValues({ ...formValues, [name]: date });
   };
 
-  // JSX remains unchanged
   return (
     <Layout>
-      <div
-        className={`request-container ${
-          isAddModalVisible || isEditModalVisible ? "blur-background" : ""
-        }`}
-      >
-        <div className="request-box">
-          <h1 className="request-title">Manage Claim Requests</h1>
+      <div className="min-h-screen bg-gray-100">
+        <div className="p-8">
+          <div className="request-content">
+            <h1 className="request-title">Claim Request Management</h1>
 
-          <div className="search-container">
-            <TextField
-              type="text"
-              placeholder="Search requests..."
-              className="search-input"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            <Button
-              onClick={() => setIsAddModalVisible(true)}
-              className="add-button"
-            >
-              + Add Request
-            </Button>
-          </div>
+            <div className="request-filters">
+              <TextField
+                label="Search"
+                variant="outlined"
+                size="small"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="search-field"
+                placeholder="Search by name..."
+              />
+              <Button
+                variant="contained"
+                onClick={() => setIsAddModalVisible(true)}
+                sx={{
+                  backgroundColor: "#bcfcbc",
+                  "&:hover": {
+                    backgroundColor: "#81eee8",
+                  },
+                }}
+              >
+                + Add Request
+              </Button>
+            </div>
 
-          {loading ? (
-            <p>Loading...</p>
-          ) : (
-            <TableContainer component={Paper} className="request-table-container">
-              <Table stickyHeader aria-label="requests table" className="request-table">
-                <TableHead>
-                  <TableRow>
-                    <TableCell align="center">Request Name</TableCell>
-                    <TableCell align="center">Project Name</TableCell>
-                    <TableCell align="center">Approver</TableCell>
-                    <TableCell align="center">Status</TableCell>
-                    <TableCell align="center">Start Date</TableCell>
-                    <TableCell align="center">End Date</TableCell>
-                    <TableCell align="center">Total Times (Hours)</TableCell>
-                    <TableCell align="center">Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {requests
-                    .filter((req) =>
-                      req.claim_name.toLowerCase().includes(search.toLowerCase())
-                    )
-                    .map((req) => (
-                      <TableRow key={req._id}>
-                        <TableCell align="center">{req.claim_name}</TableCell>
-                        <TableCell align="center">
-                          {projects.find((project) => project._id === req.project_id)
-                            ?.project_name || "Unknown Project"}
-                        </TableCell>
-                        <TableCell align="center">
-                          {approvers.find((approver) => approver._id === req.approval_id)
-                            ?.user_name || "Unknown Approver"}
-                        </TableCell>
-                        <TableCell align="center" className={`status-${req.claim_status.toLowerCase()}`}>
-                          {req.claim_status}
-                        </TableCell>
-                        <TableCell align="center">{moment(req.claim_start_date).format("YYYY-MM-DD")}</TableCell>
-                        <TableCell align="center">{moment(req.claim_end_date).format("YYYY-MM-DD")}</TableCell>
-                        <TableCell align="center">{req.total_work_time}</TableCell>
-                        <TableCell align="center">
-                          <Button
-                            onClick={() => {
-                              setCurrentRequest(req);
-                              setIsEditModalVisible(true);
-                              setFormValues({
-                                claim_name: req.claim_name,
-                                project_id: req.project_id,
-                                approval_id: req.approval_id,
-                                claim_start_date: moment(req.claim_start_date),
-                                claim_end_date: moment(req.claim_end_date),
-                                total_work_time: req.total_work_time,
-                              });
-                            }}
-                            className="edit-button"
-                            disabled={
-                              req.claim_status !== "Draft" &&
-                              req.claim_status !== "Returned"
-                            }
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            onClick={() => handleDelete(req._id)}
-                            className="delete-button"
-                            disabled={req.claim_status !== "Draft"}
-                          >
-                            Delete
-                          </Button>
-                          {(req.claim_status === "Draft" ||
-                            req.claim_status === "Returned") && (
-                            <Button
-                              onClick={() => handleRequestApproval(req._id)}
-                              className="approve-button"
+            {loading ? (
+              <div className="loading-container">
+                <div className="flex justify-center flex-row gap-2">
+                  <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce"></div>
+                  <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce [animation-delay:-.3s]"></div>
+                  <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce [animation-delay:-.5s]"></div>
+                </div>
+              </div>
+            ) : (
+              <TableContainer component={Paper} className="request-table-container">
+                <Table stickyHeader aria-label="requests table">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell align="center" sx={headerCellStyle}>
+                        Request Name
+                      </TableCell>
+                      <TableCell align="center" sx={headerCellStyle}>
+                        Project Name
+                      </TableCell>
+                      <TableCell align="center" sx={headerCellStyle}>
+                        Approver
+                      </TableCell>
+                      <TableCell align="center" sx={headerCellStyle}>
+                        Status
+                      </TableCell>
+                      <TableCell align="center" sx={headerCellStyle}>
+                        Start Date
+                      </TableCell>
+                      <TableCell align="center" sx={headerCellStyle}>
+                        End Date
+                      </TableCell>
+                      <TableCell align="center" sx={headerCellStyle}>
+                        Total Times (Hours)
+                      </TableCell>
+                      <TableCell align="center" sx={headerCellStyle}>
+                        Actions
+                      </TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {requests
+                      .filter((req) =>
+                        req.claim_name
+                          .toLowerCase()
+                          .includes(search.toLowerCase())
+                      )
+                      .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                      .map((req) => (
+                        <TableRow key={req._id}>
+                          <TableCell align="center" sx={tableCellStyle}>
+                            {req.claim_name}
+                          </TableCell>
+                          <TableCell align="center" sx={tableCellStyle}>
+                            {req.project_info?.project_name || "Unknown Project"}
+                          </TableCell>
+                          <TableCell align="center" sx={tableCellStyle}>
+                            {req.approval_info?.user_name || "Unknown Approver"}
+                          </TableCell>
+                          <TableCell align="center" sx={tableCellStyle}>
+                            <span
+                              className={`status-badge status-${req.claim_status
+                                .toLowerCase()
+                                .replace(/\s+/g, "-")}`}
                             >
-                              Request Approval
-                            </Button>
-                          )}
-                        </TableCell>
-                      </TableRow>
+                              {req.claim_status}
+                            </span>
+                          </TableCell>
+                          <TableCell align="center" sx={tableCellStyle}>
+                            {moment(req.claim_start_date).format("DD/MM/YYYY")}
+                          </TableCell>
+                          <TableCell align="center" sx={tableCellStyle}>
+                            {moment(req.claim_end_date).format("DD/MM/YYYY")}
+                          </TableCell>
+                          <TableCell align="center" sx={tableCellStyle}>
+                            {req.total_work_time} (hours)
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            sx={{ ...tableCellStyle, minWidth: "250px" }}
+                          >
+                            <div className="action-buttons">
+                              <Button
+                                variant="contained"
+                                size="small"
+                                onClick={() => {
+                                  setCurrentRequest(req);
+                                  setIsEditModalVisible(true);
+                                  const project = projects.find((p) => p._id === req.project_id);
+                                  const approver = approvers.find((a) => a._id === req.approval_id);
+                                  setFormValues({
+                                    claim_name: req.claim_name,
+                                    project_id: req.project_id,
+                                    approval_id: req.approval_id,
+                                    claim_start_date: moment(req.claim_start_date),
+                                    claim_end_date: moment(req.claim_end_date),
+                                    total_work_time: req.total_work_time,
+                                  });
+                                  setSelectedApproverName(approver?.user_name || "");
+                                  setSelectedProjectName(project?.project_name || "");
+                                }}
+                                disabled={
+                                  req.claim_status !== "Draft" &&
+                                  req.claim_status !== "Returned"
+                                }
+                                sx={{
+                                  backgroundColor: "#e6cb62",
+                                  color: "black",
+                                  "&:hover": {
+                                    backgroundColor: "#eab308",
+                                    color: "white",
+                                  },
+                                  mr: 1,
+                                }}
+                              >
+                                Edit
+                              </Button>
+                              <Button
+                                variant="contained"
+                                size="small"
+                                onClick={() => handleDelete(req._id)}
+                                disabled={req.claim_status !== "Draft"}
+                                sx={{
+                                  backgroundColor: "#dc2626",
+                                  color: "white",
+                                  "&:hover": {
+                                    backgroundColor: "#ef4444",
+                                  },
+                                  mr: 1,
+                                }}
+                              >
+                                Delete
+                              </Button>
+                              {(req.claim_status === "Draft" ||
+                                req.claim_status === "Returned") && (
+                                <Button
+                                  variant="contained"
+                                  size="small"
+                                  onClick={() => handleRequestApproval(req._id)}
+                                  sx={{
+                                    backgroundColor: "#46d179",
+                                    color: "white",
+                                    "&:hover": {
+                                      backgroundColor: "#16a34a",
+                                    },
+                                  }}
+                                >
+                                  Request Approval
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+                <TablePagination
+                  rowsPerPageOptions={[5, 10, 25]}
+                  component="div"
+                  count={totalCount}
+                  rowsPerPage={rowsPerPage}
+                  page={page}
+                  onPageChange={(event, newPage) => setPage(newPage)}
+                  onRowsPerPageChange={(event) => {
+                    setRowsPerPage(parseInt(event.target.value, 10));
+                    setPage(0);
+                  }}
+                  labelDisplayedRows={({ from, to, count }) => {
+                    const computedFrom = page * rowsPerPage + 1;
+                    const computedTo = Math.min((page + 1) * rowsPerPage, count);
+                    return `${computedFrom}-${computedTo} of ${count}`;
+                  }}
+                  showFirstButton
+                  showLastButton
+                />
+              </TableContainer>
+            )}
+          </div>
+
+          {/* Add Request Modal */}
+          <Dialog
+            open={isAddModalVisible}
+            onClose={handleModalCancel}
+            maxWidth="md"
+            fullWidth
+          >
+            <DialogTitle
+              sx={{
+                m: 0,
+                p: 2,
+                fontSize: "1.25rem",
+                position: "relative",
+                backgroundColor: "#f3f4f6",
+              }}
+            >
+              Add Request
+              <IconButton
+                aria-label="close"
+                onClick={handleModalCancel}
+                sx={{
+                  position: "absolute",
+                  right: 8,
+                  top: 8,
+                  color: (theme) => theme.palette.grey[500],
+                }}
+              >
+                <CloseIcon />
+              </IconButton>
+            </DialogTitle>
+            <DialogContent sx={{ p: 3 }}>
+              <form onSubmit={handleAddModalOk}>
+                <TextField
+                  label="Request Name"
+                  name="claim_name"
+                  value={formValues.claim_name}
+                  onChange={handleInputChange}
+                  required
+                  fullWidth
+                  margin="normal"
+                />
+                <FormControl fullWidth margin="normal">
+                  <InputLabel>Project Name</InputLabel>
+                  <Select
+                    name="project_id"
+                    value={formValues.project_id}
+                    onChange={handleSelectChange}
+                    required
+                  >
+                    {projects.map((project) => (
+                      <MenuItem key={project._id} value={project._id}>
+                        {project.project_name}
+                      </MenuItem>
                     ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
+                  </Select>
+                </FormControl>
+                <FormControl fullWidth margin="normal">
+                  <Autocomplete
+                    freeSolo
+                    options={approvers.map((approver) => approver.user_name)}
+                    value={selectedApproverName}
+                    onInputChange={(event, newInputValue) => {
+                      setSelectedApproverName(newInputValue);
+                      if (newInputValue) {
+                        fetchApprovers(newInputValue);
+                      }
+                    }}
+                    onChange={(event, newValue) => {
+                      const selectedApprover = approvers.find(
+                        (approver) => approver.user_name === newValue
+                      );
+                      if (selectedApprover) {
+                        setFormValues({
+                          ...formValues,
+                          approval_id: selectedApprover._id,
+                        });
+                        setSelectedApproverName(selectedApprover.user_name);
+                      }
+                    }}
+                    renderInput={(params) => (
+                      <TextField {...params} label="Approver" required />
+                    )}
+                  />
+                </FormControl>
+                <LocalizationProvider dateAdapter={AdapterMoment}>
+                  <div style={{ display: "flex", gap: "16px", marginTop: "16px" }}>
+                    <DatePicker
+                      label="Start Date"
+                      value={formValues.claim_start_date}
+                      onChange={(date) => handleDateChange("claim_start_date", date)}
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          required: true,
+                        },
+                      }}
+                    />
+                    <DatePicker
+                      label="End Date"
+                      value={formValues.claim_end_date}
+                      onChange={(date) => handleDateChange("claim_end_date", date)}
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          required: true,
+                        },
+                      }}
+                    />
+                  </div>
+                </LocalizationProvider>
+                {dateError && <p className="error-message">{dateError}</p>}
+                <TextField
+                  label="Total Times"
+                  name="total_work_time"
+                  type="number"
+                  value={formValues.total_work_time}
+                  onChange={handleInputChange}
+                  required
+                  fullWidth
+                  margin="normal"
+                  inputProps={{ min: 1 }}
+                />
+                <DialogActions sx={{ p: 0, mt: 3 }}>
+                  <Button onClick={handleModalCancel} variant="outlined">
+                    Cancel
+                  </Button>
+                  <Button type="submit" variant="contained" color="primary">
+                    Add
+                  </Button>
+                </DialogActions>
+              </form>
+            </DialogContent>
+          </Dialog>
+
+          {/* Edit Request Modal */}
+          <Dialog
+            open={isEditModalVisible}
+            onClose={handleModalCancel}
+            maxWidth="md"
+            fullWidth
+          >
+            <DialogTitle
+              sx={{
+                m: 0,
+                p: 2,
+                fontSize: "1.25rem",
+                position: "relative",
+                backgroundColor: "#f3f4f6",
+              }}
+            >
+              Edit Request
+              <IconButton
+                aria-label="close"
+                onClick={handleModalCancel}
+                sx={{
+                  position: "absolute",
+                  right: 8,
+                  top: 8,
+                  color: (theme) => theme.palette.grey[500],
+                }}
+              >
+                <CloseIcon />
+              </IconButton>
+            </DialogTitle>
+            <DialogContent sx={{ p: 3 }}>
+              <form onSubmit={handleEditModalOk}>
+                <TextField
+                  label="Request Name"
+                  name="claim_name"
+                  value={formValues.claim_name}
+                  onChange={handleInputChange}
+                  required
+                  fullWidth
+                  margin="normal"
+                />
+                <FormControl fullWidth margin="normal">
+                  <InputLabel>Project Name</InputLabel>
+                  <Select
+                    name="project_id"
+                    value={formValues.project_id}
+                    onChange={handleSelectChange}
+                    required
+                  >
+                    {projects.map((project) => (
+                      <MenuItem key={project._id} value={project._id}>
+                        {project.project_name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControl fullWidth margin="normal">
+                  <Autocomplete
+                    freeSolo
+                    options={approvers.map((approver) => approver.user_name)}
+                    value={selectedApproverName}
+                    onInputChange={(event, newInputValue) => {
+                      setSelectedApproverName(newInputValue);
+                      if (newInputValue) {
+                        fetchApprovers(newInputValue);
+                      }
+                    }}
+                    onChange={(event, newValue) => {
+                      const selectedApprover = approvers.find(
+                        (approver) => approver.user_name === newValue
+                      );
+                      if (selectedApprover) {
+                        setFormValues({
+                          ...formValues,
+                          approval_id: selectedApprover._id,
+                        });
+                        setSelectedApproverName(selectedApprover.user_name);
+                      }
+                    }}
+                    renderInput={(params) => (
+                      <TextField {...params} label="Approver" required />
+                    )}
+                  />
+                </FormControl>
+                <LocalizationProvider dateAdapter={AdapterMoment}>
+                  <div style={{ display: "flex", gap: "16px", marginTop: "16px" }}>
+                    <DatePicker
+                      label="Start Date"
+                      value={formValues.claim_start_date}
+                      onChange={(date) => handleDateChange("claim_start_date", date)}
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          required: true,
+                        },
+                      }}
+                    />
+                    <DatePicker
+                      label="End Date"
+                      value={formValues.claim_end_date}
+                      onChange={(date) => handleDateChange("claim_end_date", date)}
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          required: true,
+                        },
+                      }}
+                    />
+                  </div>
+                </LocalizationProvider>
+                {dateError && <p className="error-message">{dateError}</p>}
+                <TextField
+                  label="Total Times"
+                  name="total_work_time"
+                  type="number"
+                  value={formValues.total_work_time}
+                  onChange={handleInputChange}
+                  required
+                  fullWidth
+                  margin="normal"
+                  inputProps={{ min: 1 }}
+                />
+                <DialogActions sx={{ p: 0, mt: 3 }}>
+                  <Button onClick={handleModalCancel} variant="outlined">
+                    Cancel
+                  </Button>
+                  <Button type="submit" variant="contained" color="primary">
+                    Save Changes
+                  </Button>
+                </DialogActions>
+              </form>
+            </DialogContent>
+          </Dialog>
+
+          {/* Confirm Approval Modal */}
+          <Dialog
+            open={isConfirmModalVisible}
+            onClose={() => setIsConfirmModalVisible(false)}
+            maxWidth="sm"
+            fullWidth
+          >
+            <DialogTitle
+              sx={{
+                m: 0,
+                p: 2,
+                fontSize: "1.25rem",
+                position: "relative",
+                backgroundColor: "#f3f4f6",
+              }}
+            >
+              Confirm Approval Request
+              <IconButton
+                aria-label="close"
+                onClick={() => setIsConfirmModalVisible(false)}
+                sx={{
+                  position: "absolute",
+                  right: 8,
+                  top: 8,
+                  color: (theme) => theme.palette.grey[500],
+                }}
+              >
+                <CloseIcon />
+              </IconButton>
+            </DialogTitle>
+            <DialogContent sx={{ p: 3 }}>
+              <p style={{ marginTop: "16px", fontSize: "1rem" }}>
+                Are you sure you want to submit this request for approval?
+              </p>
+            </DialogContent>
+            <DialogActions sx={{ p: 3 }}>
+              <Button
+                onClick={() => setIsConfirmModalVisible(false)}
+                variant="outlined"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleConfirmApproval}
+                variant="contained"
+                color="primary"
+              >
+                Confirm
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* Delete Confirmation Modal */}
+          <Dialog
+            open={isDeleteModalVisible}
+            onClose={() => setIsDeleteModalVisible(false)}
+            maxWidth="sm"
+            fullWidth
+          >
+            <DialogTitle
+              sx={{
+                m: 0,
+                p: 2,
+                fontSize: "1.25rem",
+                position: "relative",
+                backgroundColor: "#f3f4f6",
+              }}
+            >
+              Confirm Delete
+              <IconButton
+                aria-label="close"
+                onClick={() => setIsDeleteModalVisible(false)}
+                sx={{
+                  position: "absolute",
+                  right: 8,
+                  top: 8,
+                  color: (theme) => theme.palette.grey[500],
+                }}
+              >
+                <CloseIcon />
+              </IconButton>
+            </DialogTitle>
+            <DialogContent sx={{ p: 3 }}>
+              <p style={{ marginTop: "16px", fontSize: "1rem" }}>
+                Are you sure you want to delete this request?
+              </p>
+            </DialogContent>
+            <DialogActions sx={{ p: 3 }}>
+              <Button
+                onClick={() => setIsDeleteModalVisible(false)}
+                variant="outlined"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleConfirmDelete}
+                variant="contained"
+                color="error"
+              >
+                Delete
+              </Button>
+            </DialogActions>
+          </Dialog>
         </div>
-
-        <Modal
-          open={isAddModalVisible}
-          onClose={handleModalCancel}
-          className="custom-modal"
-        >
-          <div className="modal-content">
-            <h2>Add Request</h2>
-            <form onSubmit={handleAddModalOk}>
-              <TextField
-                label="Request Name"
-                name="claim_name"
-                value={formValues.claim_name}
-                onChange={handleInputChange}
-                required
-                fullWidth
-                margin="normal"
-              />
-              <FormControl fullWidth margin="normal">
-                <InputLabel>Project Name</InputLabel>
-                <Select
-                  name="project_id"
-                  value={formValues.project_id}
-                  onChange={handleSelectChange}
-                  required
-                >
-                  {projects.map((project) => (
-                    <MenuItem key={project._id} value={project._id}>
-                      {project.project_name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormControl fullWidth margin="normal">
-                <Autocomplete
-                  freeSolo
-                  options={approvers.map((approver) => approver.user_name)}
-                  onInputChange={(event, newInputValue) => {
-                    console.log("Autocomplete input changed:", newInputValue);
-                    if (newInputValue) {
-                      fetchApprovers(newInputValue);
-                    }
-                  }}
-                  onChange={(event, newValue) => {
-                    console.log("Autocomplete value changed:", newValue);
-                    const selectedApprover = approvers.find(
-                      (approver) => approver.user_name === newValue
-                    );
-                    if (selectedApprover) {
-                      setFormValues({
-                        ...formValues,
-                        approval_id: selectedApprover._id,
-                      });
-                    }
-                  }}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Approver"
-                      margin="normal"
-                      required
-                    />
-                  )}
-                />
-              </FormControl>
-              <LocalizationProvider dateAdapter={AdapterMoment}>
-                <DatePicker
-                  label="Start Date"
-                  value={formValues.claim_start_date}
-                  onChange={(date) => handleDateChange("claim_start_date", date)}
-                  slotProps={{
-                    textField: { fullWidth: true, margin: "normal", required: true },
-                  }}
-                />
-                <DatePicker
-                  label="End Date"
-                  value={formValues.claim_end_date}
-                  onChange={(date) => handleDateChange("claim_end_date", date)}
-                  slotProps={{
-                    textField: { fullWidth: true, margin: "normal", required: true },
-                  }}
-                />
-              </LocalizationProvider>
-              {dateError && <p className="error-message">{dateError}</p>}
-              <TextField
-                label="Total Times"
-                name="total_work_time"
-                type="number"
-                value={formValues.total_work_time}
-                onChange={handleInputChange}
-                required
-                fullWidth
-                margin="normal"
-                inputProps={{ min: 1 }}
-              />
-              <Button type="submit" variant="contained" color="primary">
-                Add
-              </Button>
-            </form>
-          </div>
-        </Modal>
-
-        <Modal
-          open={isEditModalVisible}
-          onClose={handleModalCancel}
-          className="custom-modal"
-        >
-          <div className="modal-content">
-            <h2>Edit Request</h2>
-            <form onSubmit={handleEditModalOk}>
-              <TextField
-                label="Request Name"
-                name="claim_name"
-                value={formValues.claim_name}
-                onChange={handleInputChange}
-                required
-                fullWidth
-                margin="normal"
-              />
-              <FormControl fullWidth margin="normal">
-                <InputLabel>Project Name</InputLabel>
-                <Select
-                  name="project_id"
-                  value={formValues.project_id}
-                  onChange={handleSelectChange}
-                  required
-                >
-                  {projects.map((project) => (
-                    <MenuItem key={project._id} value={project._id}>
-                      {project.project_name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormControl fullWidth margin="normal">
-                <Autocomplete
-                  freeSolo
-                  options={approvers.map((approver) => approver.user_name)}
-                  onInputChange={(event, newInputValue) => {
-                    if (newInputValue) {
-                      fetchApprovers(newInputValue);
-                    }
-                  }}
-                  onChange={(event, newValue) => {
-                    const selectedApprover = approvers.find(
-                      (approver) => approver.user_name === newValue
-                    );
-                    if (selectedApprover) {
-                      setFormValues({
-                        ...formValues,
-                        approval_id: selectedApprover._id,
-                      });
-                    }
-                  }}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Approver"
-                      margin="normal"
-                      required
-                    />
-                  )}
-                />
-              </FormControl>
-              <LocalizationProvider dateAdapter={AdapterMoment}>
-                <DatePicker
-                  label="Start Date"
-                  value={formValues.claim_start_date}
-                  onChange={(date) => handleDateChange("claim_start_date", date)}
-                  slotProps={{
-                    textField: { fullWidth: true, margin: "normal", required: true },
-                  }}
-                />
-                <DatePicker
-                  label="End Date"
-                  value={formValues.claim_end_date}
-                  onChange={(date) => handleDateChange("claim_end_date", date)}
-                  slotProps={{
-                    textField: { fullWidth: true, margin: "normal", required: true },
-                  }}
-                />
-              </LocalizationProvider>
-              {dateError && <p className="error-message">{dateError}</p>}
-              <TextField
-                label="Total Times"
-                name="total_work_time"
-                type="number"
-                value={formValues.total_work_time}
-                onChange={handleInputChange}
-                required
-                fullWidth
-                margin="normal"
-                inputProps={{ min: 1 }}
-              />
-              <Button type="submit" variant="contained" color="primary">
-                Save
-              </Button>
-            </form>
-          </div>
-        </Modal>
-
-        <Modal
-          open={isConfirmModalVisible}
-          onClose={() => setIsConfirmModalVisible(false)}
-          className="custom-modal"
-        >
-          <div className="modal-content">
-            <h2>Confirm Approval</h2>
-            <p>Are you sure you want to approve this request?</p>
-            <Button
-              onClick={handleConfirmApproval}
-              variant="contained"
-              color="primary"
-            >
-              Confirm
-            </Button>
-            <Button
-              onClick={() => setIsConfirmModalVisible(false)}
-              variant="contained"
-              color="secondary"
-            >
-              Cancel
-            </Button>
-          </div>
-        </Modal>
-
-        <Modal
-          open={isDeleteModalVisible}
-          onClose={() => setIsDeleteModalVisible(false)}
-          className="custom-modal"
-        >
-          <div className="modal-content">
-            <h2>Confirm Delete</h2>
-            <p>Are you sure you want to delete this request?</p>
-            <Button
-              onClick={handleConfirmDelete}
-              variant="contained"
-              color="primary"
-            >
-              Confirm
-            </Button>
-            <Button
-              onClick={() => setIsDeleteModalVisible(false)}
-              variant="contained"
-              color="secondary"
-            >
-              Cancel
-            </Button>
-          </div>
-        </Modal>
       </div>
     </Layout>
   );

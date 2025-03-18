@@ -66,6 +66,7 @@ const ApprovalPage: React.FC = () => {
   const [endDate, setEndDate] = useState<string>("");
   const [totalCount, setTotalCount] = useState<number>(0);
   const [allClaims, setAllClaims] = useState<Claim[]>([]);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
   const tableCellStyle = {
     borderRight: "2px solid rgba(224, 224, 224, 1)",
     borderBottom: "2px solid rgba(224, 224, 224, 1)",
@@ -122,7 +123,7 @@ const ApprovalPage: React.FC = () => {
             },
             pageInfo: {
               pageNum: 1,
-              pageSize: 50, // Lấy nhiều dữ liệu
+              pageSize: 50,
             },
           },
           {
@@ -133,7 +134,6 @@ const ApprovalPage: React.FC = () => {
         );
 
         if (response.data.success) {
-          // Thêm dữ liệu vào mảng tổng hợp
           allClaimsData.push(...response.data.data.pageData);
         }
       }
@@ -146,7 +146,6 @@ const ApprovalPage: React.FC = () => {
 
       console.log("All claims data:", filteredData);
 
-      // Cập nhật state
       setClaims(filteredData);
       setFilteredClaims(filteredData);
       setTotalCount(filteredData.length);
@@ -158,23 +157,37 @@ const ApprovalPage: React.FC = () => {
   };
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 11000); // Đợi 1000ms sau khi người dùng ngừng gõ
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Sửa lại useEffect để sử dụng debouncedSearchTerm thay vì searchTerm
+  useEffect(() => {
     if (!token) return;
     fetchClaims();
-  }, [token, statusFilter, searchTerm, startDate, endDate, page, rowsPerPage]);
+  }, [
+    token,
+    statusFilter,
+    debouncedSearchTerm,
+    startDate,
+    endDate,
+    page,
+    rowsPerPage,
+  ]);
 
   const fetchClaims = async () => {
     try {
       setLoading(true);
-
-      // Tăng pageSize khi chọn All để đảm bảo lấy tất cả dữ liệu
       const pageSize = statusFilter === "All" ? 100 : rowsPerPage;
 
-      // Khi chọn All, gửi request không có filter status
       const response = await axios.post(
         `${API_URL}/claims/approval-search`,
         {
           searchCondition: {
-            keyword: searchTerm || "",
+            keyword: debouncedSearchTerm || "", // Sử dụng debouncedSearchTerm
             claim_status: statusFilter === "All" ? "" : statusFilter,
             claim_start_date: startDate || "",
             claim_end_date: endDate || "",

@@ -3,11 +3,19 @@
   justify-content: center;
   min-height: 100vh;
   padding: 24px;
-  background-color: #f8fafc;
+  background-color: #f3f4f6;
 }
 
-.request-box {
-  width: 95%;
+.css-19midj6 {
+  padding: 0 !important;
+}
+
+.MuiBox-root.css-19midj6 {
+  padding: 0 !important;
+}
+
+.request-content {
+  width: 100%;
   max-width: 1800px;
   background: white;
   padding: 32px;
@@ -19,13 +27,12 @@
 .request-title {
   font-size: 28px;
   font-weight: 600;
-  color: #1e40af;
+  color: #374151;
   text-align: center;
   margin-bottom: 32px;
-  letter-spacing: 0.025em;
 }
 
-.search-container {
+.request-filters {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -33,283 +40,114 @@
   gap: 16px;
 }
 
-.search-input {
+.search-field {
   flex: 1;
-  padding: 12px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-}
-
-.search-input:focus {
-  border-color: #3b82f6;
-}
-
-.add-button {
-  background-color: #bcfcbc;
-  color: white;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-}
-
-.add-button:hover {
-  background-color: #81eee8;
 }
 
 .request-table-container {
-  margin-top: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
 }
 
-.request-table {
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
   width: 100%;
-  border-collapse: collapse;
-  background: white;
 }
 
-.request-table th
- {
-  padding: 12px;
-  border: 1px solid #f0f0f0;
-  text-align: left;
-  font-weight: 700;
-  background-color: #f3f4f6;
-  text-align: center;
-}
-
-.request-table th {
-  background-color: #fafafa;
-  color: #1F2020;
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
   font-weight: 600;
-}
-
-.request-table tr:nth-of-type(even) {
-  background-color: #fafafa;
+  display: inline-block;
 }
 
 .status-draft {
-  color: #a59c9ce0;
-  font-weight: bold;
-}
-.status-returned{
-  color: #f59e0b;
-  font-weight: 700;
+  background-color: #e2e8f0;
+  color: #64748b;
 }
 
-.status-pending {
-  color: #3b82f6;
-  font-weight: 700;
+.status-pending-approval {
+  background-color: #dbeafe;
+  color: #2563eb;
 }
 
 .status-approved {
-  color: #10b981;
-  font-weight: 700;
+  background-color: #dcfce7;
+  color: #16a34a;
 }
 
 .status-rejected {
-  color: #ef4444;
-  font-weight: 700;
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.status-returned {
+  background-color: #fef3c7;
+  color: #d97706;
 }
 
 .status-paid {
-  color: #1890ff;
-  font-weight: bold;
+  background-color: #e0f2fe;
+  color: #0284c7;
 }
 
-.edit-button,
-.delete-button,
-.approve-button {
-  border: none;
-  padding: 8px 12px;
-  margin: 0 5px;
-  cursor: pointer;
-  border-radius: 6px;
-  font-size: 14px;
-  transition: all 0.3s ease-in-out;
+.modal-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 32px;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  width: 90%;
+  max-width: 600px;
+}
+
+.modal-content h2 {
+  color: #374151;
+  margin-bottom: 16px;
+  font-size: 1.5rem;
   font-weight: 600;
-  margin-right: 8px;
-}
-
-.edit-button {
-  background-color: #e6cb62;
-  color: black;
-}
-
-.edit-button:hover {
-  background-color: #eab308;
-  color: #ffffff;
-  transform: scale(1.05);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.delete-button {
-  background-color: #dc2626;
-  color: white;
-}
-
-.delete-button:hover {
-  background-color: #eb3e3e;
-  color: #ffffff;
-  transform: scale(1.05);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
-}
-
-.custom-modal {
-  border-radius: 8px;
-  margin-top: 18vh;
-  padding: 0px 500px;
-}
-
-
-
-.custom-modal .ant-modal-header {
-  border-bottom: none;
-  border-radius: 8px 8px 0 0;
-}
-
-.custom-modal .ant-modal-footer {
-  border-top: none;
-}
-
-.custom-modal .ant-modal-body {
-  height: calc(100vh - 108px);
-  overflow-y: auto;
-  padding: 24px;
 }
 
 .blur-background {
-  filter: blur(6px);
-  transition: filter 0.3s;
-}
-.custom-modal .ant-form-item {
-  width: 100%;
-  margin-bottom: 16px;
+  filter: blur(4px);
+  transition: filter 0.3s ease;
 }
 
-.custom-modal .ant-form-item button {
-  width: 100%;
+.error-message {
+  color: #dc2626;
+  margin-top: 8px;
+  font-size: 0.875rem;
 }
 
-.custom-modal .ant-picker {
-  width: 100%;
-}
-
-.confirm-modal .modal-content {
-  border-radius: 8px;
-  padding: 20px;
-  background-color: #f9fafb;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.confirm-modal .ant-modal-header {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.confirm-modal .ant-modal-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #111827;
-}
-
-.confirm-modal .ant-modal-body {
-  padding-top: 10px;
-  font-size: 16px;
-  color: #4b5563;
-}
-
-.confirm-modal .ant-modal-footer {
-  border-top: none;
-  padding-top: 10px;
+.loading-container {
   display: flex;
-  justify-content: flex-end;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  gap: 16px;
 }
 
-.confirm-modal {
-  background-color: #16a34a;
-  border-color: #16a34a;
+.MuiTableHead-root .MuiTableRow-root {
+  background-color: #f3f4f6;
 }
 
-.confirm-modal .ant-btn-primary:hover {
-  background-color: #22c55e;
-  border-color: #22c55e;
+.date-filters {
+  display: flex;
+  gap: 16px;
+  align-items: center;
 }
 
-.confirm-modal .ant-btn-default {
-  color: #6b7280;
-  border-color: #d1d5db;
-}
-
-.confirm-modal .ant-btn-default:hover {
-  color: #374151;
-  border-color: #9ca3af;
-}
-
-.approve-button {
-  background-color: #46d179;
-  color: #ffffff;
-  font-weight: 600;
-  font-size: 14px;
-  padding: 10px 14px;
-  border-radius: 8px;
-  transition: background-color 0.3s ease-in-out, transform 0.1s;
-  border: none;
-}
-
-.approve-button:hover {
-  background-color: #16a34a;
-  color: #ffffff;
-  transform: scale(1.05);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.custom-modal .modal-content {
-  padding: 24px;
-  border-radius: 8px;
-  background-color: white;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-.custom-modal h2 {
-  margin-top: 0;
-  margin-bottom: 20px;
-}
-
-.custom-modal .MuiButton-root {
-  margin-right: 10px;
-}
-.modal-content p{
-  padding-bottom: 15px;
-}
-.modal-content h2{
-  font-weight: bold;
-}
-button.MuiButtonBase-root.MuiButton-root.MuiButton-contained.MuiButton-containedSecondary.MuiButton-sizeMedium.MuiButton-containedSizeMedium.MuiButton-colorSecondary.MuiButton-root.MuiButton-contained.MuiButton-containedSecondary.MuiButton-sizeMedium.MuiButton-containedSizeMedium.MuiButton-colorSecondary.css-1mns5ui-MuiButtonBase-root-MuiButton-root {
-  background-color: rgba(216, 4, 39, 0.952);
-}
-button.MuiButtonBase-root.MuiButton-root.MuiButton-contained.MuiButton-containedSecondary.MuiButton-sizeMedium.MuiButton-containedSizeMedium.MuiButton-colorSecondary.MuiButton-root.MuiButton-contained.MuiButton-containedSecondary.MuiButton-sizeMedium.MuiButton-containedSizeMedium.MuiButton-colorSecondary.css-1mns5ui-MuiButtonBase-root-MuiButton-root:hover {
-  background-color: rgba(252, 57, 90, 0.952);
-}
-button.MuiButtonBase-root.MuiButton-root.MuiButton-contained.MuiButton-containedPrimary.MuiButton-sizeMedium.MuiButton-containedSizeMedium.MuiButton-colorPrimary.MuiButton-root.MuiButton-contained.MuiButton-containedPrimary.MuiButton-sizeMedium.MuiButton-containedSizeMedium.MuiButton-colorPrimary.css-74d805-MuiButtonBase-root-MuiButton-root {
-  background-color: #0c76da;
-}
-button.MuiButtonBase-root.MuiButton-root.MuiButton-contained.MuiButton-containedPrimary.MuiButton-sizeMedium.MuiButton-containedSizeMedium.MuiButton-colorPrimary.MuiButton-root.MuiButton-contained.MuiButton-containedPrimary.MuiButton-sizeMedium.MuiButton-containedSizeMedium.MuiButton-colorPrimary.css-74d805-MuiButtonBase-root-MuiButton-root:hover {
-  background-color:#3b9bf5 ;
-}
-
-.custom-modal .modal-content h2 {
-  margin-bottom: 16px;
-  font-size: 24px;
-  font-weight: 600;
-}
-
-.custom-modal .modal-content p {
-  margin-bottom: 24px;
-  font-size: 16px;
-}
-
-.custom-modal .modal-content button {
-  margin-right: 8px;
+.date-field {
+  min-width: 200px;
 }
