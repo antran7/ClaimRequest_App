@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Modal,
   Button,
@@ -22,6 +22,7 @@ import {
   IconButton,
 } from "@mui/material";
 import axios from "axios";
+import { debounce } from "lodash";
 import "./RequestPage.css";
 import moment from "moment";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
@@ -321,6 +322,8 @@ const RequestPage = () => {
     }
   };
 
+  const debouncedFetchApprovers = useCallback(debounce(fetchApprovers, 800), [token]);
+
   const handleAddModalOk = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     console.log("handleAddModalOk called with formValues:", formValues);
@@ -525,32 +528,49 @@ const RequestPage = () => {
 
   const handleConfirmApproval = async () => {
     if (requestToApprove === null || !token) return;
-
+  
     try {
-      await axios.put(
+      // Gọi API để thay đổi trạng thái sang "Pending"
+      const response = await axios.put(
         `${API_URL}/claims/change-status`,
         {
-          claim_id: requestToApprove,
-          claim_status: "Pending Approval",
-          comment: "",
+          _id: requestToApprove, // Sử dụng _id thay vì claim_id vì API yêu cầu _id
+          claim_status: "Pending Approval", // Trạng thái mới
+          comment: "", // Bình luận rỗng nếu không cần giải thích
         },
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json", // Đảm bảo header này được thêm vào
           },
         }
       );
-      setRequests(
-        requests.map((req) =>
-          req._id === requestToApprove
-            ? { ...req, claim_status: "Pending Approval" }
-            : req
-        )
-      );
-      setIsConfirmModalVisible(false);
-      setRequestToApprove(null);
+  
+      // Kiểm tra phản hồi từ API
+      if (response.data.success) {
+        // Cập nhật danh sách requests trong state
+        setRequests(
+          requests.map((req) =>
+            req._id === requestToApprove
+              ? { ...req, claim_status: "Pending Approval" } // Cập nhật trạng thái trong UI
+              : req
+          )
+        );
+        // Đóng modal xác nhận
+        setIsConfirmModalVisible(false);
+        setRequestToApprove(null);
+        alert("Request has been submitted for approval!");
+      } else {
+        console.error("Failed to update status:", response.data.message);
+        alert(`Failed to submit request: ${response.data.message}`);
+      }
     } catch (error) {
       console.error("Error sending approval request:", error);
+      if (axios.isAxiosError(error) && error.response) {
+        alert(`Error: ${error.response.data.message || "Failed to update status"}`);
+      } else {
+        alert("An unexpected error occurred. Please try again.");
+      }
     }
   };
 
@@ -588,6 +608,55 @@ const RequestPage = () => {
     setFormValues({ ...formValues, [name]: date });
   };
 
+  const handleRequestCancel = async (id: string) => {
+    setRequestToDelete(id);
+    setIsDeleteModalVisible(true);
+  };
+
+  const handleConfirmCancel = async () => {
+    if (requestToDelete === null || !token) return;
+
+    try {
+      const response = await axios.put(
+        `${API_URL}/claims/change-status`,
+        {
+          _id: requestToDelete,
+          claim_status: "Canceled",
+          comment: "Canceled by user",
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.data.success) {
+        setRequests(
+          requests.map((req) =>
+            req._id === requestToDelete
+              ? { ...req, claim_status: "Canceled" }
+              : req
+          )
+        );
+        setIsDeleteModalVisible(false);
+        setRequestToDelete(null);
+        alert("Request has been canceled!");
+      } else {
+        console.error("Failed to cancel request:", response.data.message);
+        alert(`Failed to cancel request: ${response.data.message}`);
+      }
+    } catch (error) {
+      console.error("Error canceling request:", error);
+      if (axios.isAxiosError(error) && error.response) {
+        alert(`Error: ${error.response.data.message || "Failed to cancel request"}`);
+      } else {
+        alert("An unexpected error occurred. Please try again.");
+      }
+    }
+  };
+
   return (
     <Layout>
       <div className="min-h-screen bg-gray-100">
@@ -609,7 +678,7 @@ const RequestPage = () => {
                 variant="contained"
                 onClick={() => setIsAddModalVisible(true)}
                 sx={{
-                  backgroundColor: "#bcfcbc",
+                  backgroundColor: "#CBE82A",
                   "&:hover": {
                     backgroundColor: "#81eee8",
                   },
@@ -738,8 +807,14 @@ const RequestPage = () => {
                               <Button
                                 variant="contained"
                                 size="small"
-                                onClick={() => handleDelete(req._id)}
-                                disabled={req.claim_status !== "Draft"}
+                                onClick={() => handleRequestCancel(req._id)}
+                                disabled={
+                                  req.claim_status === "Canceled" ||
+                                  req.claim_status === "Pending Approval" ||
+                                  req.claim_status === "Paid" ||
+                                  req.claim_status === "Rejected" ||
+                                  req.claim_status === "Approved"
+                                }
                                 sx={{
                                   backgroundColor: "#dc2626",
                                   color: "white",
@@ -749,7 +824,7 @@ const RequestPage = () => {
                                   mr: 1,
                                 }}
                               >
-                                Delete
+                                Cancel
                               </Button>
                               {(req.claim_status === "Draft" ||
                                 req.claim_status === "Returned") && (
@@ -861,7 +936,7 @@ const RequestPage = () => {
                     onInputChange={(event, newInputValue) => {
                       setSelectedApproverName(newInputValue);
                       if (newInputValue) {
-                        fetchApprovers(newInputValue);
+                        debouncedFetchApprovers(newInputValue);
                       }
                     }}
                     onChange={(event, newValue) => {
@@ -995,7 +1070,7 @@ const RequestPage = () => {
                     onInputChange={(event, newInputValue) => {
                       setSelectedApproverName(newInputValue);
                       if (newInputValue) {
-                        fetchApprovers(newInputValue);
+                        debouncedFetchApprovers(newInputValue);
                       }
                     }}
                     onChange={(event, newValue) => {
@@ -1133,7 +1208,7 @@ const RequestPage = () => {
                 backgroundColor: "#f3f4f6",
               }}
             >
-              Confirm Delete
+              Confirm Cancel
               <IconButton
                 aria-label="close"
                 onClick={() => setIsDeleteModalVisible(false)}
@@ -1149,7 +1224,7 @@ const RequestPage = () => {
             </DialogTitle>
             <DialogContent sx={{ p: 3 }}>
               <p style={{ marginTop: "16px", fontSize: "1rem" }}>
-                Are you sure you want to delete this request?
+                Are you sure you want to cancel this request?
               </p>
             </DialogContent>
             <DialogActions sx={{ p: 3 }}>
@@ -1160,11 +1235,11 @@ const RequestPage = () => {
                 Cancel
               </Button>
               <Button
-                onClick={handleConfirmDelete}
+                onClick={handleConfirmCancel}
                 variant="contained"
                 color="error"
               >
-                Delete
+                Confirm
               </Button>
             </DialogActions>
           </Dialog>
