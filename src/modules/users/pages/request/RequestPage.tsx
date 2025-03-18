@@ -20,7 +20,6 @@ import {
   DialogContent,
   DialogActions,
   IconButton,
-  TablePagination,
 } from "@mui/material";
 import axios from "axios";
 import "./RequestPage.css";
@@ -28,12 +27,9 @@ import moment from "moment";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
 import Layout from "../../../../shared/layouts/Layout";
-
-import BackButton from "../../../admin/components/BackButton";
-
 import { SelectChangeEvent } from "@mui/material/Select";
 import CloseIcon from "@mui/icons-material/Close";
-
+import TablePagination from "@mui/material/TablePagination";
 
 const API_URL = "https://management-claim-request.vercel.app/api";
 
@@ -71,13 +67,11 @@ interface Request {
     _id: string;
     project_name: string;
     project_code: string;
-    // ... other project fields
   };
   approval_info?: {
     _id: string;
     user_name: string;
     email: string;
-    // ... other approver fields
   };
 }
 
@@ -128,6 +122,8 @@ const RequestPage = () => {
     claim_end_date: null,
     total_work_time: 0,
   });
+  const [selectedApproverName, setSelectedApproverName] = useState<string>(""); // New state for approver display
+  const [selectedProjectName, setSelectedProjectName] = useState<string>(""); // New state for project display
   const [userEmail, setUserEmail] = useState<string>("");
   const [userId, setUserId] = useState<string | null>(null);
   const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false);
@@ -140,7 +136,6 @@ const RequestPage = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
 
-  // useEffect hooks remain unchanged
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
     if (storedToken) {
@@ -166,16 +161,13 @@ const RequestPage = () => {
         const currentUserEmail = localStorage.getItem("userEmail");
         if (currentUserEmail) {
           setUserEmail(currentUserEmail);
-          const response = await axios.get(
-            `${API_URL}/users/${currentUserEmail}`
-          );
+          const response = await axios.get(`${API_URL}/users/${currentUserEmail}`);
           setUserId(response.data.data._id);
         }
       } catch (error) {
         console.error("Error fetching user information:", error);
       }
     };
-
     fetchUser();
   }, []);
 
@@ -218,7 +210,6 @@ const RequestPage = () => {
         setLoading(false);
       }
     };
-
     fetchRequests();
   }, [userEmail, userId, token, page, rowsPerPage]);
 
@@ -287,6 +278,15 @@ const RequestPage = () => {
     }
   }, [requests]);
 
+  useEffect(() => {
+    const fetchDataForEdit = async () => {
+      if (currentRequest && (!projects.length || !approvers.length)) {
+        await Promise.all([fetchProjects(), fetchApprovers("")]);
+      }
+    };
+    fetchDataForEdit();
+  }, [currentRequest, projects.length, approvers.length]);
+
   const fetchApprovers = async (keyword: string) => {
     try {
       console.log("Fetching approvers...");
@@ -321,12 +321,10 @@ const RequestPage = () => {
     }
   };
 
-  // Updated handleAddModalOk function
   const handleAddModalOk = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     console.log("handleAddModalOk called with formValues:", formValues);
 
-    // Validate required fields
     if (
       !formValues.claim_name ||
       !formValues.project_id ||
@@ -341,7 +339,6 @@ const RequestPage = () => {
       return;
     }
 
-    // Validate date logic
     if (
       formValues.claim_end_date &&
       formValues.claim_start_date &&
@@ -352,7 +349,6 @@ const RequestPage = () => {
       return;
     }
 
-    // Ensure userId and token are available
     if (!userId || !token) {
       console.error("Missing userId or token");
       return;
@@ -360,14 +356,14 @@ const RequestPage = () => {
 
     try {
       const newRequest = {
-        user_id: userId, // Include user_id in the request
+        user_id: userId,
         project_id: formValues.project_id,
         approval_id: formValues.approval_id,
         claim_name: formValues.claim_name,
         claim_start_date: formValues.claim_start_date.toISOString(),
         claim_end_date: formValues.claim_end_date.toISOString(),
-        total_work_time: Number(formValues.total_work_time), // Ensure it's a number
-        claim_status: "Draft", // Default status
+        total_work_time: Number(formValues.total_work_time),
+        claim_status: "Draft",
         remark: "",
       };
 
@@ -385,7 +381,7 @@ const RequestPage = () => {
       if (response.data.success) {
         const updatedRequests = [...requests, response.data.data];
         setRequests(updatedRequests);
-        localStorage.setItem("requests", JSON.stringify(updatedRequests)); // Save to localStorage
+        localStorage.setItem("requests", JSON.stringify(updatedRequests));
         setIsAddModalVisible(false);
         setFormValues({
           claim_name: "",
@@ -398,22 +394,20 @@ const RequestPage = () => {
         setDateError(null);
       } else {
         console.error("Failed to add request:", response.data.message);
-        alert(response.data.message); // Display error message to user
+        alert(response.data.message);
       }
     } catch (error) {
       console.error("Error adding request:", error);
     }
   };
 
-  // Other functions remain unchanged
   const handleEditModalOk = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!currentRequest || !token) {
       console.error("Missing currentRequest or token");
       return;
     }
-  
-    // Validate required fields
+
     if (
       !formValues.claim_name ||
       !formValues.project_id ||
@@ -426,8 +420,7 @@ const RequestPage = () => {
       alert("Please fill in all fields and ensure total work time is positive.");
       return;
     }
-  
-    // Validate date logic
+
     if (
       formValues.claim_end_date &&
       formValues.claim_start_date &&
@@ -437,22 +430,22 @@ const RequestPage = () => {
       console.error("Date validation failed:", dateError);
       return;
     }
-  
+
     try {
       const updatedRequest = {
-        _id: currentRequest._id, // Ensure the ID is included
-        user_id: userId, // Include user_id if required by the backend
+        _id: currentRequest._id,
+        user_id: userId,
         project_id: formValues.project_id,
         approval_id: formValues.approval_id,
         claim_name: formValues.claim_name,
         claim_start_date: formValues.claim_start_date?.toISOString() || "",
         claim_end_date: formValues.claim_end_date?.toISOString() || "",
-        total_work_time: Number(formValues.total_work_time), // Ensure it's a number
-        claim_status: currentRequest.claim_status, // Preserve the current status unless changed by the backend
+        total_work_time: Number(formValues.total_work_time),
+        claim_status: currentRequest.claim_status,
       };
-  
+
       console.log("Submitting updated request:", updatedRequest);
-  
+
       const response = await axios.put(
         `${API_URL}/claims/${currentRequest._id}`,
         updatedRequest,
@@ -463,7 +456,7 @@ const RequestPage = () => {
           },
         }
       );
-  
+
       if (response.data.success) {
         setRequests(
           requests.map((req) =>
@@ -574,6 +567,8 @@ const RequestPage = () => {
       claim_end_date: null,
       total_work_time: 0,
     });
+    setSelectedApproverName("");
+    setSelectedProjectName("");
     setDateError(null);
   };
 
@@ -582,54 +577,19 @@ const RequestPage = () => {
     setFormValues({ ...formValues, [name]: value });
   };
 
-
-  const handleSelectChange = (
-    e: React.ChangeEvent<{ name?: string; value: unknown }>
-  ) => {
-
   const handleSelectChange = (e: SelectChangeEvent<string>) => {
-
     const { name, value } = e.target;
     setFormValues({ ...formValues, [name as string]: value as string });
+    const project = projects.find((p) => p._id === value);
+    setSelectedProjectName(project?.project_name || "");
   };
 
   const handleDateChange = (name: string, date: moment.Moment | null) => {
     setFormValues({ ...formValues, [name]: date });
   };
 
-  // JSX remains unchanged
   return (
     <Layout>
-
-      <div className="bg-[#f8fafc]">
-        <BackButton to="/admin/dashboard" />
-        <h1 className="request-title">Manage Claim Requests</h1>
-        <div className="flex justify-end items-center gap-4 mb-6 pr-13">
-          <TextField
-            type="text"
-            placeholder="Search requests..."
-            className="border border-gray-300 rounded-lg px-4 py-2 w-full max-w-sm focus:ring-2 focus:ring-blue-500 outline-none"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <Button
-            onClick={() => setIsAddModalVisible(true)}
-            className="add-button"
-          >
-            + Add Request
-          </Button>
-        </div>
-        <div
-          className={`request-container ${
-            isAddModalVisible || isEditModalVisible ? "blur-background" : ""
-          }`}
-        >
-          <div className="request-box">
-            <div className="search-container"></div>
-
-            {loading ? (
-              <p>Loading...</p>
-
       <div className="min-h-screen bg-gray-100">
         <div className="p-8">
           <div className="request-content">
@@ -667,35 +627,8 @@ const RequestPage = () => {
                   <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce [animation-delay:-.5s]"></div>
                 </div>
               </div>
-
             ) : (
-              <TableContainer
-                component={Paper}
-                className="request-table-container"
-              >
-
-                <Table
-                  stickyHeader
-                  aria-label="requests table"
-                  className="request-table"
-                >
-                  <TableHead>
-                    <TableRow>
-                      <TableCell align="center" sx={{ width: "17%" }}>
-                        Request Name
-                      </TableCell>
-                      <TableCell align="center" sx={{ width: "19%" }}>
-                        Project Name
-                      </TableCell>
-                      <TableCell align="center">Approver</TableCell>
-                      <TableCell align="center">Status</TableCell>
-                      <TableCell align="center">Start Date</TableCell>
-                      <TableCell align="center">End Date</TableCell>
-                      <TableCell align="center" sx={{ width: "10%" }}>
-                        Total Times
-                      </TableCell>
-                      <TableCell align="center">Actions</TableCell>
-
+              <TableContainer component={Paper} className="request-table-container">
                 <Table stickyHeader aria-label="requests table">
                   <TableHead>
                     <TableRow>
@@ -723,7 +656,6 @@ const RequestPage = () => {
                       <TableCell align="center" sx={headerCellStyle}>
                         Actions
                       </TableCell>
-
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -733,81 +665,14 @@ const RequestPage = () => {
                           .toLowerCase()
                           .includes(search.toLowerCase())
                       )
+                      .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                       .map((req) => (
                         <TableRow key={req._id}>
-
-                          <TableCell align="center">{req.claim_name}</TableCell>
-                          <TableCell align="center">
-                            {projects.find(
-                              (project) => project._id === req.project_id
-                            )?.project_name || "Unknown Project"}
-                          </TableCell>
-                          <TableCell align="center">
-                            {approvers.find(
-                              (approver) => approver._id === req.approval_id
-                            )?.user_name || "Unknown Approver"}
-                          </TableCell>
-                          <TableCell
-                            align="center"
-                            className={`status-${req.claim_status.toLowerCase()}`}
-                          >
-                            {req.claim_status}
-                          </TableCell>
-                          <TableCell align="center">
-                            {moment(req.claim_start_date).format("YYYY-MM-DD")}
-                          </TableCell>
-                          <TableCell align="center">
-                            {moment(req.claim_end_date).format("YYYY-MM-DD")}
-                          </TableCell>
-                          <TableCell align="center">
-                            {req.total_work_time}
-                          </TableCell>
-                          <TableCell align="center">
-                            <Button
-                              onClick={() => {
-                                setCurrentRequest(req);
-                                setIsEditModalVisible(true);
-                                setFormValues({
-                                  claim_name: req.claim_name,
-                                  project_id: req.project_id,
-                                  approval_id: req.approval_id,
-                                  claim_start_date: moment(
-                                    req.claim_start_date
-                                  ),
-                                  claim_end_date: moment(req.claim_end_date),
-                                  total_work_time: req.total_work_time,
-                                });
-                              }}
-                              className="edit-button"
-                              disabled={
-                                req.claim_status !== "Draft" &&
-                                req.claim_status !== "Returned"
-                              }
-                            >
-                              Edit
-                            </Button>
-                            <Button
-                              onClick={() => handleDelete(req._id)}
-                              className="delete-button"
-                              disabled={req.claim_status !== "Draft"}
-                            >
-                              Delete
-                            </Button>
-                            {(req.claim_status === "Draft" ||
-                              req.claim_status === "Returned") && (
-                              <Button
-                                onClick={() => handleRequestApproval(req._id)}
-                                className="approve-button"
-                              >
-                                Request Approval
-                              </Button>
-                            )}
-                       <TableCell align="center" sx={tableCellStyle}>
+                          <TableCell align="center" sx={tableCellStyle}>
                             {req.claim_name}
                           </TableCell>
                           <TableCell align="center" sx={tableCellStyle}>
-                            {req.project_info?.project_name ||
-                              "Unknown Project"}
+                            {req.project_info?.project_name || "Unknown Project"}
                           </TableCell>
                           <TableCell align="center" sx={tableCellStyle}>
                             {req.approval_info?.user_name || "Unknown Approver"}
@@ -841,16 +706,18 @@ const RequestPage = () => {
                                 onClick={() => {
                                   setCurrentRequest(req);
                                   setIsEditModalVisible(true);
+                                  const project = projects.find((p) => p._id === req.project_id);
+                                  const approver = approvers.find((a) => a._id === req.approval_id);
                                   setFormValues({
                                     claim_name: req.claim_name,
                                     project_id: req.project_id,
                                     approval_id: req.approval_id,
-                                    claim_start_date: moment(
-                                      req.claim_start_date
-                                    ),
+                                    claim_start_date: moment(req.claim_start_date),
                                     claim_end_date: moment(req.claim_end_date),
                                     total_work_time: req.total_work_time,
                                   });
+                                  setSelectedApproverName(approver?.user_name || "");
+                                  setSelectedProjectName(project?.project_name || "");
                                 }}
                                 disabled={
                                   req.claim_status !== "Draft" &&
@@ -902,7 +769,6 @@ const RequestPage = () => {
                                 </Button>
                               )}
                             </div>
-
                           </TableCell>
                         </TableRow>
                       ))}
@@ -930,15 +796,6 @@ const RequestPage = () => {
               </TableContainer>
             )}
           </div>
-
-
-          <Modal
-            open={isAddModalVisible}
-            onClose={handleModalCancel}
-            className="custom-modal"
-          >
-            <div className="modal-content">
-              <h2>Add Request</h2>
 
           {/* Add Request Modal */}
           <Dialog
@@ -971,14 +828,12 @@ const RequestPage = () => {
               </IconButton>
             </DialogTitle>
             <DialogContent sx={{ p: 3 }}>
-
               <form onSubmit={handleAddModalOk}>
                 <TextField
                   label="Request Name"
                   name="claim_name"
                   value={formValues.claim_name}
                   onChange={handleInputChange}
-
                   required
                   fullWidth
                   margin="normal"
@@ -1002,121 +857,9 @@ const RequestPage = () => {
                   <Autocomplete
                     freeSolo
                     options={approvers.map((approver) => approver.user_name)}
+                    value={selectedApproverName}
                     onInputChange={(event, newInputValue) => {
-                      console.log("Autocomplete input changed:", newInputValue);
-                      if (newInputValue) {
-                        fetchApprovers(newInputValue);
-                      }
-                    }}
-                    onChange={(event, newValue) => {
-                      console.log("Autocomplete value changed:", newValue);
-                      const selectedApprover = approvers.find(
-                        (approver) => approver.user_name === newValue
-                      );
-                      if (selectedApprover) {
-                        setFormValues({
-                          ...formValues,
-                          approval_id: selectedApprover._id,
-                        });
-                      }
-                    }}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Approver"
-                        margin="normal"
-                        required
-                      />
-                    )}
-                  />
-                </FormControl>
-                <LocalizationProvider dateAdapter={AdapterMoment}>
-                  <DatePicker
-                    label="Start Date"
-                    value={formValues.claim_start_date}
-                    onChange={(date) =>
-                      handleDateChange("claim_start_date", date)
-                    }
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        margin: "normal",
-                        required: true,
-                      },
-                    }}
-                  />
-                  <DatePicker
-                    label="End Date"
-                    value={formValues.claim_end_date}
-                    onChange={(date) =>
-                      handleDateChange("claim_end_date", date)
-                    }
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        margin: "normal",
-                        required: true,
-                      },
-                    }}
-                  />
-                </LocalizationProvider>
-                {dateError && <p className="error-message">{dateError}</p>}
-                <TextField
-                  label="Total Times"
-                  name="total_work_time"
-                  type="number"
-                  value={formValues.total_work_time}
-                  onChange={handleInputChange}
-                  required
-                  fullWidth
-                  margin="normal"
-                  inputProps={{ min: 1 }}
-                />
-                <Button type="submit" variant="contained" color="primary">
-                  Add
-                </Button>
-              </form>
-            </div>
-          </Modal>
-
-          <Modal
-            open={isEditModalVisible}
-            onClose={handleModalCancel}
-            className="custom-modal"
-          >
-            <div className="modal-content">
-              <h2>Edit Request</h2>
-              <form onSubmit={handleEditModalOk}>
-                <TextField
-                  label="Request Name"
-                  name="claim_name"
-                  value={formValues.claim_name}
-                  onChange={handleInputChange}
-
-                  required
-                  fullWidth
-                  margin="normal"
-                />
-                <FormControl fullWidth margin="normal">
-                  <InputLabel>Project Name</InputLabel>
-                  <Select
-                    name="project_id"
-                    value={formValues.project_id}
-                    onChange={handleSelectChange}
-                    required
-                  >
-                    {projects.map((project) => (
-                      <MenuItem key={project._id} value={project._id}>
-                        {project.project_name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormControl fullWidth margin="normal">
-                  <Autocomplete
-                    freeSolo
-                    options={approvers.map((approver) => approver.user_name)}
-                    onInputChange={(event, newInputValue) => {
+                      setSelectedApproverName(newInputValue);
                       if (newInputValue) {
                         fetchApprovers(newInputValue);
                       }
@@ -1130,62 +873,20 @@ const RequestPage = () => {
                           ...formValues,
                           approval_id: selectedApprover._id,
                         });
+                        setSelectedApproverName(selectedApprover.user_name);
                       }
                     }}
                     renderInput={(params) => (
-
-                      <TextField
-                        {...params}
-                        label="Approver"
-                        margin="normal"
-                        required
-                      />
-
                       <TextField {...params} label="Approver" required />
-
                     )}
                   />
                 </FormControl>
                 <LocalizationProvider dateAdapter={AdapterMoment}>
-
-                  <DatePicker
-                    label="Start Date"
-                    value={formValues.claim_start_date}
-                    onChange={(date) =>
-                      handleDateChange("claim_start_date", date)
-                    }
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        margin: "normal",
-                        required: true,
-                      },
-                    }}
-                  />
-                  <DatePicker
-                    label="End Date"
-                    value={formValues.claim_end_date}
-                    onChange={(date) =>
-                      handleDateChange("claim_end_date", date)
-                    }
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        margin: "normal",
-                        required: true,
-                      },
-                    }}
-                  />
-
-                  <div
-                    style={{ display: "flex", gap: "16px", marginTop: "16px" }}
-                  >
+                  <div style={{ display: "flex", gap: "16px", marginTop: "16px" }}>
                     <DatePicker
                       label="Start Date"
                       value={formValues.claim_start_date}
-                      onChange={(date) =>
-                        handleDateChange("claim_start_date", date)
-                      }
+                      onChange={(date) => handleDateChange("claim_start_date", date)}
                       slotProps={{
                         textField: {
                           fullWidth: true,
@@ -1196,9 +897,7 @@ const RequestPage = () => {
                     <DatePicker
                       label="End Date"
                       value={formValues.claim_end_date}
-                      onChange={(date) =>
-                        handleDateChange("claim_end_date", date)
-                      }
+                      onChange={(date) => handleDateChange("claim_end_date", date)}
                       slotProps={{
                         textField: {
                           fullWidth: true,
@@ -1292,7 +991,9 @@ const RequestPage = () => {
                   <Autocomplete
                     freeSolo
                     options={approvers.map((approver) => approver.user_name)}
+                    value={selectedApproverName}
                     onInputChange={(event, newInputValue) => {
+                      setSelectedApproverName(newInputValue);
                       if (newInputValue) {
                         fetchApprovers(newInputValue);
                       }
@@ -1306,6 +1007,7 @@ const RequestPage = () => {
                           ...formValues,
                           approval_id: selectedApprover._id,
                         });
+                        setSelectedApproverName(selectedApprover.user_name);
                       }
                     }}
                     renderInput={(params) => (
@@ -1314,15 +1016,11 @@ const RequestPage = () => {
                   />
                 </FormControl>
                 <LocalizationProvider dateAdapter={AdapterMoment}>
-                  <div
-                    style={{ display: "flex", gap: "16px", marginTop: "16px" }}
-                  >
+                  <div style={{ display: "flex", gap: "16px", marginTop: "16px" }}>
                     <DatePicker
                       label="Start Date"
                       value={formValues.claim_start_date}
-                      onChange={(date) =>
-                        handleDateChange("claim_start_date", date)
-                      }
+                      onChange={(date) => handleDateChange("claim_start_date", date)}
                       slotProps={{
                         textField: {
                           fullWidth: true,
@@ -1333,9 +1031,7 @@ const RequestPage = () => {
                     <DatePicker
                       label="End Date"
                       value={formValues.claim_end_date}
-                      onChange={(date) =>
-                        handleDateChange("claim_end_date", date)
-                      }
+                      onChange={(date) => handleDateChange("claim_end_date", date)}
                       slotProps={{
                         textField: {
                           fullWidth: true,
@@ -1344,7 +1040,6 @@ const RequestPage = () => {
                       }}
                     />
                   </div>
-
                 </LocalizationProvider>
                 {dateError && <p className="error-message">{dateError}</p>}
                 <TextField
@@ -1358,64 +1053,6 @@ const RequestPage = () => {
                   margin="normal"
                   inputProps={{ min: 1 }}
                 />
-
-                <Button type="submit" variant="contained" color="primary">
-                  Save
-                </Button>
-              </form>
-            </div>
-          </Modal>
-
-          <Modal
-            open={isConfirmModalVisible}
-            onClose={() => setIsConfirmModalVisible(false)}
-            className="custom-modal"
-          >
-            <div className="modal-content">
-              <h2>Confirm Approval</h2>
-              <p>Are you sure you want to approve this request?</p>
-              <Button
-                onClick={handleConfirmApproval}
-                variant="contained"
-                color="primary"
-              >
-                Confirm
-              </Button>
-              <Button
-                onClick={() => setIsConfirmModalVisible(false)}
-                variant="contained"
-                color="secondary"
-              >
-                Cancel
-              </Button>
-            </div>
-          </Modal>
-
-          <Modal
-            open={isDeleteModalVisible}
-            onClose={() => setIsDeleteModalVisible(false)}
-            className="custom-modal"
-          >
-            <div className="modal-content">
-              <h2>Confirm Delete</h2>
-              <p>Are you sure you want to delete this request?</p>
-              <Button
-                onClick={handleConfirmDelete}
-                variant="contained"
-                color="primary"
-              >
-                Confirm
-              </Button>
-              <Button
-                onClick={() => setIsDeleteModalVisible(false)}
-                variant="contained"
-                color="secondary"
-              >
-                Cancel
-              </Button>
-            </div>
-          </Modal>
-
                 <DialogActions sx={{ p: 0, mt: 3 }}>
                   <Button onClick={handleModalCancel} variant="outlined">
                     Cancel
@@ -1531,7 +1168,6 @@ const RequestPage = () => {
               </Button>
             </DialogActions>
           </Dialog>
-
         </div>
       </div>
     </Layout>
