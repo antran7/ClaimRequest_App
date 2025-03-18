@@ -22,6 +22,7 @@ import moment from "moment";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
 import Layout from "../../../../shared/layouts/Layout";
+import BackButton from "../../../admin/components/BackButton";
 
 const API_URL = "https://management-claim-request.vercel.app/api";
 
@@ -123,7 +124,9 @@ const RequestPage = () => {
         const currentUserEmail = localStorage.getItem("userEmail");
         if (currentUserEmail) {
           setUserEmail(currentUserEmail);
-          const response = await axios.get(`${API_URL}/users/${currentUserEmail}`);
+          const response = await axios.get(
+            `${API_URL}/users/${currentUserEmail}`
+          );
           setUserId(response.data.data._id);
         }
       } catch (error) {
@@ -292,7 +295,9 @@ const RequestPage = () => {
       !formValues.claim_end_date ||
       formValues.total_work_time <= 0
     ) {
-      console.error("All fields are required and total work time must be positive");
+      console.error(
+        "All fields are required and total work time must be positive"
+      );
       return;
     }
 
@@ -388,15 +393,23 @@ const RequestPage = () => {
           : null,
         total_work_time: formValues.total_work_time,
       };
-      await axios.put(`${API_URL}/claims/${currentRequest._id}`, updatedRequest, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await axios.put(
+        `${API_URL}/claims/${currentRequest._id}`,
+        updatedRequest,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       setRequests(
         requests.map((req) =>
           req._id === currentRequest._id
-            ? { ...updatedRequest, claim_start_date: updatedRequest.claim_start_date || "", claim_end_date: updatedRequest.claim_end_date || "" }
+            ? {
+                ...updatedRequest,
+                claim_start_date: updatedRequest.claim_start_date || "",
+                claim_end_date: updatedRequest.claim_end_date || "",
+              }
             : req
         )
       );
@@ -462,7 +475,9 @@ const RequestPage = () => {
       );
       setRequests(
         requests.map((req) =>
-          req._id === requestToApprove ? { ...req, claim_status: "Pending Approval" } : req
+          req._id === requestToApprove
+            ? { ...req, claim_status: "Pending Approval" }
+            : req
         )
       );
       setIsConfirmModalVisible(false);
@@ -493,7 +508,9 @@ const RequestPage = () => {
     setFormValues({ ...formValues, [name]: value });
   };
 
-  const handleSelectChange = (e: React.ChangeEvent<{ name?: string; value: unknown }>) => {
+  const handleSelectChange = (
+    e: React.ChangeEvent<{ name?: string; value: unknown }>
+  ) => {
     const { name, value } = e.target;
     setFormValues({ ...formValues, [name as string]: value as string });
   };
@@ -505,365 +522,420 @@ const RequestPage = () => {
   // JSX remains unchanged
   return (
     <Layout>
-      <div
-        className={`request-container ${
-          isAddModalVisible || isEditModalVisible ? "blur-background" : ""
-        }`}
-      >
-        <div className="request-box">
-          <h1 className="request-title">Manage Claim Requests</h1>
-
-          <div className="search-container">
-            <TextField
-              type="text"
-              placeholder="Search requests..."
-              className="search-input"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            <Button
-              onClick={() => setIsAddModalVisible(true)}
-              className="add-button"
-            >
-              + Add Request
-            </Button>
-          </div>
-
-          {loading ? (
-            <p>Loading...</p>
-          ) : (
-            <TableContainer component={Paper} className="request-table-container">
-              <Table stickyHeader aria-label="requests table" className="request-table">
-                <TableHead>
-                  <TableRow>
-                    <TableCell align="center">Request Name</TableCell>
-                    <TableCell align="center">Project Name</TableCell>
-                    <TableCell align="center">Approver</TableCell>
-                    <TableCell align="center">Status</TableCell>
-                    <TableCell align="center">Start Date</TableCell>
-                    <TableCell align="center">End Date</TableCell>
-                    <TableCell align="center">Total Times (Hours)</TableCell>
-                    <TableCell align="center">Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {requests
-                    .filter((req) =>
-                      req.claim_name.toLowerCase().includes(search.toLowerCase())
-                    )
-                    .map((req) => (
-                      <TableRow key={req._id}>
-                        <TableCell align="center">{req.claim_name}</TableCell>
-                        <TableCell align="center">
-                          {projects.find((project) => project._id === req.project_id)
-                            ?.project_name || "Unknown Project"}
-                        </TableCell>
-                        <TableCell align="center">
-                          {approvers.find((approver) => approver._id === req.approval_id)
-                            ?.user_name || "Unknown Approver"}
-                        </TableCell>
-                        <TableCell align="center" className={`status-${req.claim_status.toLowerCase()}`}>
-                          {req.claim_status}
-                        </TableCell>
-                        <TableCell align="center">{moment(req.claim_start_date).format("YYYY-MM-DD")}</TableCell>
-                        <TableCell align="center">{moment(req.claim_end_date).format("YYYY-MM-DD")}</TableCell>
-                        <TableCell align="center">{req.total_work_time}</TableCell>
-                        <TableCell align="center">
-                          <Button
-                            onClick={() => {
-                              setCurrentRequest(req);
-                              setIsEditModalVisible(true);
-                              setFormValues({
-                                claim_name: req.claim_name,
-                                project_id: req.project_id,
-                                approval_id: req.approval_id,
-                                claim_start_date: moment(req.claim_start_date),
-                                claim_end_date: moment(req.claim_end_date),
-                                total_work_time: req.total_work_time,
-                              });
-                            }}
-                            className="edit-button"
-                            disabled={
-                              req.claim_status !== "Draft" &&
-                              req.claim_status !== "Returned"
-                            }
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            onClick={() => handleDelete(req._id)}
-                            className="delete-button"
-                            disabled={req.claim_status !== "Draft"}
-                          >
-                            Delete
-                          </Button>
-                          {(req.claim_status === "Draft" ||
-                            req.claim_status === "Returned") && (
-                            <Button
-                              onClick={() => handleRequestApproval(req._id)}
-                              className="approve-button"
-                            >
-                              Request Approval
-                            </Button>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
+      <div className="bg-[#f8fafc]">
+        <BackButton to="/admin/dashboard" />
+        <h1 className="request-title">Manage Claim Requests</h1>
+        <div className="flex justify-end items-center gap-4 mb-6 pr-13">
+          <TextField
+            type="text"
+            placeholder="Search requests..."
+            className="border border-gray-300 rounded-lg px-4 py-2 w-full max-w-sm focus:ring-2 focus:ring-blue-500 outline-none"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <Button
+            onClick={() => setIsAddModalVisible(true)}
+            className="add-button"
+          >
+            + Add Request
+          </Button>
         </div>
-
-        <Modal
-          open={isAddModalVisible}
-          onClose={handleModalCancel}
-          className="custom-modal"
+        <div
+          className={`request-container ${
+            isAddModalVisible || isEditModalVisible ? "blur-background" : ""
+          }`}
         >
-          <div className="modal-content">
-            <h2>Add Request</h2>
-            <form onSubmit={handleAddModalOk}>
-              <TextField
-                label="Request Name"
-                name="claim_name"
-                value={formValues.claim_name}
-                onChange={handleInputChange}
-                required
-                fullWidth
-                margin="normal"
-              />
-              <FormControl fullWidth margin="normal">
-                <InputLabel>Project Name</InputLabel>
-                <Select
-                  name="project_id"
-                  value={formValues.project_id}
-                  onChange={handleSelectChange}
-                  required
+          <div className="request-box">
+            <div className="search-container"></div>
+
+            {loading ? (
+              <p>Loading...</p>
+            ) : (
+              <TableContainer
+                component={Paper}
+                className="request-table-container"
+              >
+                <Table
+                  stickyHeader
+                  aria-label="requests table"
+                  className="request-table"
                 >
-                  {projects.map((project) => (
-                    <MenuItem key={project._id} value={project._id}>
-                      {project.project_name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormControl fullWidth margin="normal">
-                <Autocomplete
-                  freeSolo
-                  options={approvers.map((approver) => approver.user_name)}
-                  onInputChange={(event, newInputValue) => {
-                    console.log("Autocomplete input changed:", newInputValue);
-                    if (newInputValue) {
-                      fetchApprovers(newInputValue);
-                    }
-                  }}
-                  onChange={(event, newValue) => {
-                    console.log("Autocomplete value changed:", newValue);
-                    const selectedApprover = approvers.find(
-                      (approver) => approver.user_name === newValue
-                    );
-                    if (selectedApprover) {
-                      setFormValues({
-                        ...formValues,
-                        approval_id: selectedApprover._id,
-                      });
-                    }
-                  }}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Approver"
-                      margin="normal"
-                      required
-                    />
-                  )}
-                />
-              </FormControl>
-              <LocalizationProvider dateAdapter={AdapterMoment}>
-                <DatePicker
-                  label="Start Date"
-                  value={formValues.claim_start_date}
-                  onChange={(date) => handleDateChange("claim_start_date", date)}
-                  slotProps={{
-                    textField: { fullWidth: true, margin: "normal", required: true },
-                  }}
-                />
-                <DatePicker
-                  label="End Date"
-                  value={formValues.claim_end_date}
-                  onChange={(date) => handleDateChange("claim_end_date", date)}
-                  slotProps={{
-                    textField: { fullWidth: true, margin: "normal", required: true },
-                  }}
-                />
-              </LocalizationProvider>
-              {dateError && <p className="error-message">{dateError}</p>}
-              <TextField
-                label="Total Times"
-                name="total_work_time"
-                type="number"
-                value={formValues.total_work_time}
-                onChange={handleInputChange}
-                required
-                fullWidth
-                margin="normal"
-                inputProps={{ min: 1 }}
-              />
-              <Button type="submit" variant="contained" color="primary">
-                Add
-              </Button>
-            </form>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell align="center" sx={{ width: "17%" }}>
+                        Request Name
+                      </TableCell>
+                      <TableCell align="center" sx={{ width: "19%" }}>
+                        Project Name
+                      </TableCell>
+                      <TableCell align="center">Approver</TableCell>
+                      <TableCell align="center">Status</TableCell>
+                      <TableCell align="center">Start Date</TableCell>
+                      <TableCell align="center">End Date</TableCell>
+                      <TableCell align="center" sx={{ width: "10%" }}>
+                        Total Times
+                      </TableCell>
+                      <TableCell align="center">Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {requests
+                      .filter((req) =>
+                        req.claim_name
+                          .toLowerCase()
+                          .includes(search.toLowerCase())
+                      )
+                      .map((req) => (
+                        <TableRow key={req._id}>
+                          <TableCell align="center">{req.claim_name}</TableCell>
+                          <TableCell align="center">
+                            {projects.find(
+                              (project) => project._id === req.project_id
+                            )?.project_name || "Unknown Project"}
+                          </TableCell>
+                          <TableCell align="center">
+                            {approvers.find(
+                              (approver) => approver._id === req.approval_id
+                            )?.user_name || "Unknown Approver"}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={`status-${req.claim_status.toLowerCase()}`}
+                          >
+                            {req.claim_status}
+                          </TableCell>
+                          <TableCell align="center">
+                            {moment(req.claim_start_date).format("YYYY-MM-DD")}
+                          </TableCell>
+                          <TableCell align="center">
+                            {moment(req.claim_end_date).format("YYYY-MM-DD")}
+                          </TableCell>
+                          <TableCell align="center">
+                            {req.total_work_time}
+                          </TableCell>
+                          <TableCell align="center">
+                            <Button
+                              onClick={() => {
+                                setCurrentRequest(req);
+                                setIsEditModalVisible(true);
+                                setFormValues({
+                                  claim_name: req.claim_name,
+                                  project_id: req.project_id,
+                                  approval_id: req.approval_id,
+                                  claim_start_date: moment(
+                                    req.claim_start_date
+                                  ),
+                                  claim_end_date: moment(req.claim_end_date),
+                                  total_work_time: req.total_work_time,
+                                });
+                              }}
+                              className="edit-button"
+                              disabled={
+                                req.claim_status !== "Draft" &&
+                                req.claim_status !== "Returned"
+                              }
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              onClick={() => handleDelete(req._id)}
+                              className="delete-button"
+                              disabled={req.claim_status !== "Draft"}
+                            >
+                              Delete
+                            </Button>
+                            {(req.claim_status === "Draft" ||
+                              req.claim_status === "Returned") && (
+                              <Button
+                                onClick={() => handleRequestApproval(req._id)}
+                                className="approve-button"
+                              >
+                                Request Approval
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
           </div>
-        </Modal>
 
-        <Modal
-          open={isEditModalVisible}
-          onClose={handleModalCancel}
-          className="custom-modal"
-        >
-          <div className="modal-content">
-            <h2>Edit Request</h2>
-            <form onSubmit={handleEditModalOk}>
-              <TextField
-                label="Request Name"
-                name="claim_name"
-                value={formValues.claim_name}
-                onChange={handleInputChange}
-                required
-                fullWidth
-                margin="normal"
-              />
-              <FormControl fullWidth margin="normal">
-                <InputLabel>Project Name</InputLabel>
-                <Select
-                  name="project_id"
-                  value={formValues.project_id}
-                  onChange={handleSelectChange}
+          <Modal
+            open={isAddModalVisible}
+            onClose={handleModalCancel}
+            className="custom-modal"
+          >
+            <div className="modal-content">
+              <h2>Add Request</h2>
+              <form onSubmit={handleAddModalOk}>
+                <TextField
+                  label="Request Name"
+                  name="claim_name"
+                  value={formValues.claim_name}
+                  onChange={handleInputChange}
                   required
-                >
-                  {projects.map((project) => (
-                    <MenuItem key={project._id} value={project._id}>
-                      {project.project_name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormControl fullWidth margin="normal">
-                <Autocomplete
-                  freeSolo
-                  options={approvers.map((approver) => approver.user_name)}
-                  onInputChange={(event, newInputValue) => {
-                    if (newInputValue) {
-                      fetchApprovers(newInputValue);
+                  fullWidth
+                  margin="normal"
+                />
+                <FormControl fullWidth margin="normal">
+                  <InputLabel>Project Name</InputLabel>
+                  <Select
+                    name="project_id"
+                    value={formValues.project_id}
+                    onChange={handleSelectChange}
+                    required
+                  >
+                    {projects.map((project) => (
+                      <MenuItem key={project._id} value={project._id}>
+                        {project.project_name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControl fullWidth margin="normal">
+                  <Autocomplete
+                    freeSolo
+                    options={approvers.map((approver) => approver.user_name)}
+                    onInputChange={(event, newInputValue) => {
+                      console.log("Autocomplete input changed:", newInputValue);
+                      if (newInputValue) {
+                        fetchApprovers(newInputValue);
+                      }
+                    }}
+                    onChange={(event, newValue) => {
+                      console.log("Autocomplete value changed:", newValue);
+                      const selectedApprover = approvers.find(
+                        (approver) => approver.user_name === newValue
+                      );
+                      if (selectedApprover) {
+                        setFormValues({
+                          ...formValues,
+                          approval_id: selectedApprover._id,
+                        });
+                      }
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Approver"
+                        margin="normal"
+                        required
+                      />
+                    )}
+                  />
+                </FormControl>
+                <LocalizationProvider dateAdapter={AdapterMoment}>
+                  <DatePicker
+                    label="Start Date"
+                    value={formValues.claim_start_date}
+                    onChange={(date) =>
+                      handleDateChange("claim_start_date", date)
                     }
-                  }}
-                  onChange={(event, newValue) => {
-                    const selectedApprover = approvers.find(
-                      (approver) => approver.user_name === newValue
-                    );
-                    if (selectedApprover) {
-                      setFormValues({
-                        ...formValues,
-                        approval_id: selectedApprover._id,
-                      });
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        margin: "normal",
+                        required: true,
+                      },
+                    }}
+                  />
+                  <DatePicker
+                    label="End Date"
+                    value={formValues.claim_end_date}
+                    onChange={(date) =>
+                      handleDateChange("claim_end_date", date)
                     }
-                  }}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Approver"
-                      margin="normal"
-                      required
-                    />
-                  )}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        margin: "normal",
+                        required: true,
+                      },
+                    }}
+                  />
+                </LocalizationProvider>
+                {dateError && <p className="error-message">{dateError}</p>}
+                <TextField
+                  label="Total Times"
+                  name="total_work_time"
+                  type="number"
+                  value={formValues.total_work_time}
+                  onChange={handleInputChange}
+                  required
+                  fullWidth
+                  margin="normal"
+                  inputProps={{ min: 1 }}
                 />
-              </FormControl>
-              <LocalizationProvider dateAdapter={AdapterMoment}>
-                <DatePicker
-                  label="Start Date"
-                  value={formValues.claim_start_date}
-                  onChange={(date) => handleDateChange("claim_start_date", date)}
-                  slotProps={{
-                    textField: { fullWidth: true, margin: "normal", required: true },
-                  }}
+                <Button type="submit" variant="contained" color="primary">
+                  Add
+                </Button>
+              </form>
+            </div>
+          </Modal>
+
+          <Modal
+            open={isEditModalVisible}
+            onClose={handleModalCancel}
+            className="custom-modal"
+          >
+            <div className="modal-content">
+              <h2>Edit Request</h2>
+              <form onSubmit={handleEditModalOk}>
+                <TextField
+                  label="Request Name"
+                  name="claim_name"
+                  value={formValues.claim_name}
+                  onChange={handleInputChange}
+                  required
+                  fullWidth
+                  margin="normal"
                 />
-                <DatePicker
-                  label="End Date"
-                  value={formValues.claim_end_date}
-                  onChange={(date) => handleDateChange("claim_end_date", date)}
-                  slotProps={{
-                    textField: { fullWidth: true, margin: "normal", required: true },
-                  }}
+                <FormControl fullWidth margin="normal">
+                  <InputLabel>Project Name</InputLabel>
+                  <Select
+                    name="project_id"
+                    value={formValues.project_id}
+                    onChange={handleSelectChange}
+                    required
+                  >
+                    {projects.map((project) => (
+                      <MenuItem key={project._id} value={project._id}>
+                        {project.project_name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControl fullWidth margin="normal">
+                  <Autocomplete
+                    freeSolo
+                    options={approvers.map((approver) => approver.user_name)}
+                    onInputChange={(event, newInputValue) => {
+                      if (newInputValue) {
+                        fetchApprovers(newInputValue);
+                      }
+                    }}
+                    onChange={(event, newValue) => {
+                      const selectedApprover = approvers.find(
+                        (approver) => approver.user_name === newValue
+                      );
+                      if (selectedApprover) {
+                        setFormValues({
+                          ...formValues,
+                          approval_id: selectedApprover._id,
+                        });
+                      }
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Approver"
+                        margin="normal"
+                        required
+                      />
+                    )}
+                  />
+                </FormControl>
+                <LocalizationProvider dateAdapter={AdapterMoment}>
+                  <DatePicker
+                    label="Start Date"
+                    value={formValues.claim_start_date}
+                    onChange={(date) =>
+                      handleDateChange("claim_start_date", date)
+                    }
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        margin: "normal",
+                        required: true,
+                      },
+                    }}
+                  />
+                  <DatePicker
+                    label="End Date"
+                    value={formValues.claim_end_date}
+                    onChange={(date) =>
+                      handleDateChange("claim_end_date", date)
+                    }
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        margin: "normal",
+                        required: true,
+                      },
+                    }}
+                  />
+                </LocalizationProvider>
+                {dateError && <p className="error-message">{dateError}</p>}
+                <TextField
+                  label="Total Times"
+                  name="total_work_time"
+                  type="number"
+                  value={formValues.total_work_time}
+                  onChange={handleInputChange}
+                  required
+                  fullWidth
+                  margin="normal"
+                  inputProps={{ min: 1 }}
                 />
-              </LocalizationProvider>
-              {dateError && <p className="error-message">{dateError}</p>}
-              <TextField
-                label="Total Times"
-                name="total_work_time"
-                type="number"
-                value={formValues.total_work_time}
-                onChange={handleInputChange}
-                required
-                fullWidth
-                margin="normal"
-                inputProps={{ min: 1 }}
-              />
-              <Button type="submit" variant="contained" color="primary">
-                Save
+                <Button type="submit" variant="contained" color="primary">
+                  Save
+                </Button>
+              </form>
+            </div>
+          </Modal>
+
+          <Modal
+            open={isConfirmModalVisible}
+            onClose={() => setIsConfirmModalVisible(false)}
+            className="custom-modal"
+          >
+            <div className="modal-content">
+              <h2>Confirm Approval</h2>
+              <p>Are you sure you want to approve this request?</p>
+              <Button
+                onClick={handleConfirmApproval}
+                variant="contained"
+                color="primary"
+              >
+                Confirm
               </Button>
-            </form>
-          </div>
-        </Modal>
+              <Button
+                onClick={() => setIsConfirmModalVisible(false)}
+                variant="contained"
+                color="secondary"
+              >
+                Cancel
+              </Button>
+            </div>
+          </Modal>
 
-        <Modal
-          open={isConfirmModalVisible}
-          onClose={() => setIsConfirmModalVisible(false)}
-          className="custom-modal"
-        >
-          <div className="modal-content">
-            <h2>Confirm Approval</h2>
-            <p>Are you sure you want to approve this request?</p>
-            <Button
-              onClick={handleConfirmApproval}
-              variant="contained"
-              color="primary"
-            >
-              Confirm
-            </Button>
-            <Button
-              onClick={() => setIsConfirmModalVisible(false)}
-              variant="contained"
-              color="secondary"
-            >
-              Cancel
-            </Button>
-          </div>
-        </Modal>
-
-        <Modal
-          open={isDeleteModalVisible}
-          onClose={() => setIsDeleteModalVisible(false)}
-          className="custom-modal"
-        >
-          <div className="modal-content">
-            <h2>Confirm Delete</h2>
-            <p>Are you sure you want to delete this request?</p>
-            <Button
-              onClick={handleConfirmDelete}
-              variant="contained"
-              color="primary"
-            >
-              Confirm
-            </Button>
-            <Button
-              onClick={() => setIsDeleteModalVisible(false)}
-              variant="contained"
-              color="secondary"
-            >
-              Cancel
-            </Button>
-          </div>
-        </Modal>
+          <Modal
+            open={isDeleteModalVisible}
+            onClose={() => setIsDeleteModalVisible(false)}
+            className="custom-modal"
+          >
+            <div className="modal-content">
+              <h2>Confirm Delete</h2>
+              <p>Are you sure you want to delete this request?</p>
+              <Button
+                onClick={handleConfirmDelete}
+                variant="contained"
+                color="primary"
+              >
+                Confirm
+              </Button>
+              <Button
+                onClick={() => setIsDeleteModalVisible(false)}
+                variant="contained"
+                color="secondary"
+              >
+                Cancel
+              </Button>
+            </div>
+          </Modal>
+        </div>
       </div>
     </Layout>
   );

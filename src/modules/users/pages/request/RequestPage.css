@@ -17,45 +17,31 @@
 }
 
 .request-title {
-  font-size: 28px;
+  font-size: 40px;
   font-weight: 600;
-  color: #1e40af;
-  text-align: center;
-  margin-bottom: 32px;
+  color: #090909;
+  padding-left: 40px;
+
   letter-spacing: 0.025em;
 }
 
 .search-container {
-  display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+
   gap: 16px;
 }
 
 .search-input {
   flex: 1;
-  padding: 12px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+
+  border: 1px solid #1b5fac;
+
   transition: all 0.3s ease;
 }
 
 .search-input:focus {
   border-color: #3b82f6;
-}
-
-.add-button {
-  background-color: #bcfcbc;
-  color: white;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-}
-
-.add-button:hover {
-  background-color: #81eee8;
 }
 
 .request-table-container {
@@ -68,19 +54,17 @@
   background: white;
 }
 
-.request-table th
- {
+.request-table th {
   padding: 12px;
   border: 1px solid #f0f0f0;
   text-align: left;
   font-weight: 700;
-  background-color: #f3f4f6;
+  background-color: #b6b6b7;
   text-align: center;
 }
 
 .request-table th {
-  background-color: #fafafa;
-  color: #1F2020;
+  color: #1f2020;
   font-weight: 600;
 }
 
@@ -92,7 +76,7 @@
   color: #a59c9ce0;
   font-weight: bold;
 }
-.status-returned{
+.status-returned {
   color: #f59e0b;
   font-weight: 700;
 }
@@ -160,8 +144,6 @@
   margin-top: 18vh;
   padding: 0px 500px;
 }
-
-
 
 .custom-modal .ant-modal-header {
   border-bottom: none;
@@ -280,10 +262,10 @@
 .custom-modal .MuiButton-root {
   margin-right: 10px;
 }
-.modal-content p{
+.modal-content p {
   padding-bottom: 15px;
 }
-.modal-content h2{
+.modal-content h2 {
   font-weight: bold;
 }
 button.MuiButtonBase-root.MuiButton-root.MuiButton-contained.MuiButton-containedSecondary.MuiButton-sizeMedium.MuiButton-containedSizeMedium.MuiButton-colorSecondary.MuiButton-root.MuiButton-contained.MuiButton-containedSecondary.MuiButton-sizeMedium.MuiButton-containedSizeMedium.MuiButton-colorSecondary.css-1mns5ui-MuiButtonBase-root-MuiButton-root {
@@ -296,7 +278,7 @@ button.MuiButtonBase-root.MuiButton-root.MuiButton-contained.MuiButton-contained
   background-color: #0c76da;
 }
 button.MuiButtonBase-root.MuiButton-root.MuiButton-contained.MuiButton-containedPrimary.MuiButton-sizeMedium.MuiButton-containedSizeMedium.MuiButton-colorPrimary.MuiButton-root.MuiButton-contained.MuiButton-containedPrimary.MuiButton-sizeMedium.MuiButton-containedSizeMedium.MuiButton-colorPrimary.css-74d805-MuiButtonBase-root-MuiButton-root:hover {
-  background-color:#3b9bf5 ;
+  background-color: #3b9bf5;
 }
 
 .custom-modal .modal-content h2 {
