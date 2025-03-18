@@ -25,10 +25,11 @@ import Layout from "../../../../shared/layouts/Layout";
 
 const API_URL = "https://management-claim-request.vercel.app/api";
 
-// Interfaces remain unchanged
 interface Request {
   _id: string;
-  user_id: string;
+  staff_id: string;
+  staff_name: string;
+  staff_email: string;
   project_id: string;
   approval_id: string;
   claim_name: string;
@@ -39,6 +40,18 @@ interface Request {
   is_deleted: boolean;
   created_at: string;
   updated_at: string;
+  project_info?: {
+    _id: string;
+    project_name: string;
+    project_code: string;
+    // ... other project fields
+  };
+  approval_info?: {
+    _id: string;
+    user_name: string;
+    email: string;
+    // ... other approver fields
+  };
 }
 
 interface Project {
@@ -123,7 +136,9 @@ const RequestPage = () => {
         const currentUserEmail = localStorage.getItem("userEmail");
         if (currentUserEmail) {
           setUserEmail(currentUserEmail);
-          const response = await axios.get(`${API_URL}/users/${currentUserEmail}`);
+          const response = await axios.get(
+            `${API_URL}/users/${currentUserEmail}`
+          );
           setUserId(response.data.data._id);
         }
       } catch (error) {
@@ -140,7 +155,7 @@ const RequestPage = () => {
       try {
         console.log("Fetching requests...");
         const response = await axios.post(
-          `${API_URL}/claims/claimer-search`,
+          `${API_URL}/claims/claimer-search`, // Thay đổi endpoint từ /claims/search thành /claims/claimer-search
           {
             searchCondition: {
               keyword: "",
@@ -162,10 +177,7 @@ const RequestPage = () => {
         );
         console.log("Response received:", response.data);
         if (response.data.success) {
-          const userRequests = response.data.data.pageData.filter(
-            (req: Request) => req.user_id === userId
-          );
-          setRequests(userRequests);
+          setRequests(response.data.data.pageData);
         } else {
           console.error("Failed to fetch requests:", response.data.message);
         }
@@ -292,7 +304,9 @@ const RequestPage = () => {
       !formValues.claim_end_date ||
       formValues.total_work_time <= 0
     ) {
-      console.error("All fields are required and total work time must be positive");
+      console.error(
+        "All fields are required and total work time must be positive"
+      );
       return;
     }
 
@@ -388,15 +402,23 @@ const RequestPage = () => {
           : null,
         total_work_time: formValues.total_work_time,
       };
-      await axios.put(`${API_URL}/claims/${currentRequest._id}`, updatedRequest, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await axios.put(
+        `${API_URL}/claims/${currentRequest._id}`,
+        updatedRequest,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       setRequests(
         requests.map((req) =>
           req._id === currentRequest._id
-            ? { ...updatedRequest, claim_start_date: updatedRequest.claim_start_date || "", claim_end_date: updatedRequest.claim_end_date || "" }
+            ? {
+                ...updatedRequest,
+                claim_start_date: updatedRequest.claim_start_date || "",
+                claim_end_date: updatedRequest.claim_end_date || "",
+              }
             : req
         )
       );
@@ -462,7 +484,9 @@ const RequestPage = () => {
       );
       setRequests(
         requests.map((req) =>
-          req._id === requestToApprove ? { ...req, claim_status: "Pending Approval" } : req
+          req._id === requestToApprove
+            ? { ...req, claim_status: "Pending Approval" }
+            : req
         )
       );
       setIsConfirmModalVisible(false);
@@ -493,7 +517,9 @@ const RequestPage = () => {
     setFormValues({ ...formValues, [name]: value });
   };
 
-  const handleSelectChange = (e: React.ChangeEvent<{ name?: string; value: unknown }>) => {
+  const handleSelectChange = (
+    e: React.ChangeEvent<{ name?: string; value: unknown }>
+  ) => {
     const { name, value } = e.target;
     setFormValues({ ...formValues, [name as string]: value as string });
   };
@@ -532,8 +558,15 @@ const RequestPage = () => {
           {loading ? (
             <p>Loading...</p>
           ) : (
-            <TableContainer component={Paper} className="request-table-container">
-              <Table stickyHeader aria-label="requests table" className="request-table">
+            <TableContainer
+              component={Paper}
+              className="request-table-container"
+            >
+              <Table
+                stickyHeader
+                aria-label="requests table"
+                className="request-table"
+              >
                 <TableHead>
                   <TableRow>
                     <TableCell align="center">Request Name</TableCell>
@@ -549,25 +582,34 @@ const RequestPage = () => {
                 <TableBody>
                   {requests
                     .filter((req) =>
-                      req.claim_name.toLowerCase().includes(search.toLowerCase())
+                      req.claim_name
+                        .toLowerCase()
+                        .includes(search.toLowerCase())
                     )
                     .map((req) => (
                       <TableRow key={req._id}>
                         <TableCell align="center">{req.claim_name}</TableCell>
                         <TableCell align="center">
-                          {projects.find((project) => project._id === req.project_id)
-                            ?.project_name || "Unknown Project"}
+                          {req.project_info?.project_name || "Unknown Project"}
                         </TableCell>
                         <TableCell align="center">
-                          {approvers.find((approver) => approver._id === req.approval_id)
-                            ?.user_name || "Unknown Approver"}
+                          {req.approval_info?.user_name || "Unknown Approver"}
                         </TableCell>
-                        <TableCell align="center" className={`status-${req.claim_status.toLowerCase()}`}>
+                        <TableCell
+                          align="center"
+                          className={`status-${req.claim_status.toLowerCase()}`}
+                        >
                           {req.claim_status}
                         </TableCell>
-                        <TableCell align="center">{moment(req.claim_start_date).format("YYYY-MM-DD")}</TableCell>
-                        <TableCell align="center">{moment(req.claim_end_date).format("YYYY-MM-DD")}</TableCell>
-                        <TableCell align="center">{req.total_work_time}</TableCell>
+                        <TableCell align="center">
+                          {moment(req.claim_start_date).format("YYYY-MM-DD")}
+                        </TableCell>
+                        <TableCell align="center">
+                          {moment(req.claim_end_date).format("YYYY-MM-DD")}
+                        </TableCell>
+                        <TableCell align="center">
+                          {req.total_work_time}
+                        </TableCell>
                         <TableCell align="center">
                           <Button
                             onClick={() => {
@@ -683,9 +725,15 @@ const RequestPage = () => {
                 <DatePicker
                   label="Start Date"
                   value={formValues.claim_start_date}
-                  onChange={(date) => handleDateChange("claim_start_date", date)}
+                  onChange={(date) =>
+                    handleDateChange("claim_start_date", date)
+                  }
                   slotProps={{
-                    textField: { fullWidth: true, margin: "normal", required: true },
+                    textField: {
+                      fullWidth: true,
+                      margin: "normal",
+                      required: true,
+                    },
                   }}
                 />
                 <DatePicker
@@ -693,7 +741,11 @@ const RequestPage = () => {
                   value={formValues.claim_end_date}
                   onChange={(date) => handleDateChange("claim_end_date", date)}
                   slotProps={{
-                    textField: { fullWidth: true, margin: "normal", required: true },
+                    textField: {
+                      fullWidth: true,
+                      margin: "normal",
+                      required: true,
+                    },
                   }}
                 />
               </LocalizationProvider>
@@ -782,9 +834,15 @@ const RequestPage = () => {
                 <DatePicker
                   label="Start Date"
                   value={formValues.claim_start_date}
-                  onChange={(date) => handleDateChange("claim_start_date", date)}
+                  onChange={(date) =>
+                    handleDateChange("claim_start_date", date)
+                  }
                   slotProps={{
-                    textField: { fullWidth: true, margin: "normal", required: true },
+                    textField: {
+                      fullWidth: true,
+                      margin: "normal",
+                      required: true,
+                    },
                   }}
                 />
                 <DatePicker
@@ -792,7 +850,11 @@ const RequestPage = () => {
                   value={formValues.claim_end_date}
                   onChange={(date) => handleDateChange("claim_end_date", date)}
                   slotProps={{
-                    textField: { fullWidth: true, margin: "normal", required: true },
+                    textField: {
+                      fullWidth: true,
+                      margin: "normal",
+                      required: true,
+                    },
                   }}
                 />
               </LocalizationProvider>
