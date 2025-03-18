@@ -28,12 +28,13 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-  Paper,
+  FormControl,
   Grid,
   CardContent,
   Card,
   Typography,
   MenuItem,
+  InputLabel,
 } from "@mui/material";
 
 import Select, { SelectChangeEvent } from "@mui/material/Select";
@@ -290,7 +291,33 @@ const UserManagement = () => {
     }
   };
   
-  
+  // const handleSaveEmployeeDetails = async () => {
+  //   try {
+  //     if (!employeeData.created_at) {
+  //       console.error("Error: created_at is missing!");
+  //       return;
+  //     }
+
+  //     const updatedEmployeeData = {
+  //       ...employeeData,
+  //       created_at: new Date(employeeData.created_at), // Ensure it's a Date
+  //       updated_at: new Date(),
+  //     };
+
+  //     console.log(
+  //       "Sending to API:",
+  //       JSON.stringify(updatedEmployeeData, null, 2)
+  //     );
+
+  //     await updateEmployee(userId, updatedEmployeeData);
+  //     setPopupOpen2(false);
+  //   } catch (error) {
+  //     console.error("Error updating employee details:", error);
+  //     toast.error("Error updating employee details");
+  //   }
+  // };
+
+
   
   const handleRoleChange = async (userId: string, newRoleCode: string) => {
     if (!userId) return;
@@ -594,30 +621,6 @@ const UserManagement = () => {
                   </Grid>
                 )}
               </DialogContent>
-              {/* <DialogContent>
-              {viewUser && (
-                <div>
-                  <Typography>
-                    <strong>UserID:</strong> {viewUser._id}
-                  </Typography>
-                  <Typography>
-                    <strong>Username:</strong> {viewUser.user_name}
-                  </Typography>
-                  <Typography>
-                    <strong>Email:</strong> {viewUser.email}
-                  </Typography>
-                  <Typography>
-                    <strong>Role:</strong> {roleMap[viewUser.role_code]}
-                  </Typography>
-                  <Typography>
-                    <strong>Created at:</strong> {viewUser.created_at ? format(viewUser.created_at, "yyyy-MM-dd HH:mm:ss") : "N/A"}
-                  </Typography>
-                  <Typography>
-                    <strong>Updated at:</strong> {viewUser.updated_at ? format(viewUser.updated_at, "yyyy-MM-dd HH:mm:ss") : "N/A"}
-                  </Typography>
-                </div>
-              )}
-            </DialogContent> */}
               <DialogActions>
                 <Button onClick={() => setViewUser(null)} color="primary">
                   Close
@@ -945,30 +948,49 @@ const UserManagement = () => {
                   fullWidth
                   margin="dense"
                 />
-                <TextField
-                  label="Job Rank"
-                  value={employeeData.job_rank}
-                  onChange={(e) =>
-                    setEmployeeData({
-                      ...employeeData,
-                      job_rank: e.target.value,
-                    })
-                  }
-                  fullWidth
-                  margin="dense"
-                />
-                <TextField
-                  label="Department Code"
-                  value={employeeData.department_code}
-                  onChange={(e) =>
-                    setEmployeeData({
-                      ...employeeData,
-                      department_code: e.target.value,
-                    })
-                  }
-                  fullWidth
-                  margin="dense"
-                />
+                <FormControl fullWidth margin="dense">
+                <InputLabel id="job-rank-label">Job Rank</InputLabel>
+                <Select
+                  labelId="job-rank-label"
+                  value={employeeData.job_rank || ""}
+                  onChange={(e) => setEmployeeData({ ...employeeData, job_rank: e.target.value })}
+                  displayEmpty
+                >
+                  <MenuItem value="" disabled>
+                  </MenuItem>
+                  {[
+                    "TC3", "TC2", "TC1",
+                    "TEST3", "TEST2", "TEST1",
+                    "DEV3", "DEV2", "DEV1",
+                    "QA3", "QA2", "QA1",
+                    "BA3", "BA2", "BA1",
+                    "TL3", "TL2", "TL1",
+                    "PM3", "PM2", "PM1",
+                    "BUL", "FI3", "FI2", "FI1",
+                    "Admin"
+                  ].map((job_rank) => (
+                    <MenuItem key={job_rank} value={job_rank}>
+                      {job_rank}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+               <FormControl fullWidth margin="dense">
+                <InputLabel>Department Code</InputLabel>
+                <Select
+                  value={employeeData.department_code || ""}
+                  onChange={(e) => setEmployeeData({ ...employeeData, department_code: e.target.value })}
+                  displayEmpty
+                >
+                  <MenuItem value="" disabled></MenuItem>
+                  {["DE01", "DE02", "DE03", "DE04"].map((dept) => (
+                    <MenuItem key={dept} value={dept}>
+                      {dept}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
                 <TextField
                   label="Avatar URL"
                   value={employeeData.avatar_url}
@@ -1009,25 +1031,21 @@ const UserManagement = () => {
                 />
                 <TextField
                   label="Start Date"
-                  value={employeeData.start_date}
+                  type="date"
+                  value={employeeData.start_date ? format(employeeData.start_date, "yyyy-MM-dd") : ""}
                   onChange={(e) =>
-                    setEmployeeData({
-                      ...employeeData,
-                      start_date: e.target.value,
-                    })
+                    setEmployeeData({ ...employeeData, start_date: new Date(e.target.value) })
                   }
                   fullWidth
                   margin="dense"
                   InputLabelProps={{ shrink: true }}
                 />
-                <TextField
+                 <TextField
                   label="End Date"
-                  value={employeeData.end_date}
+                  type="date"
+                  value={employeeData.end_date ? format(employeeData.end_date, "yyyy-MM-dd") : ""}
                   onChange={(e) =>
-                    setEmployeeData({
-                      ...employeeData,
-                      end_date: e.target.value,
-                    })
+                    setEmployeeData({ ...employeeData, end_date: new Date(e.target.value) })
                   }
                   fullWidth
                   margin="dense"
@@ -1036,6 +1054,14 @@ const UserManagement = () => {
               </>
             )}
           </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setPopupOpen2(false)} color="secondary">
+              Cancel
+            </Button>
+            <Button onClick={handleSaveEmployeeDetails} color="primary" variant="contained">
+              Save
+            </Button>
+          </DialogActions>
         </Dialog>
       </div>
     </Layout>
