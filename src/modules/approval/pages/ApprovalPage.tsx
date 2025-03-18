@@ -122,7 +122,7 @@ const ApprovalPage: React.FC = () => {
             },
             pageInfo: {
               pageNum: 1,
-              pageSize: 50, // Lấy nhiều dữ liệu
+              pageSize: 50,
             },
           },
           {
@@ -133,7 +133,6 @@ const ApprovalPage: React.FC = () => {
         );
 
         if (response.data.success) {
-          // Thêm dữ liệu vào mảng tổng hợp
           allClaimsData.push(...response.data.data.pageData);
         }
       }
@@ -146,7 +145,6 @@ const ApprovalPage: React.FC = () => {
 
       console.log("All claims data:", filteredData);
 
-      // Cập nhật state
       setClaims(filteredData);
       setFilteredClaims(filteredData);
       setTotalCount(filteredData.length);

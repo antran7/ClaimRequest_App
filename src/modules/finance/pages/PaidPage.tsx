@@ -13,6 +13,12 @@ import {
   Tooltip,
   TablePagination,
   Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { Search, Download, AttachMoney } from "@mui/icons-material";
 import axios from "axios";
@@ -47,6 +53,13 @@ const PaidPage = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
   const [token, setToken] = useState("");
+  const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+  const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success" as "success" | "error",
+  });
 
   const tableCellStyle = {
     borderRight: "2px solid rgba(224, 224, 224, 1)",
@@ -73,19 +86,6 @@ const PaidPage = () => {
   const fetchClaims = async () => {
     try {
       setLoading(true);
-
-      // Thêm log để kiểm tra dữ liệu gửi đi
-      console.log("Sending request with:", {
-        searchCondition: {
-          keyword: searchTerm || "",
-          is_delete: false,
-        },
-        pageInfo: {
-          pageNum: page + 1,
-          pageSize: rowsPerPage,
-        },
-      });
-
       const response = await axios.post(
         `${API_URL}/claims/finance-search`,
         {
@@ -104,9 +104,6 @@ const PaidPage = () => {
           },
         }
       );
-
-      // Thêm log để kiểm tra response
-      console.log("API Response:", response.data);
 
       if (response.data.success) {
         setClaims(response.data.data.pageData);
@@ -135,6 +132,20 @@ const PaidPage = () => {
     setPage(0);
   };
 
+  const handleOpenConfirmDialog = (claim: Claim) => {
+    setSelectedClaim(claim);
+    setOpenConfirmDialog(true);
+  };
+
+  const handleCloseConfirmDialog = () => {
+    setOpenConfirmDialog(false);
+    setSelectedClaim(null);
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar((prev) => ({ ...prev, open: false }));
+  };
+
   const handlePaid = async (claim: Claim) => {
     try {
       const response = await axios.put(
@@ -152,16 +163,27 @@ const PaidPage = () => {
       );
 
       if (response.data.success) {
-        // Update local state to show the change immediately
         setClaims((prevClaims) =>
           prevClaims.map((c) =>
             c._id === claim._id ? { ...c, claim_status: "Paid" } : c
           )
         );
+        setSnackbar({
+          open: true,
+          message: "Payment processed successfully!",
+          severity: "success",
+        });
+        fetchClaims(); // Refresh the data
       }
     } catch (error) {
       console.error("Error marking as paid:", error);
-      alert("Failed to mark as paid");
+      setSnackbar({
+        open: true,
+        message: "Failed to process payment. Please try again.",
+        severity: "error",
+      });
+    } finally {
+      handleCloseConfirmDialog();
     }
   };
 
@@ -290,7 +312,7 @@ const PaidPage = () => {
                                     color: "white",
                                     "&:hover": { backgroundColor: "darkgray" },
                                   }}
-                                  onClick={() => handlePaid(claim)}
+                                  onClick={() => handleOpenConfirmDialog(claim)}
                                 >
                                   Mark as Paid
                                 </Button>
@@ -332,6 +354,59 @@ const PaidPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Confirm Dialog */}
+      <Dialog
+        open={openConfirmDialog}
+        onClose={handleCloseConfirmDialog}
+        aria-labelledby="confirm-dialog-title"
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle
+          id="confirm-dialog-title"
+          sx={{ fontSize: "24px", padding: "20px 24px" }}
+        >
+          Confirm Payment
+        </DialogTitle>
+        <DialogContent sx={{ padding: "20px 24px" }}>
+          Are you sure you want to mark this claim as paid?
+        </DialogContent>
+        <DialogActions sx={{ padding: "20px 24px" }}>
+          <Button
+            onClick={handleCloseConfirmDialog}
+            color="primary"
+            sx={{ fontSize: "16px" }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() => selectedClaim && handlePaid(selectedClaim)}
+            color="primary"
+            variant="contained"
+            sx={{ fontSize: "16px" }}
+          >
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Success/Error Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        sx={{ marginTop: "80px" }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Layout>
   );
 };
