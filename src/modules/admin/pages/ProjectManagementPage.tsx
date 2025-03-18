@@ -250,7 +250,9 @@ const ProjectManagementPage: React.FC = () => {
         <div className="p-8">
           <BackButton to="/admin/dashboard" />
           <div className="flex justify-between items-center mb-6 ">
-            <Typography variant="h5" className="text-4xl">Project Management</Typography>
+            <Typography variant="h5" className="text-4xl">
+              Project Management
+            </Typography>
             <Search onSearch={handleSearch} />
             <button
               title="Add New"
@@ -283,7 +285,7 @@ const ProjectManagementPage: React.FC = () => {
                       color: "white",
                       fontWeight: "bold",
                       backgroundColor: "#6B7280",
-                      width: "25%",
+                      width: "27%",
 
                       fontSize: "17px",
                       borderRight: "2px solid #ffff",
@@ -344,7 +346,7 @@ const ProjectManagementPage: React.FC = () => {
                       backgroundColor: "#6B7280",
                       borderRight: "2px solid #ffff",
                       textAlign: "center",
-                      width: "18%",
+                      width: "15%",
                     }}
                   >
                     Actions
@@ -383,7 +385,7 @@ const ProjectManagementPage: React.FC = () => {
                       <TableCell sx={{ textAlign: "center" }}>
                         <Button
                           sx={{
-                            color: "gray" 
+                            color: "gray",
                           }}
                           startIcon={<Eye />}
                           onClick={() => handleViewProject(project._id)}
