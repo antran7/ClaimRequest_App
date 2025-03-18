@@ -1,6 +1,15 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./UserDashboard.css";
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
 import ClaimRequestData from "./ClaimRequestData";
 import PieChartComponent from "./PieChartComponent";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -10,12 +19,11 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import Layout from "../../../../shared/layouts/Layout"; // Ensure the correct path
-
-
+import { Grid } from "@mui/material";
+import { AccountCircleOutlined, Folder } from "@mui/icons-material";
 
 // Register ChartJS components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
-
 
 const Tableau10 = [
   "#4e79a7",
@@ -37,14 +45,17 @@ const chartsParams = {
 
 export default function UserDashboard() {
   const [color, setColor] = useState("#4e79a7");
+  const navigate = useNavigate();
+  const count = 0; // Dummy count value, replace with actual data fetching logic
 
-  const handleChange = (event: React.MouseEvent<HTMLElement>, nextColor: string | null) => {
+  const handleChange = (nextColor) => {
     if (nextColor) setColor(nextColor);
   };
 
   return (
     <div>
       <Layout>
+        
         <div className="dashboard-container">
           {/* Swiper Slider */}
           <div className="swiper-container">
@@ -68,25 +79,34 @@ export default function UserDashboard() {
               ))}
             </Swiper>
           </div>
-
+          <div className="items-cards">
+        <div className="request-card">
+          <Grid item xs={2} onClick={() => navigate("/user/my-requests")}>
+            <div className="requests-cards">
+              <div className="requests-card-left">
+                <p>My claims</p>
+                {/* <p>{count}</p> */}
+              </div>
+              <div className="requests-card-right">
+                <Folder style={{ fontSize: "50px" }} />
+              </div>
+            </div>
+          </Grid>
+        </div>
+        </div>
           {/* PieChartComponent */}
           <div className="chart-wrapper">
-
-            <div className="chart-container ">
-
+            <div className="chart-container">
               <PieChartComponent />
             </div>
 
-            {/* ClaimRequestData*/}
+            {/* ClaimRequestData */}
             <div className="bar-chart">
               <ClaimRequestData />
             </div>
           </div>
         </div>
-
-
       </Layout>
-
     </div>
   );
 }

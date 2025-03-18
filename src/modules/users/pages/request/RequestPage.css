@@ -3,11 +3,19 @@
   justify-content: center;
   min-height: 100vh;
   padding: 24px;
-  background-color: #f8fafc;
+  background-color: #f3f4f6;
 }
 
-.request-box {
-  width: 95%;
+.css-19midj6 {
+  padding: 0 !important;
+}
+
+.MuiBox-root.css-19midj6 {
+  padding: 0 !important;
+}
+
+.request-content {
+  width: 100%;
   max-width: 1800px;
   background: white;
   padding: 32px;
@@ -19,6 +27,7 @@
 .request-title {
   font-size: 40px;
   font-weight: 600;
+
   color: #090909;
   padding-left: 40px;
 
@@ -26,14 +35,24 @@
 }
 
 .search-container {
+
+  color: #374151;
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.request-filters {
+  display: flex;
+
   justify-content: space-between;
   align-items: center;
 
   gap: 16px;
 }
 
-.search-input {
+.search-field {
   flex: 1;
+
 
   border: 1px solid #1b5fac;
 
@@ -42,17 +61,25 @@
 
 .search-input:focus {
   border-color: #3b82f6;
+
+
 }
 
 .request-table-container {
-  margin-top: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
 }
 
-.request-table {
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
   width: 100%;
-  border-collapse: collapse;
-  background: white;
 }
+
 
 .request-table th {
   padding: 12px;
@@ -65,33 +92,42 @@
 
 .request-table th {
   color: #1f2020;
-  font-weight: 600;
-}
 
-.request-table tr:nth-of-type(even) {
-  background-color: #fafafa;
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+
+  font-weight: 600;
+  display: inline-block;
 }
 
 .status-draft {
+
   color: #a59c9ce0;
   font-weight: bold;
 }
 .status-returned {
   color: #f59e0b;
   font-weight: 700;
+
+  background-color: #e2e8f0;
+  color: #64748b;
+
 }
 
-.status-pending {
-  color: #3b82f6;
-  font-weight: 700;
+.status-pending-approval {
+  background-color: #dbeafe;
+  color: #2563eb;
 }
 
 .status-approved {
-  color: #10b981;
-  font-weight: 700;
+  background-color: #dcfce7;
+  color: #16a34a;
 }
 
 .status-rejected {
+
   color: #ef4444;
   font-weight: 700;
 }
@@ -182,82 +218,54 @@
   padding: 20px;
   background-color: #f9fafb;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+  background-color: #fee2e2;
+  color: #dc2626;
+
 }
 
-.confirm-modal .ant-modal-header {
-  border-bottom: none;
-  padding-bottom: 0;
+.status-returned {
+  background-color: #fef3c7;
+  color: #d97706;
 }
 
-.confirm-modal .ant-modal-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #111827;
+.status-paid {
+  background-color: #e0f2fe;
+  color: #0284c7;
 }
 
-.confirm-modal .ant-modal-body {
-  padding-top: 10px;
-  font-size: 16px;
-  color: #4b5563;
+.modal-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 32px;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  width: 90%;
+  max-width: 600px;
 }
 
-.confirm-modal .ant-modal-footer {
-  border-top: none;
-  padding-top: 10px;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.confirm-modal {
-  background-color: #16a34a;
-  border-color: #16a34a;
-}
-
-.confirm-modal .ant-btn-primary:hover {
-  background-color: #22c55e;
-  border-color: #22c55e;
-}
-
-.confirm-modal .ant-btn-default {
-  color: #6b7280;
-  border-color: #d1d5db;
-}
-
-.confirm-modal .ant-btn-default:hover {
+.modal-content h2 {
   color: #374151;
-  border-color: #9ca3af;
-}
-
-.approve-button {
-  background-color: #46d179;
-  color: #ffffff;
+  margin-bottom: 16px;
+  font-size: 1.5rem;
   font-weight: 600;
-  font-size: 14px;
-  padding: 10px 14px;
-  border-radius: 8px;
-  transition: background-color 0.3s ease-in-out, transform 0.1s;
-  border: none;
 }
 
-.approve-button:hover {
-  background-color: #16a34a;
-  color: #ffffff;
-  transform: scale(1.05);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+.blur-background {
+  filter: blur(4px);
+  transition: filter 0.3s ease;
 }
 
-.custom-modal .modal-content {
-  padding: 24px;
-  border-radius: 8px;
-  background-color: white;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+.error-message {
+  color: #dc2626;
+  margin-top: 8px;
+  font-size: 0.875rem;
 }
 
-.custom-modal h2 {
-  margin-top: 0;
-  margin-bottom: 20px;
-}
 
 .custom-modal .MuiButton-root {
   margin-right: 10px;
@@ -279,19 +287,27 @@ button.MuiButtonBase-root.MuiButton-root.MuiButton-contained.MuiButton-contained
 }
 button.MuiButtonBase-root.MuiButton-root.MuiButton-contained.MuiButton-containedPrimary.MuiButton-sizeMedium.MuiButton-containedSizeMedium.MuiButton-colorPrimary.MuiButton-root.MuiButton-contained.MuiButton-containedPrimary.MuiButton-sizeMedium.MuiButton-containedSizeMedium.MuiButton-colorPrimary.css-74d805-MuiButtonBase-root-MuiButton-root:hover {
   background-color: #3b9bf5;
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  gap: 16px;
+
 }
 
-.custom-modal .modal-content h2 {
-  margin-bottom: 16px;
-  font-size: 24px;
-  font-weight: 600;
+.MuiTableHead-root .MuiTableRow-root {
+  background-color: #f3f4f6;
 }
 
-.custom-modal .modal-content p {
-  margin-bottom: 24px;
-  font-size: 16px;
+.date-filters {
+  display: flex;
+  gap: 16px;
+  align-items: center;
 }
 
-.custom-modal .modal-content button {
-  margin-right: 8px;
+.date-field {
+  min-width: 200px;
 }
