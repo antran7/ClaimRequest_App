@@ -5,6 +5,7 @@ import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 //Import từ thư viện bên ngoài
+import { CircleX, Eye } from "lucide-react";
 import {
   Button,
   Typography,
@@ -35,6 +36,8 @@ import Layout from "../../../shared/layouts/Layout";
 import BackButton from "../components/BackButton";
 import Search from "../../../shared/components/searchComponent/Search";
 import { searchUsers } from "../services/userService";
+import DepartmentSelect from "../components/DepartmentSelect";
+import useDebounce from "../../../shared/hooks/useDebounce";
 //Import service, interface, and types
 import {
   searchProject,
@@ -44,9 +47,10 @@ import {
 import {
   Project,
   ProjectMember,
-  User,
+  User as ProjectUser,
   ApiResponse,
 } from "../types/projectInterface";
+import { User } from "../types/user";
 
 const ProjectManagementPage: React.FC = () => {
   const navigate = useNavigate();
@@ -56,6 +60,8 @@ const ProjectManagementPage: React.FC = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 500); // 500ms delay
   const itemPerPage = 10;
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
@@ -66,7 +72,7 @@ const ProjectManagementPage: React.FC = () => {
     const fetchProjects = async () => {
       setLoading(true);
       try {
-        const response = await searchProject("", page);
+        const response = await searchProject(debouncedSearchTerm, page);
         if (response.success && response.data) {
           setProjects(response.data.pageData);
           setTotalPages(response.data.pageInfo.totalPages);
@@ -81,7 +87,7 @@ const ProjectManagementPage: React.FC = () => {
     };
 
     fetchProjects();
-  }, [page]);
+  }, [page, debouncedSearchTerm]);
 
   const fetchUsers = async () => {
     try {
@@ -133,7 +139,7 @@ const ProjectManagementPage: React.FC = () => {
           user_id: "",
           project_role: "",
         },
-      ],
+      ] as ProjectMember[],
     },
     validationSchema,
     onSubmit: async (values) => {
@@ -142,18 +148,28 @@ const ProjectManagementPage: React.FC = () => {
           ...values,
           project_start_date: new Date(values.project_start_date).toISOString(),
           project_end_date: new Date(values.project_end_date).toISOString(),
+          project_members: values.project_members.map((member) => {
+            const user = users.find((u) => u._id === member.user_id);
+            return {
+              user_id: member.user_id,
+              project_role: member.project_role,
+              user_name: user?.user_name || "",
+              email: user?.email || "",
+              _id: member.user_id,
+            } as ProjectUser;
+          }),
         };
-  
+
         await addProject(projectData);
         toast.success("Project added successfully!");
-        
-        const response = await searchProject("", 1); 
+
+        const response = await searchProject("", 1);
         if (response.success && response.data) {
           setProjects(response.data.pageData);
           setTotalPages(response.data.pageInfo.totalPages);
-          setPage(1); 
+          setPage(1);
         }
-  
+
         handleCloseDialog();
       } catch (error) {
         toast.error("Failed to save project");
@@ -164,7 +180,7 @@ const ProjectManagementPage: React.FC = () => {
   const handleAddMember = () => {
     formik.setFieldValue("project_members", [
       ...formik.values.project_members,
-      { user_id: "", project_role: "" },
+      { user_id: "", project_role: "" } as ProjectMember,
     ]);
   };
 
@@ -176,7 +192,10 @@ const ProjectManagementPage: React.FC = () => {
 
   const handleMemberChange = (index: number, field: string, value: string) => {
     const updatedMembers = [...formik.values.project_members];
-    updatedMembers[index] = { ...updatedMembers[index], [field]: value };
+    updatedMembers[index] = {
+      ...updatedMembers[index],
+      [field]: value,
+    } as ProjectMember;
     formik.setFieldValue("project_members", updatedMembers);
   };
 
@@ -215,20 +234,9 @@ const ProjectManagementPage: React.FC = () => {
     }
   };
 
-  const handleSearch = async (searchTerm: string) => {
-    setLoading(true);
-    try {
-      const response = await searchProject(searchTerm, 1);
-      if (response.success && response.data) {
-        setProjects(response.data.pageData);
-        setTotalPages(response.data.pageInfo.totalPages);
-        setPage(1);
-      }
-    } catch (error) {
-      toast.error("Failed to search projects");
-    } finally {
-      setLoading(false);
-    }
+  const handleSearch = (searchTerm: string) => {
+    setSearchTerm(searchTerm);
+    setPage(1); // Reset to first page when searching
   };
 
   const formatDate = (dateString: string) => {
@@ -241,8 +249,8 @@ const ProjectManagementPage: React.FC = () => {
       <div className="min-h-screen bg-gray-100">
         <div className="p-8">
           <BackButton to="/admin/dashboard" />
-          <div className="flex justify-between items-center mb-6">
-            <Typography variant="h5">Project Management</Typography>
+          <div className="flex justify-between items-center mb-6 ">
+            <Typography variant="h5" className="text-4xl">Project Management</Typography>
             <Search onSearch={handleSearch} />
             <button
               title="Add New"
@@ -270,12 +278,77 @@ const ProjectManagementPage: React.FC = () => {
             <Table>
               <TableHead>
                 <TableRow className="bg-gray-300">
-                  <TableCell>Project Name</TableCell>
-                  <TableCell>Project Code</TableCell>
-                  <TableCell>Department</TableCell>
-                  <TableCell>Start Date</TableCell>
-                  <TableCell>End Date</TableCell>
-                  <TableCell>Actions</TableCell>
+                  <TableCell
+                    sx={{
+                      color: "white",
+                      fontWeight: "bold",
+                      backgroundColor: "#6B7280",
+                      width: "25%",
+
+                      fontSize: "17px",
+                      borderRight: "2px solid #ffff",
+                      textAlign: "center",
+                    }}
+                  >
+                    Project Name
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      color: "white",
+                      fontWeight: "bold",
+                      backgroundColor: "#6B7280",
+                      borderRight: "2px solid #ffff",
+                      width: "15%",
+                      textAlign: "center",
+                    }}
+                  >
+                    Project Code
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      color: "white",
+                      fontWeight: "bold",
+                      backgroundColor: "#6B7280",
+                      borderRight: "2px solid #ffff",
+                      textAlign: "center",
+                    }}
+                  >
+                    Department
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      color: "white",
+                      fontWeight: "bold",
+                      backgroundColor: "#6B7280",
+                      borderRight: "2px solid #ffff",
+                      textAlign: "center",
+                    }}
+                  >
+                    Start Date
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      color: "white",
+                      fontWeight: "bold",
+                      backgroundColor: "#6B7280",
+                      borderRight: "2px solid #ffff",
+                      textAlign: "center",
+                    }}
+                  >
+                    End Date
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      color: "white",
+                      fontWeight: "bold",
+                      backgroundColor: "#6B7280",
+                      borderRight: "2px solid #ffff",
+                      textAlign: "center",
+                      width: "18%",
+                    }}
+                  >
+                    Actions
+                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -301,34 +374,26 @@ const ProjectManagementPage: React.FC = () => {
                       <TableCell>{project.project_name}</TableCell>
                       <TableCell>{project.project_code}</TableCell>
                       <TableCell>{project.project_department}</TableCell>
-                      <TableCell>
+                      <TableCell sx={{ textAlign: "center" }}>
                         {formatDate(project.project_start_date)}
                       </TableCell>
-                      <TableCell>
+                      <TableCell sx={{ textAlign: "center" }}>
                         {formatDate(project.project_end_date)}
                       </TableCell>
-                      <TableCell>
+                      <TableCell sx={{ textAlign: "center" }}>
                         <Button
-                          variant="contained"
                           sx={{
-                            backgroundColor: "gray",
-                            color: "white",
-                            "&:hover": { backgroundColor: "darkgray" },
-                            mr: 1,
+                            color: "gray" 
                           }}
-                          startIcon={<VisibilityIcon />}
+                          startIcon={<Eye />}
                           onClick={() => handleViewProject(project._id)}
-                        >
-                          View
-                        </Button>
+                        ></Button>
+
                         <Button
-                          variant="outlined"
-                          color="error"
-                          startIcon={<DeleteIcon />}
+                          color="warning"
+                          startIcon={<CircleX />}
                           onClick={() => handleOpenConfirmDialog(project._id)}
-                        >
-                          Delete
-                        </Button>
+                        ></Button>
                       </TableCell>
                     </TableRow>
                   ))
@@ -354,115 +419,186 @@ const ProjectManagementPage: React.FC = () => {
           onClose={handleCloseDialog}
           fullWidth
           maxWidth="md"
+          classes={{ paper: "rounded-lg" }}
         >
-          <DialogTitle className="bg-gray-300">Add Project</DialogTitle>
-          <DialogContent>
-            <div className="grid grid-cols-2 gap-4 mt-4">
-              <TextField
-                fullWidth
-                label="Project Name"
-                {...formik.getFieldProps("project_name")}
-                error={
-                  formik.touched.project_name &&
-                  Boolean(formik.errors.project_name)
-                }
-                helperText={
-                  formik.touched.project_name && formik.errors.project_name
-                }
-              />
+          <DialogTitle className="bg-gray-500 border-b border-gray-200 py-4">
+            <h2 className="text-xl font-semibold text-gray-50">Add Project</h2>
+          </DialogTitle>
+          <DialogContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+              <div className="space-y-1">
+                <TextField
+                  fullWidth
+                  label="Project Name"
+                  {...formik.getFieldProps("project_name")}
+                  error={
+                    formik.touched.project_name &&
+                    Boolean(formik.errors.project_name)
+                  }
+                  helperText={
+                    formik.touched.project_name && formik.errors.project_name
+                  }
+                  className="bg-white"
+                  InputProps={{
+                    className: "rounded-md",
+                  }}
+                />
+              </div>
 
-              <TextField
-                fullWidth
-                label="Project Code"
-                {...formik.getFieldProps("project_code")}
-                error={
-                  formik.touched.project_code &&
-                  Boolean(formik.errors.project_code)
-                }
-                helperText={
-                  formik.touched.project_code && formik.errors.project_code
-                }
-              />
+              <div className="space-y-1">
+                <TextField
+                  fullWidth
+                  label="Project Code"
+                  {...formik.getFieldProps("project_code")}
+                  error={
+                    formik.touched.project_code &&
+                    Boolean(formik.errors.project_code)
+                  }
+                  helperText={
+                    formik.touched.project_code && formik.errors.project_code
+                  }
+                  className="bg-white"
+                  InputProps={{
+                    className: "rounded-md",
+                  }}
+                />
+              </div>
 
-              <TextField
-                fullWidth
-                label="Department"
-                {...formik.getFieldProps("project_department")}
-                error={
-                  formik.touched.project_department &&
-                  Boolean(formik.errors.project_department)
-                }
-                helperText={
-                  formik.touched.project_department &&
-                  formik.errors.project_department
-                }
-              />
+              <div className="space-y-1">
+                <FormControl
+                  fullWidth
+                  error={
+                    formik.touched.project_department &&
+                    Boolean(formik.errors.project_department)
+                  }
+                  className="bg-white rounded-md"
+                >
+                  <InputLabel
+                    shrink
+                    id="department-select-label"
+                    className="bg-white px-1 text-gray-600"
+                  >
+                    Department
+                  </InputLabel>
+                  <div className="mt-2">
+                    <DepartmentSelect
+                      value={formik.values.project_department}
+                      onChange={(value) =>
+                        formik.setFieldValue("project_department", value)
+                      }
+                      required
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Select Department"
+                    />
+                  </div>
+                  {formik.touched.project_department &&
+                    formik.errors.project_department && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {formik.errors.project_department as string}
+                      </p>
+                    )}
+                </FormControl>
+              </div>
 
-              <TextField
-                fullWidth
-                label="Description"
-                multiline
-                rows={4}
-                {...formik.getFieldProps("project_description")}
-                error={
-                  formik.touched.project_description &&
-                  Boolean(formik.errors.project_description)
-                }
-                helperText={
-                  formik.touched.project_description &&
-                  formik.errors.project_description
-                }
-              />
+              <div className="space-y-1 md:col-span-2">
+                <TextField
+                  fullWidth
+                  label="Description"
+                  multiline
+                  rows={3}
+                  {...formik.getFieldProps("project_description")}
+                  error={
+                    formik.touched.project_description &&
+                    Boolean(formik.errors.project_description)
+                  }
+                  helperText={
+                    formik.touched.project_description &&
+                    formik.errors.project_description
+                  }
+                  className="bg-white"
+                  InputProps={{
+                    className: "rounded-md",
+                  }}
+                />
+              </div>
 
-              <TextField
-                fullWidth
-                label="Start Date"
-                type="date"
-                InputLabelProps={{ shrink: true }}
-                {...formik.getFieldProps("project_start_date")}
-                error={
-                  formik.touched.project_start_date &&
-                  Boolean(formik.errors.project_start_date)
-                }
-                helperText={
-                  formik.touched.project_start_date &&
-                  formik.errors.project_start_date
-                }
-              />
+              <div className="space-y-1">
+                <TextField
+                  fullWidth
+                  label="Start Date"
+                  type="date"
+                  InputLabelProps={{ shrink: true }}
+                  {...formik.getFieldProps("project_start_date")}
+                  error={
+                    formik.touched.project_start_date &&
+                    Boolean(formik.errors.project_start_date)
+                  }
+                  helperText={
+                    formik.touched.project_start_date &&
+                    formik.errors.project_start_date
+                  }
+                  className="bg-white"
+                  InputProps={{
+                    className: "rounded-md",
+                  }}
+                />
+              </div>
 
-              <TextField
-                fullWidth
-                label="End Date"
-                type="date"
-                InputLabelProps={{ shrink: true }}
-                {...formik.getFieldProps("project_end_date")}
-                error={
-                  formik.touched.project_end_date &&
-                  Boolean(formik.errors.project_end_date)
-                }
-                helperText={
-                  formik.touched.project_end_date &&
-                  formik.errors.project_end_date
-                }
-              />
+              <div className="space-y-1">
+                <TextField
+                  fullWidth
+                  label="End Date"
+                  type="date"
+                  InputLabelProps={{ shrink: true }}
+                  {...formik.getFieldProps("project_end_date")}
+                  error={
+                    formik.touched.project_end_date &&
+                    Boolean(formik.errors.project_end_date)
+                  }
+                  helperText={
+                    formik.touched.project_end_date &&
+                    formik.errors.project_end_date
+                  }
+                  className="bg-white"
+                  InputProps={{
+                    className: "rounded-md",
+                  }}
+                />
+              </div>
             </div>
 
-            <div className="mt-6">
-              <div className="flex justify-between items-center mb-2">
-                <Typography variant="h6">Project Members</Typography>
+            <div className="mt-8">
+              <div className="flex justify-between items-center mb-4 border-b border-gray-200 pb-2">
+                <Typography
+                  variant="h6"
+                  className="text-gray-700 font-semibold"
+                >
+                  Project Members
+                </Typography>
                 <Button
-                  variant="outlined"
-                  color="primary"
+                  sx={{
+                    color: "white",
+                    backgroundColor: "gray",
+                    "&:hover": { backgroundColor: "darkgray" },
+                  }}
                   onClick={handleAddMember}
+                  className="rounded-md"
+                  size="small"
                 >
                   Add Member
                 </Button>
               </div>
 
               {formik.values.project_members.map((member, index) => (
-                <div key={index} className="grid grid-cols-3 gap-4 mb-4">
-                  <FormControl fullWidth>
-                    <InputLabel id={`user-select-label-${index}`}>
+                <div
+                  key={index}
+                  className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200"
+                >
+                  <FormControl fullWidth className="bg-white rounded-md">
+                    <InputLabel
+                      id={`user-select-label-${index}`}
+                      className="bg-white px-1"
+                    >
                       User
                     </InputLabel>
                     <Select
@@ -472,6 +608,7 @@ const ProjectManagementPage: React.FC = () => {
                       onChange={(e) =>
                         handleMemberChange(index, "user_id", e.target.value)
                       }
+                      className="rounded-md"
                     >
                       {users.map((user) => (
                         <MenuItem key={user._id} value={user._id}>
@@ -481,8 +618,8 @@ const ProjectManagementPage: React.FC = () => {
                     </Select>
                   </FormControl>
 
-                  <FormControl fullWidth>
-                    <InputLabel>Role</InputLabel>
+                  <FormControl fullWidth className="bg-white rounded-md">
+                    <InputLabel className="bg-white px-1">Role</InputLabel>
                     <Select
                       value={member.project_role}
                       label="Role"
@@ -493,6 +630,7 @@ const ProjectManagementPage: React.FC = () => {
                           e.target.value
                         )
                       }
+                      className="rounded-md"
                     >
                       <MenuItem value="Project Manager">
                         Project Manager
@@ -514,38 +652,50 @@ const ProjectManagementPage: React.FC = () => {
                     </Select>
                   </FormControl>
 
-                  <Button
-                    color="error"
-                    onClick={() => handleRemoveMember(index)}
-                    disabled={formik.values.project_members.length <= 1}
-                  >
-                    Remove
-                  </Button>
+                  <div className="flex items-center justify-end">
+                    <Button
+                      color="error"
+                      onClick={() => handleRemoveMember(index)}
+                      disabled={formik.values.project_members.length <= 1}
+                      className="rounded-md"
+                      variant="outlined"
+                      size="small"
+                    >
+                      Remove
+                    </Button>
+                  </div>
                 </div>
               ))}
 
               {formik.touched.project_members &&
                 typeof formik.errors.project_members === "string" && (
-                  <Typography color="error">
+                  <Typography color="error" className="mt-2 text-sm">
                     {formik.errors.project_members}
                   </Typography>
                 )}
             </div>
           </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseDialog} sx={{ color: "gray" }}>
+          <DialogActions className="bg-gray-100 border-t border-gray-200 p-4 flex justify-end gap-2">
+            <Button
+              onClick={handleCloseDialog}
+              sx={{
+                color: "gray",
+              }}
+              className="bg-white text-gray-700 hover:bg-gray-200 px-4 py-2 rounded-md border border-gray-300"
+            >
               Cancel
             </Button>
             <Button
               onClick={() => formik.handleSubmit()}
               variant="contained"
               sx={{
-                backgroundColor: "gray",
                 color: "white",
+                backgroundColor: "gray",
                 "&:hover": { backgroundColor: "darkgray" },
               }}
+              className="text-white px-6 py-2 rounded-md"
             >
-              Save
+              Save Project
             </Button>
           </DialogActions>
         </Dialog>

@@ -333,7 +333,9 @@ const ProjectDetail = () => {
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle>Edit Project</DialogTitle>
+        <DialogTitle className="bg-gray-100 border-b border-gray-200 py-4">
+          <h2 className="text-xl font-semibold text-gray-800">Edit Project</h2>
+        </DialogTitle>
         <form onSubmit={formik.handleSubmit}>
           <DialogContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

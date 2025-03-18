@@ -65,6 +65,7 @@ const ApprovalPage: React.FC = () => {
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [totalCount, setTotalCount] = useState<number>(0);
+  const [allClaims, setAllClaims] = useState<Claim[]>([]);
   const tableCellStyle = {
     borderRight: "2px solid rgba(224, 224, 224, 1)",
     borderBottom: "2px solid rgba(224, 224, 224, 1)",
@@ -80,10 +81,6 @@ const ApprovalPage: React.FC = () => {
     fontWeight: "bold",
   };
 
-  const getDisplayStatus = (status: string) => {
-    return status === "Paid" ? "Approved" : status;
-  };
-
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
     if (storedToken) {
@@ -92,31 +89,87 @@ const ApprovalPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    if (statusFilter === "All" && token) {
+      fetchAllClaims();
+    }
+  }, [token, statusFilter]);
+
+  const fetchAllClaims = async () => {
+    try {
+      setLoading(true);
+
+      // Lấy tất cả các status cần thiết
+      const statuses = [
+        "Pending Approval",
+        "Approved",
+        "Rejected",
+        "Returned",
+        "Paid",
+      ];
+      const allClaimsData: Claim[] = [];
+
+      // Lấy dữ liệu cho từng status
+      for (const status of statuses) {
+        const response = await axios.post(
+          `${API_URL}/claims/approval-search`,
+          {
+            searchCondition: {
+              keyword: searchTerm || "",
+              claim_status: status,
+              claim_start_date: startDate || "",
+              claim_end_date: endDate || "",
+              is_delete: false,
+            },
+            pageInfo: {
+              pageNum: 1,
+              pageSize: 50, // Lấy nhiều dữ liệu
+            },
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.data.success) {
+          // Thêm dữ liệu vào mảng tổng hợp
+          allClaimsData.push(...response.data.data.pageData);
+        }
+      }
+
+      // Lọc bỏ các claim có status là "Draft" hoặc "Canceled"
+      const filteredData = allClaimsData.filter(
+        (claim: Claim) =>
+          claim.claim_status !== "Draft" && claim.claim_status !== "Canceled"
+      );
+
+      console.log("All claims data:", filteredData);
+
+      // Cập nhật state
+      setClaims(filteredData);
+      setFilteredClaims(filteredData);
+      setTotalCount(filteredData.length);
+    } catch (error) {
+      console.error("Error fetching all claims:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     if (!token) return;
     fetchClaims();
   }, [token, statusFilter, searchTerm, startDate, endDate, page, rowsPerPage]);
 
-  useEffect(() => {
-    const filtered = claims.filter((claim) => {
-      const matchesStatus =
-        statusFilter === "All" || claim.claim_status === statusFilter;
-      const matchesSearch =
-        claim.claim_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        claim.staff_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (claim.project_info?.project_name || "")
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase());
-
-      return matchesStatus && matchesSearch;
-    });
-
-    setFilteredClaims(filtered);
-    setPage(0);
-  }, [claims, statusFilter, searchTerm]);
-
   const fetchClaims = async () => {
     try {
       setLoading(true);
+
+      // Tăng pageSize khi chọn All để đảm bảo lấy tất cả dữ liệu
+      const pageSize = statusFilter === "All" ? 100 : rowsPerPage;
+
+      // Khi chọn All, gửi request không có filter status
       const response = await axios.post(
         `${API_URL}/claims/approval-search`,
         {
@@ -129,7 +182,7 @@ const ApprovalPage: React.FC = () => {
           },
           pageInfo: {
             pageNum: page + 1,
-            pageSize: rowsPerPage,
+            pageSize: pageSize, // Sử dụng pageSize đã điều chỉnh
           },
         },
         {
@@ -140,15 +193,29 @@ const ApprovalPage: React.FC = () => {
       );
 
       if (response.data.success) {
-        const processedClaims = response.data.data.pageData.map(
-          (claim: Claim) => ({
-            ...claim,
-            claim_status: getDisplayStatus(claim.claim_status),
-          })
+        console.log("API response:", response.data);
+
+        // Lọc bỏ các claim có status là "Draft" hoặc "Canceled"
+        const filteredData = response.data.data.pageData.filter(
+          (claim: Claim) =>
+            claim.claim_status !== "Draft" && claim.claim_status !== "Canceled"
         );
 
-        setFilteredClaims(processedClaims);
-        setTotalCount(response.data.data.pageInfo.totalItems);
+        console.log("Filtered data (no Draft/Canceled):", filteredData);
+
+        // Log số lượng claim theo từng status để debug
+        const statusCounts = filteredData.reduce((acc: any, claim: Claim) => {
+          acc[claim.claim_status] = (acc[claim.claim_status] || 0) + 1;
+          return acc;
+        }, {});
+        console.log("Claims by status:", statusCounts);
+
+        setClaims(filteredData);
+
+        // Cập nhật tổng số item sau khi đã lọc
+        const removedCount =
+          response.data.data.pageData.length - filteredData.length;
+        setTotalCount(response.data.data.pageInfo.totalItems - removedCount);
       }
     } catch (error) {
       console.error("Error fetching claims:", error);
@@ -173,6 +240,44 @@ const ApprovalPage: React.FC = () => {
 
     setFilteredClaims(filtered);
     setPage(0);
+  }, [claims, statusFilter, searchTerm]);
+
+  useEffect(() => {
+    // Chỉ lọc khi không phải All hoặc đã có dữ liệu All
+    if (statusFilter !== "All" || claims.length > 0) {
+      console.log("Current claims:", claims);
+
+      const filtered = claims.filter((claim) => {
+        // Loại bỏ các claim có status là "Draft" hoặc "Canceled"
+        if (claim.claim_status === "Draft" || claim.claim_status === "Canceled")
+          return false;
+
+        // Khi chọn All, hiển thị tất cả các status
+        const matchesStatus =
+          statusFilter === "All" || claim.claim_status === statusFilter;
+
+        const matchesSearch =
+          !searchTerm ||
+          claim.claim_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          claim.staff_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (claim.project_info?.project_name || "")
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase());
+
+        return matchesStatus && matchesSearch;
+      });
+
+      console.log("Filtered claims:", filtered);
+
+      // Log số lượng claim theo từng status sau khi lọc
+      const statusCounts = filtered.reduce((acc: any, claim: Claim) => {
+        acc[claim.claim_status] = (acc[claim.claim_status] || 0) + 1;
+        return acc;
+      }, {});
+      console.log("Filtered claims by status:", statusCounts);
+
+      setFilteredClaims(filtered);
+    }
   }, [claims, statusFilter, searchTerm]);
 
   const handleChangePage = (event: unknown, newPage: number) => {
@@ -311,6 +416,7 @@ const ApprovalPage: React.FC = () => {
                 <MenuItem value="Approved">Approved</MenuItem>
                 <MenuItem value="Rejected">Rejected</MenuItem>
                 <MenuItem value="Returned">Returned</MenuItem>
+                <MenuItem value="Paid">Paid</MenuItem>
               </Select>
             </FormControl>
 
@@ -428,13 +534,11 @@ const ApprovalPage: React.FC = () => {
                         </TableCell>
                         <TableCell align="center" sx={tableCellStyle}>
                           <span
-                            className={`status-badge status-${getDisplayStatus(
-                              claim.claim_status
-                            )
+                            className={`status-badge status-${claim.claim_status
                               .toLowerCase()
                               .replace(/\s+/g, "-")}`}
                           >
-                            {getDisplayStatus(claim.claim_status)}
+                            {claim.claim_status}
                           </span>
                         </TableCell>
                         <TableCell
