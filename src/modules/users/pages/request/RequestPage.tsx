@@ -20,6 +20,7 @@ import {
   DialogContent,
   DialogActions,
   IconButton,
+  TablePagination,
 } from "@mui/material";
 import axios from "axios";
 import "./RequestPage.css";
@@ -131,6 +132,9 @@ const RequestPage = () => {
   const [requestToDelete, setRequestToDelete] = useState<string | null>(null);
   const [dateError, setDateError] = useState<string | null>(null);
   const [token, setToken] = useState<string>("");
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
 
   // useEffect hooks remain unchanged
   useEffect(() => {
@@ -177,7 +181,7 @@ const RequestPage = () => {
       try {
         console.log("Fetching requests...");
         const response = await axios.post(
-          `${API_URL}/claims/claimer-search`, // Thay đổi endpoint từ /claims/search thành /claims/claimer-search
+          `${API_URL}/claims/claimer-search`,
           {
             searchCondition: {
               keyword: "",
@@ -187,8 +191,8 @@ const RequestPage = () => {
               is_delete: false,
             },
             pageInfo: {
-              pageNum: 1,
-              pageSize: 10,
+              pageNum: page + 1,
+              pageSize: rowsPerPage,
             },
           },
           {
@@ -200,6 +204,7 @@ const RequestPage = () => {
         console.log("Response received:", response.data);
         if (response.data.success) {
           setRequests(response.data.data.pageData);
+          setTotalCount(response.data.data.pageInfo.totalItems);
         } else {
           console.error("Failed to fetch requests:", response.data.message);
         }
@@ -211,7 +216,7 @@ const RequestPage = () => {
     };
 
     fetchRequests();
-  }, [userEmail, userId, token]);
+  }, [userEmail, userId, token, page, rowsPerPage]);
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -399,56 +404,90 @@ const RequestPage = () => {
   // Other functions remain unchanged
   const handleEditModalOk = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!currentRequest || !token) return;
-
+    if (!currentRequest || !token) {
+      console.error("Missing currentRequest or token");
+      return;
+    }
+  
+    // Validate required fields
+    if (
+      !formValues.claim_name ||
+      !formValues.project_id ||
+      !formValues.approval_id ||
+      !formValues.claim_start_date ||
+      !formValues.claim_end_date ||
+      formValues.total_work_time <= 0
+    ) {
+      console.error("All fields are required and total work time must be positive");
+      alert("Please fill in all fields and ensure total work time is positive.");
+      return;
+    }
+  
+    // Validate date logic
     if (
       formValues.claim_end_date &&
       formValues.claim_start_date &&
       formValues.claim_end_date.isBefore(formValues.claim_start_date)
     ) {
       setDateError("End date cannot be before start date");
+      console.error("Date validation failed:", dateError);
       return;
     }
-
+  
     try {
       const updatedRequest = {
-        ...currentRequest,
-        claim_name: formValues.claim_name,
+        _id: currentRequest._id, // Ensure the ID is included
+        user_id: userId, // Include user_id if required by the backend
         project_id: formValues.project_id,
         approval_id: formValues.approval_id,
-        claim_start_date: formValues.claim_start_date
-          ? formValues.claim_start_date.toISOString()
-          : null,
-        claim_end_date: formValues.claim_end_date
-          ? formValues.claim_end_date.toISOString()
-          : null,
-        total_work_time: formValues.total_work_time,
+        claim_name: formValues.claim_name,
+        claim_start_date: formValues.claim_start_date?.toISOString() || "",
+        claim_end_date: formValues.claim_end_date?.toISOString() || "",
+        total_work_time: Number(formValues.total_work_time), // Ensure it's a number
+        claim_status: currentRequest.claim_status, // Preserve the current status unless changed by the backend
       };
-      await axios.put(
+  
+      console.log("Submitting updated request:", updatedRequest);
+  
+      const response = await axios.put(
         `${API_URL}/claims/${currentRequest._id}`,
         updatedRequest,
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         }
       );
-      setRequests(
-        requests.map((req) =>
-          req._id === currentRequest._id
-            ? {
-                ...updatedRequest,
-                claim_start_date: updatedRequest.claim_start_date || "",
-                claim_end_date: updatedRequest.claim_end_date || "",
-              }
-            : req
-        )
-      );
-      setIsEditModalVisible(false);
-      setCurrentRequest(null);
-      setDateError(null);
+  
+      if (response.data.success) {
+        setRequests(
+          requests.map((req) =>
+            req._id === currentRequest._id
+              ? {
+                  ...req,
+                  ...updatedRequest,
+                  claim_start_date: updatedRequest.claim_start_date,
+                  claim_end_date: updatedRequest.claim_end_date,
+                }
+              : req
+          )
+        );
+        setIsEditModalVisible(false);
+        setCurrentRequest(null);
+        setDateError(null);
+        alert("Request updated successfully!");
+      } else {
+        console.error("Failed to update request:", response.data.message);
+        alert(`Failed to update request: ${response.data.message}`);
+      }
     } catch (error) {
       console.error("Error editing request:", error);
+      if (axios.isAxiosError(error) && error.response) {
+        alert(`Error: ${error.response.data.message || "Failed to update request"}`);
+      } else {
+        alert("An unexpected error occurred. Please try again.");
+      }
     }
   };
 
@@ -736,6 +775,25 @@ const RequestPage = () => {
                       ))}
                   </TableBody>
                 </Table>
+                <TablePagination
+                  rowsPerPageOptions={[5, 10, 25]}
+                  component="div"
+                  count={totalCount}
+                  rowsPerPage={rowsPerPage}
+                  page={page}
+                  onPageChange={(event, newPage) => setPage(newPage)}
+                  onRowsPerPageChange={(event) => {
+                    setRowsPerPage(parseInt(event.target.value, 10));
+                    setPage(0);
+                  }}
+                  labelDisplayedRows={({ from, to, count }) => {
+                    const computedFrom = page * rowsPerPage + 1;
+                    const computedTo = Math.min((page + 1) * rowsPerPage, count);
+                    return `${computedFrom}-${computedTo} of ${count}`;
+                  }}
+                  showFirstButton
+                  showLastButton
+                />
               </TableContainer>
             )}
           </div>
