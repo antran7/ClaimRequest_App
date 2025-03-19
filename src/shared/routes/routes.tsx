@@ -1,11 +1,11 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
-import { AuthProvider } from "../../core/hooks/useAuth";
+import { AuthProvider } from "../../modules/auth/hooks/useAuth";
 import { userRoutes } from "../../modules/users/routes";
 import { adminRoutes } from "../../modules/admin/routes";
 import { financeRoutes } from "../../modules/finance/routes";
 import { approvalRoutes } from "../../modules/approval/routes";
 import { commonRoutes } from "../../modules/common/routes";
-import { PreloaderProvider, usePreloader } from "../../core/hooks/usePreloader";
+import { PreloaderProvider, usePreloader } from "../hooks/usePreloader";
 import { useEffect } from "react";
 
 const PageLoader: React.FC = () => {

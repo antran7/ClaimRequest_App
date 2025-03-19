@@ -1,6 +1,5 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { Role } from "../constants/roles";
-import { useAuth } from "../../core/hooks/useAuth";
 import { useEffect, useState } from "react";
 
 interface PrivateRouteProps {

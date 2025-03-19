@@ -1,7 +1,7 @@
 import { TextField, Button, Container, Typography, Box } from "@mui/material";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
-import { useAuth } from "../../../core/hooks/useAuth";
+import { useAuth } from "../hooks/useAuth";
 import Layout from "../../../shared/layouts/Layout";
 
 type FormData = {

@@ -5,8 +5,8 @@ import { Role } from "../constants/roles";
 import MenuIcon from "@mui/icons-material/Menu";
 import IconButton from "@mui/material/IconButton";
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import { useAuth } from "../../core/hooks/useAuth";
 import { Menu, MenuItem } from "@mui/material";
+import { logout } from "../../modules/auth/services/authService";
 
 interface HeaderProps {
   toggleSidebar?: () => void;
@@ -15,7 +15,6 @@ interface HeaderProps {
 const Header = ({ toggleSidebar = () => { } }: HeaderProps) => {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = React.useState(null);
-  const { logout } = useAuth();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const token = localStorage.getItem("token") as Role | null;
 
@@ -101,7 +100,7 @@ const Header = ({ toggleSidebar = () => { } }: HeaderProps) => {
               onClose={handleClose}
               disableScrollLock={true} // Giữ thanh cuộn
             >
-              <MenuItem onClick={() => navigate("/account/profile")}>
+              <MenuItem onClick={() => navigate("/profile")}>
                 My Profile
               </MenuItem>
               <MenuItem onClick={handleClose}>

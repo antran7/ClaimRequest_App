@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import "./Login.css";
-import { useAuth } from "../../../core/hooks/useAuth";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useForm } from "react-hook-form";
-import { TextField, Checkbox, FormControlLabel, Button,CircularProgress } from "@mui/material";
+import { TextField, Checkbox, FormControlLabel, Button, CircularProgress } from "@mui/material";
+import { getUserInfo, login } from "../services/authService";
 
 interface LoginFormInputs {
   email: string;
@@ -14,7 +14,6 @@ interface LoginFormInputs {
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login, getUserInfo } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -28,8 +27,23 @@ const Login: React.FC = () => {
     setIsLoading(true);
     try {
       await login(data.email, data.password);
-      await getUserInfo();
-      navigate("/");
+      const user = await getUserInfo();
+      switch (user.data?.role_code) {
+        case "A001":
+          navigate("/admin");
+          break;
+        case "A002":
+          navigate("/finance");
+          break;
+        case "A003":
+          navigate("/approval");
+          break;
+        case "A004":
+          navigate("/user");
+          break;
+        default:
+          navigate("/");
+      }
       toast("Login successfully.", {
         icon: "🔥",
       });
@@ -88,10 +102,10 @@ const Login: React.FC = () => {
             </div>
           </div>
           <div className="verify" onClick={() => navigate("/verify")}>
-              Verify Account
-            </div>
+            Verify Account
+          </div>
           <Button type="submit" variant="contained" fullWidth disabled={isLoading} className="login-submit">
-            {isLoading? <CircularProgress size={24}/>: "Sign in"}
+            {isLoading ? <CircularProgress size={24} /> : "Sign in"}
           </Button>
         </form>
       </div>
