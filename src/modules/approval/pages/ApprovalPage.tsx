@@ -55,7 +55,7 @@ const ApprovalPage: React.FC = () => {
   const [modalReason, setModalReason] = useState("");
   const [currentClaimId, setCurrentClaimId] = useState<string | null>(null);
   const [currentAction, setCurrentAction] = useState<
-    "Approved" | "Rejected" | "Returned" | null
+    "Approved" | "Rejected" | null
   >(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -102,13 +102,7 @@ const ApprovalPage: React.FC = () => {
       setLoading(true);
 
       // Lấy tất cả các status cần thiết
-      const statuses = [
-        "Pending Approval",
-        "Approved",
-        "Rejected",
-        "Returned",
-        "Paid",
-      ];
+      const statuses = ["Pending Approval", "Approved", "Rejected", "Paid"];
       const allClaimsData: Claim[] = [];
 
       // First, get the total count for each status
@@ -384,12 +378,6 @@ const ApprovalPage: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleReturn = (id: string) => {
-    setCurrentClaimId(id);
-    setCurrentAction("Returned");
-    setIsModalOpen(true);
-  };
-
   const handleModalSubmit = async () => {
     if (!currentClaimId || !currentAction) return;
 
@@ -483,7 +471,6 @@ const ApprovalPage: React.FC = () => {
                 <MenuItem value="Pending Approval">Pending Approval</MenuItem>
                 <MenuItem value="Approved">Approved</MenuItem>
                 <MenuItem value="Rejected">Rejected</MenuItem>
-                <MenuItem value="Returned">Returned</MenuItem>
                 <MenuItem value="Paid">Paid</MenuItem>
               </Select>
             </FormControl>
@@ -642,17 +629,6 @@ const ApprovalPage: React.FC = () => {
                                 >
                                   Reject
                                 </Button>
-                                <Button
-                                  variant="outlined"
-                                  size="small"
-                                  sx={{
-                                    color: "#d97706",
-                                    borderColor: "#d97706",
-                                  }}
-                                  onClick={() => handleReturn(claim._id)}
-                                >
-                                  Return
-                                </Button>
                               </div>
                             )}
                           </TableCell>
@@ -697,11 +673,7 @@ const ApprovalPage: React.FC = () => {
               fontSize: "1.25rem",
             }}
           >
-            {currentAction === "Approved"
-              ? "Approve Claim"
-              : currentAction === "Rejected"
-              ? "Reject Claim"
-              : "Return Claim"}
+            {currentAction === "Approved" ? "Approve Claim" : "Reject Claim"}
             <IconButton
               aria-label="close"
               onClick={handleCloseModal}
