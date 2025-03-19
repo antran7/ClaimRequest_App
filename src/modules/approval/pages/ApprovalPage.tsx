@@ -69,7 +69,6 @@ const ApprovalPage: React.FC = () => {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
   const [hasMore, setHasMore] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const PAGE_SIZE = 100;
   const tableCellStyle = {
     borderRight: "2px solid rgba(224, 224, 224, 1)",
     borderBottom: "2px solid rgba(224, 224, 224, 1)",
@@ -112,43 +111,61 @@ const ApprovalPage: React.FC = () => {
       ];
       const allClaimsData: Claim[] = [];
 
-      // Lấy dữ liệu cho từng status
+      // First, get the total count for each status
       for (const status of statuses) {
-        let pageNum = 1;
-        let hasMoreData = true;
-
-        // Continue fetching pages until no more data is available
-        while (hasMoreData) {
-          const response = await axios.post(
-            `${API_URL}/claims/approval-search`,
-            {
-              searchCondition: {
-                keyword: searchTerm || "",
-                claim_status: status,
-                claim_start_date: startDate || "",
-                claim_end_date: endDate || "",
-                is_delete: false,
-              },
-              pageInfo: {
-                pageNum: pageNum,
-                pageSize: PAGE_SIZE,
-              },
+        // Initial request to get total count
+        const countResponse = await axios.post(
+          `${API_URL}/claims/approval-search`,
+          {
+            searchCondition: {
+              keyword: searchTerm || "",
+              claim_status: status,
+              claim_start_date: startDate || "",
+              claim_end_date: endDate || "",
+              is_delete: false,
             },
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
+            pageInfo: {
+              pageNum: 1,
+              pageSize: 1, // Just need to get the total count
+            },
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (countResponse.data.success) {
+          const totalItems = countResponse.data.data.pageInfo.totalItems;
+
+          // Now fetch all data in one request with the exact page size needed
+          if (totalItems > 0) {
+            const dataResponse = await axios.post(
+              `${API_URL}/claims/approval-search`,
+              {
+                searchCondition: {
+                  keyword: searchTerm || "",
+                  claim_status: status,
+                  claim_start_date: startDate || "",
+                  claim_end_date: endDate || "",
+                  is_delete: false,
+                },
+                pageInfo: {
+                  pageNum: 1,
+                  pageSize: totalItems, // Use the exact count
+                },
               },
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+
+            if (dataResponse.data.success) {
+              allClaimsData.push(...dataResponse.data.data.pageData);
             }
-          );
-
-          if (response.data.success) {
-            const pageData = response.data.data.pageData;
-            allClaimsData.push(...pageData);
-
-            hasMoreData = pageData.length === PAGE_SIZE;
-            pageNum++;
-          } else {
-            hasMoreData = false;
           }
         }
       }
@@ -197,7 +214,9 @@ const ApprovalPage: React.FC = () => {
   const fetchClaims = async (pageNum = currentPage, isNewSearch = false) => {
     try {
       setLoading(true);
-      const response = await axios.post(
+
+      // First, get the total count
+      const countResponse = await axios.post(
         `${API_URL}/claims/approval-search`,
         {
           searchCondition: {
@@ -208,8 +227,8 @@ const ApprovalPage: React.FC = () => {
             is_delete: false,
           },
           pageInfo: {
-            pageNum: pageNum,
-            pageSize: PAGE_SIZE,
+            pageNum: 1,
+            pageSize: 1, // Just need to get the total count
           },
         },
         {
@@ -219,24 +238,47 @@ const ApprovalPage: React.FC = () => {
         }
       );
 
-      if (response.data.success) {
-        const filteredData = response.data.data.pageData.filter(
-          (claim: Claim) =>
-            claim.claim_status !== "Draft" && claim.claim_status !== "Canceled"
+      if (countResponse.data.success) {
+        const totalItems = countResponse.data.data.pageInfo.totalItems;
+        setTotalCount(totalItems);
+
+        // Now fetch all data in one request
+        const response = await axios.post(
+          `${API_URL}/claims/approval-search`,
+          {
+            searchCondition: {
+              keyword: debouncedSearchTerm || "",
+              claim_status: statusFilter === "All" ? "" : statusFilter,
+              claim_start_date: startDate || "",
+              claim_end_date: endDate || "",
+              is_delete: false,
+            },
+            pageInfo: {
+              pageNum: 1,
+              pageSize: totalItems, // Use the exact count
+            },
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
 
-        // If it's a new search, replace claims, otherwise append
-        setClaims((prevClaims) =>
-          isNewSearch ? filteredData : [...prevClaims, ...filteredData]
-        );
+        if (response.data.success) {
+          const filteredData = response.data.data.pageData.filter(
+            (claim: Claim) =>
+              claim.claim_status !== "Draft" &&
+              claim.claim_status !== "Canceled"
+          );
 
-        // Check if there's more data to load
-        setHasMore(filteredData.length === PAGE_SIZE);
-        setTotalCount(response.data.data.pageInfo.totalItems);
+          setClaims(filteredData);
+          setFilteredClaims(filteredData);
 
-        // Only reset page to 0 for new searches
-        if (isNewSearch) {
-          setPage(0);
+          // Only reset page to 0 for new searches
+          if (isNewSearch) {
+            setPage(0);
+          }
         }
       }
     } catch (error) {
@@ -307,17 +349,6 @@ const ApprovalPage: React.FC = () => {
   }, [claims, statusFilter, searchTerm]);
 
   const handleChangePage = (event: unknown, newPage: number) => {
-    // If we're moving to a page that might need more data
-    if (
-      newPage > page &&
-      (newPage + 1) * rowsPerPage > claims.length &&
-      hasMore
-    ) {
-      // Calculate which page to fetch from the API
-      const nextApiPage = Math.floor(claims.length / PAGE_SIZE) + 1;
-      setCurrentPage(nextApiPage);
-      fetchClaims(nextApiPage, false);
-    }
     setPage(newPage);
   };
 
