@@ -7,7 +7,6 @@ import {
   createUser,
   updateUser,
   changeUserStatus,
-  fetchUser,
   deleteUser,
   changeUserRole,
   getEmployeeById,
@@ -37,7 +36,7 @@ import {
   InputLabel,
 } from "@mui/material";
 
-import Select, { SelectChangeEvent } from "@mui/material/Select";
+import Select from "@mui/material/Select";
 import AccessibilityIcon from "@mui/icons-material/Accessibility";
 import { User, Employee } from "../types/user";
 import { Pagination } from "@mui/material";
@@ -100,6 +99,27 @@ const UserManagement = () => {
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  useEffect(() => {
+    if (editingUser) {
+      // When switching to edit mode, reset password-related fields & errors
+      setForm((prev) => ({
+        ...prev,
+        password: "",
+        confirmPassword: "",
+      }));
+      setErrors({});
+    } else {
+      // When switching to add mode, reset the form
+      setForm({
+        email: "",
+        user_name: "",
+        role_code: "A001",
+        password: "",
+        confirmPassword: "",
+      });
+      setErrors({});
+    }
+  }, [editingUser]);
 
   const validateForm = () => {
     let newErrors = {};
@@ -391,7 +411,7 @@ const UserManagement = () => {
 
               <DialogContent>
                 {/* Email Field */}
-                Email
+                Email*
                 <TextField
                   type="email"
                   fullWidth
@@ -407,7 +427,7 @@ const UserManagement = () => {
                   }}
                 />
                 {/* Username Field */}
-                Username
+                Username*
                 <TextField
                   fullWidth
                   margin="dense"
@@ -423,11 +443,34 @@ const UserManagement = () => {
                     color: "gray",
                   }}
                 />
+                  {/* Role Dropdown (ONLY for Adding New User) */}
+                  {!editingUser && (
+                    <>
+                      Role
+                      <Select
+                        fullWidth
+                        margin="dense"
+                        value={form.role_code}
+                        onChange={(e) => setForm({ ...form, role_code: e.target.value })}
+                        sx={{
+                          backgroundColor: "#E3F2FD",
+                          borderRadius: "6px",
+                        }}
+                      >
+                        {Object.entries(roleMap).map(([code, label]) => (
+                          <MenuItem key={code} value={code}>
+                            {label}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </>
+                  )}
+
                 {/* Password Field (ONLY for Adding New User) */}
                 <span
                   style={{ visibility: editingUser ? "hidden" : "visible" }}
                 >
-                  Password
+                  Password*
                 </span>
                 {!editingUser && (
                   <TextField
@@ -457,7 +500,7 @@ const UserManagement = () => {
                 <span
                   style={{ visibility: editingUser ? "hidden" : "visible" }}
                 >
-                  Confirm Password
+                  Confirm Password*
                 </span>
                 {!editingUser && (
                   <TextField
@@ -929,12 +972,16 @@ const UserManagement = () => {
                 />
                 <TextField
                   label="Phone"
+                  type="number"
                   value={employeeData.phone}
                   onChange={(e) =>
                     setEmployeeData({ ...employeeData, phone: e.target.value })
                   }
                   fullWidth
                   margin="dense"
+                  slotProps={{
+                    htmlInput: { inputMode: "numeric", style: { textAlign: "right" } }, // ✅ Use slotProps.htmlInput
+                  }}
                 />
                 <TextField
                   label="Address"
@@ -1004,53 +1051,71 @@ const UserManagement = () => {
                   margin="dense"
                   InputLabelProps={{ shrink: true }}
                 />
-                <TextField
-                  label="Contract Type"
-                  value={employeeData.contract_type}
+                <FormControl fullWidth margin="dense">
+                <InputLabel>Contract Type</InputLabel>
+                <Select
+                  value={employeeData.contract_type || ""}
                   onChange={(e) =>
-                    setEmployeeData({
-                      ...employeeData,
-                      contract_type: e.target.value,
-                    })
+                    setEmployeeData({ ...employeeData, contract_type: e.target.value })
                   }
-                  fullWidth
-                  margin="dense"
-                />
-                <TextField
-                  label="Salary"
-                  type="number"
-                  value={employeeData.salary}
-                  onChange={(e) =>
-                    setEmployeeData({
-                      ...employeeData,
-                      salary: Number(e.target.value),
-                    })
-                  }
-                  fullWidth
-                  margin="dense"
-                />
-                <TextField
-                  label="Start Date"
-                  type="date"
-                  value={employeeData.start_date ? format(employeeData.start_date, "yyyy-MM-dd") : ""}
-                  onChange={(e) =>
-                    setEmployeeData({ ...employeeData, start_date: new Date(e.target.value) })
-                  }
-                  fullWidth
-                  margin="dense"
-                  InputLabelProps={{ shrink: true }}
-                />
-                 <TextField
-                  label="End Date"
-                  type="date"
-                  value={employeeData.end_date ? format(employeeData.end_date, "yyyy-MM-dd") : ""}
-                  onChange={(e) =>
-                    setEmployeeData({ ...employeeData, end_date: new Date(e.target.value) })
-                  }
-                  fullWidth
-                  margin="dense"
-                  InputLabelProps={{ shrink: true }}
-                />
+                  displayEmpty
+                >
+                  <MenuItem value="" disabled></MenuItem>
+                  {["INDEFINITE", "THREE YEAR", "ONE YEAR"].map((type) => (
+                    <MenuItem key={type} value={type}>
+                      {type}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <TextField
+                label="Salary"
+                type="number"
+                value={employeeData.salary}
+                onChange={(e) =>
+                  setEmployeeData({
+                    ...employeeData,
+                    salary: Number(e.target.value),
+                  })
+                }
+                fullWidth
+                margin="dense"
+                slotProps={{
+                  htmlInput: { inputMode: "numeric", style: { textAlign: "right" } }, // ✅ Use slotProps.htmlInput
+                }}
+              />
+
+                <div style={{ textAlign: "right" }}>
+                  <TextField
+                    label="Start Date"
+                    type="date"
+                    value={employeeData.start_date ? format(employeeData.start_date, "yyyy-MM-dd") : ""}
+                    onChange={(e) =>
+                      setEmployeeData({ ...employeeData, start_date: new Date(e.target.value) })
+                    }
+                    fullWidth
+                    margin="dense"
+                    slotProps={{
+                      inputLabel: { shrink: true },
+                    }}
+                  />
+                </div>
+
+                <div style={{ textAlign: "right" }}>
+                  <TextField
+                    label="End Date"
+                    type="date"
+                    value={employeeData.end_date ? format(employeeData.end_date, "yyyy-MM-dd") : ""}
+                    onChange={(e) =>
+                      setEmployeeData({ ...employeeData, end_date: new Date(e.target.value) })
+                    }
+                    fullWidth
+                    margin="dense"
+                    slotProps={{
+                      inputLabel: { shrink: true },
+                    }}
+                  />
+                </div>
               </>
             )}
           </DialogContent>

@@ -55,7 +55,7 @@ const ApprovalPage: React.FC = () => {
   const [modalReason, setModalReason] = useState("");
   const [currentClaimId, setCurrentClaimId] = useState<string | null>(null);
   const [currentAction, setCurrentAction] = useState<
-    "Approved" | "Rejected" | "Returned" | null
+    "Approved" | "Rejected" | null
   >(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -66,6 +66,9 @@ const ApprovalPage: React.FC = () => {
   const [endDate, setEndDate] = useState<string>("");
   const [totalCount, setTotalCount] = useState<number>(0);
   const [allClaims, setAllClaims] = useState<Claim[]>([]);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
+  const [hasMore, setHasMore] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
   const tableCellStyle = {
     borderRight: "2px solid rgba(224, 224, 224, 1)",
     borderBottom: "2px solid rgba(224, 224, 224, 1)",
@@ -99,18 +102,13 @@ const ApprovalPage: React.FC = () => {
       setLoading(true);
 
       // Lấy tất cả các status cần thiết
-      const statuses = [
-        "Pending Approval",
-        "Approved",
-        "Rejected",
-        "Returned",
-        "Paid",
-      ];
+      const statuses = ["Pending Approval", "Approved", "Rejected", "Paid"];
       const allClaimsData: Claim[] = [];
 
-      // Lấy dữ liệu cho từng status
+      // First, get the total count for each status
       for (const status of statuses) {
-        const response = await axios.post(
+        // Initial request to get total count
+        const countResponse = await axios.post(
           `${API_URL}/claims/approval-search`,
           {
             searchCondition: {
@@ -122,7 +120,7 @@ const ApprovalPage: React.FC = () => {
             },
             pageInfo: {
               pageNum: 1,
-              pageSize: 50,
+              pageSize: 1, // Just need to get the total count
             },
           },
           {
@@ -132,12 +130,40 @@ const ApprovalPage: React.FC = () => {
           }
         );
 
-        if (response.data.success) {
-          allClaimsData.push(...response.data.data.pageData);
+        if (countResponse.data.success) {
+          const totalItems = countResponse.data.data.pageInfo.totalItems;
+
+          // Now fetch all data in one request with the exact page size needed
+          if (totalItems > 0) {
+            const dataResponse = await axios.post(
+              `${API_URL}/claims/approval-search`,
+              {
+                searchCondition: {
+                  keyword: searchTerm || "",
+                  claim_status: status,
+                  claim_start_date: startDate || "",
+                  claim_end_date: endDate || "",
+                  is_delete: false,
+                },
+                pageInfo: {
+                  pageNum: 1,
+                  pageSize: totalItems, // Use the exact count
+                },
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+
+            if (dataResponse.data.success) {
+              allClaimsData.push(...dataResponse.data.data.pageData);
+            }
+          }
         }
       }
 
-      // Lọc bỏ các claim có status là "Draft" hoặc "Canceled"
       const filteredData = allClaimsData.filter(
         (claim: Claim) =>
           claim.claim_status !== "Draft" && claim.claim_status !== "Canceled"
@@ -156,31 +182,47 @@ const ApprovalPage: React.FC = () => {
   };
 
   useEffect(() => {
-    if (!token) return;
-    fetchClaims();
-  }, [token, statusFilter, searchTerm, startDate, endDate, page, rowsPerPage]);
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 11000); // Đợi 1000ms sau khi người dùng ngừng gõ
 
-  const fetchClaims = async () => {
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Sửa lại useEffect để sử dụng debouncedSearchTerm thay vì searchTerm
+  useEffect(() => {
+    if (!token) return;
+    // Reset pagination when filters change
+    setCurrentPage(1);
+    setClaims([]);
+    fetchClaims(1, true);
+  }, [
+    token,
+    statusFilter,
+    debouncedSearchTerm,
+    startDate,
+    endDate,
+    // Remove page and rowsPerPage from here
+  ]);
+
+  const fetchClaims = async (pageNum = currentPage, isNewSearch = false) => {
     try {
       setLoading(true);
 
-      // Tăng pageSize khi chọn All để đảm bảo lấy tất cả dữ liệu
-      const pageSize = statusFilter === "All" ? 100 : rowsPerPage;
-
-      // Khi chọn All, gửi request không có filter status
-      const response = await axios.post(
+      // First, get the total count
+      const countResponse = await axios.post(
         `${API_URL}/claims/approval-search`,
         {
           searchCondition: {
-            keyword: searchTerm || "",
+            keyword: debouncedSearchTerm || "",
             claim_status: statusFilter === "All" ? "" : statusFilter,
             claim_start_date: startDate || "",
             claim_end_date: endDate || "",
             is_delete: false,
           },
           pageInfo: {
-            pageNum: page + 1,
-            pageSize: pageSize, // Sử dụng pageSize đã điều chỉnh
+            pageNum: 1,
+            pageSize: 1, // Just need to get the total count
           },
         },
         {
@@ -190,36 +232,58 @@ const ApprovalPage: React.FC = () => {
         }
       );
 
-      if (response.data.success) {
-        console.log("API response:", response.data);
+      if (countResponse.data.success) {
+        const totalItems = countResponse.data.data.pageInfo.totalItems;
+        setTotalCount(totalItems);
 
-        // Lọc bỏ các claim có status là "Draft" hoặc "Canceled"
-        const filteredData = response.data.data.pageData.filter(
-          (claim: Claim) =>
-            claim.claim_status !== "Draft" && claim.claim_status !== "Canceled"
+        // Now fetch all data in one request
+        const response = await axios.post(
+          `${API_URL}/claims/approval-search`,
+          {
+            searchCondition: {
+              keyword: debouncedSearchTerm || "",
+              claim_status: statusFilter === "All" ? "" : statusFilter,
+              claim_start_date: startDate || "",
+              claim_end_date: endDate || "",
+              is_delete: false,
+            },
+            pageInfo: {
+              pageNum: 1,
+              pageSize: totalItems, // Use the exact count
+            },
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
 
-        console.log("Filtered data (no Draft/Canceled):", filteredData);
+        if (response.data.success) {
+          const filteredData = response.data.data.pageData.filter(
+            (claim: Claim) =>
+              claim.claim_status !== "Draft" &&
+              claim.claim_status !== "Canceled"
+          );
 
-        // Log số lượng claim theo từng status để debug
-        const statusCounts = filteredData.reduce((acc: any, claim: Claim) => {
-          acc[claim.claim_status] = (acc[claim.claim_status] || 0) + 1;
-          return acc;
-        }, {});
-        console.log("Claims by status:", statusCounts);
+          setClaims(filteredData);
+          setFilteredClaims(filteredData);
 
-        setClaims(filteredData);
-
-        // Cập nhật tổng số item sau khi đã lọc
-        const removedCount =
-          response.data.data.pageData.length - filteredData.length;
-        setTotalCount(response.data.data.pageInfo.totalItems - removedCount);
+          // Only reset page to 0 for new searches
+          if (isNewSearch) {
+            setPage(0);
+          }
+        }
       }
     } catch (error) {
       console.error("Error fetching claims:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleLoadMore = () => {
+    setCurrentPage((prev) => prev + 1);
   };
 
   useEffect(() => {
@@ -237,7 +301,7 @@ const ApprovalPage: React.FC = () => {
     });
 
     setFilteredClaims(filtered);
-    setPage(0);
+    // Don't reset page here
   }, [claims, statusFilter, searchTerm]);
 
   useEffect(() => {
@@ -311,12 +375,6 @@ const ApprovalPage: React.FC = () => {
   const handleReject = (id: string) => {
     setCurrentClaimId(id);
     setCurrentAction("Rejected");
-    setIsModalOpen(true);
-  };
-
-  const handleReturn = (id: string) => {
-    setCurrentClaimId(id);
-    setCurrentAction("Returned");
     setIsModalOpen(true);
   };
 
@@ -413,7 +471,6 @@ const ApprovalPage: React.FC = () => {
                 <MenuItem value="Pending Approval">Pending Approval</MenuItem>
                 <MenuItem value="Approved">Approved</MenuItem>
                 <MenuItem value="Rejected">Rejected</MenuItem>
-                <MenuItem value="Returned">Returned</MenuItem>
                 <MenuItem value="Paid">Paid</MenuItem>
               </Select>
             </FormControl>
@@ -505,84 +562,78 @@ const ApprovalPage: React.FC = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {filteredClaims.map((claim) => (
-                      <TableRow key={claim._id}>
-                        <TableCell sx={tableCellStyle}>
-                          {claim.claim_name}
-                        </TableCell>
-                        <TableCell sx={tableCellStyle}>
-                          {claim.project_info
-                            ? `${claim.project_info.project_name} (${claim.project_info.project_code})`
-                            : "N/A"}
-                        </TableCell>
-                        <TableCell align="center" sx={tableCellStyle}>
-                          {claim.staff_name}
-                        </TableCell>
-                        <TableCell align="center" sx={tableCellStyle}>
-                          {claim.role_in_project || "N/A"}
-                        </TableCell>
-                        <TableCell align="center" sx={tableCellStyle}>
-                          {formatDate(claim.claim_start_date)}
-                        </TableCell>
-                        <TableCell align="center" sx={tableCellStyle}>
-                          {formatDate(claim.claim_end_date)}
-                        </TableCell>
-                        <TableCell align="center" sx={tableCellStyle}>
-                          {claim.total_work_time} (hours)
-                        </TableCell>
-                        <TableCell align="center" sx={tableCellStyle}>
-                          <span
-                            className={`status-badge status-${claim.claim_status
-                              .toLowerCase()
-                              .replace(/\s+/g, "-")}`}
+                    {filteredClaims
+                      .slice(
+                        page * rowsPerPage,
+                        page * rowsPerPage + rowsPerPage
+                      )
+                      .map((claim) => (
+                        <TableRow key={claim._id}>
+                          <TableCell sx={tableCellStyle}>
+                            {claim.claim_name}
+                          </TableCell>
+                          <TableCell sx={tableCellStyle}>
+                            {claim.project_info
+                              ? `${claim.project_info.project_name} (${claim.project_info.project_code})`
+                              : "N/A"}
+                          </TableCell>
+                          <TableCell align="center" sx={tableCellStyle}>
+                            {claim.staff_name}
+                          </TableCell>
+                          <TableCell align="center" sx={tableCellStyle}>
+                            {claim.role_in_project || "N/A"}
+                          </TableCell>
+                          <TableCell align="center" sx={tableCellStyle}>
+                            {formatDate(claim.claim_start_date)}
+                          </TableCell>
+                          <TableCell align="center" sx={tableCellStyle}>
+                            {formatDate(claim.claim_end_date)}
+                          </TableCell>
+                          <TableCell align="center" sx={tableCellStyle}>
+                            {claim.total_work_time} (hours)
+                          </TableCell>
+                          <TableCell align="center" sx={tableCellStyle}>
+                            <span
+                              className={`status-badge status-${claim.claim_status
+                                .toLowerCase()
+                                .replace(/\s+/g, "-")}`}
+                            >
+                              {claim.claim_status}
+                            </span>
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            sx={{ ...tableCellStyle, minWidth: "250px" }}
                           >
-                            {claim.claim_status}
-                          </span>
-                        </TableCell>
-                        <TableCell
-                          align="center"
-                          sx={{ ...tableCellStyle, minWidth: "250px" }}
-                        >
-                          {claim.claim_status === "Pending Approval" && (
-                            <div className="action-buttons">
-                              <Button
-                                variant="contained"
-                                size="small"
-                                sx={{
-                                  backgroundColor: "gray",
-                                  color: "white",
-                                  "&:hover": { backgroundColor: "darkgray" },
-                                  mr: 1,
-                                }}
-                                onClick={() => handleApprove(claim._id)}
-                              >
-                                Approve
-                              </Button>
-                              <Button
-                                variant="outlined"
-                                size="small"
-                                color="error"
-                                onClick={() => handleReject(claim._id)}
-                                sx={{ mr: 1 }}
-                              >
-                                Reject
-                              </Button>
-                              <Button
-                                variant="outlined"
-                                size="small"
-                                sx={{
-                                  color: "#d97706",
-                                  borderColor: "#d97706",
-                                }}
-                                onClick={() => handleReturn(claim._id)}
-                              >
-                                Return
-                              </Button>
-                            </div>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                            {claim.claim_status === "Pending Approval" && (
+                              <div className="action-buttons">
+                                <Button
+                                  variant="contained"
+                                  size="small"
+                                  sx={{
+                                    backgroundColor: "gray",
+                                    color: "white",
+                                    "&:hover": { backgroundColor: "darkgray" },
+                                    mr: 1,
+                                  }}
+                                  onClick={() => handleApprove(claim._id)}
+                                >
+                                  Approve
+                                </Button>
+                                <Button
+                                  variant="outlined"
+                                  size="small"
+                                  color="error"
+                                  onClick={() => handleReject(claim._id)}
+                                  sx={{ mr: 1 }}
+                                >
+                                  Reject
+                                </Button>
+                              </div>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
                   </TableBody>
                 </Table>
               </TableContainer>
@@ -600,8 +651,8 @@ const ApprovalPage: React.FC = () => {
                   const computedTo = Math.min((page + 1) * rowsPerPage, count);
                   return `${computedFrom}-${computedTo} of ${count}`;
                 }}
-                showFirstButton // Thêm nút về trang đầu
-                showLastButton // Thêm nút đến trang cuối
+                showFirstButton
+                showLastButton
               />
             </>
           )}
@@ -622,11 +673,7 @@ const ApprovalPage: React.FC = () => {
               fontSize: "1.25rem",
             }}
           >
-            {currentAction === "Approved"
-              ? "Approve Claim"
-              : currentAction === "Rejected"
-              ? "Reject Claim"
-              : "Return Claim"}
+            {currentAction === "Approved" ? "Approve Claim" : "Reject Claim"}
             <IconButton
               aria-label="close"
               onClick={handleCloseModal}
