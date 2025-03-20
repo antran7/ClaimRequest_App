@@ -92,88 +92,62 @@ const ApprovalPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (statusFilter === "All" && token) {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 1000); // Giảm thời gian debounce xuống 1 giây
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    if (!token) return;
+    setCurrentPage(1);
+    setClaims([]);
+    if (statusFilter === "All") {
       fetchAllClaims();
+    } else {
+      fetchClaims(1, true);
     }
-  }, [token, statusFilter]);
+  }, [token, statusFilter, debouncedSearchTerm, startDate, endDate]);
 
   const fetchAllClaims = async () => {
     try {
       setLoading(true);
-
-      // Lấy tất cả các status cần thiết
       const statuses = ["Pending Approval", "Approved", "Rejected", "Paid"];
-      const allClaimsData: Claim[] = [];
 
-      // First, get the total count for each status
-      for (const status of statuses) {
-        // Initial request to get total count
-        const countResponse = await axios.post(
-          `${API_URL}/claims/approval-search`,
-          {
-            searchCondition: {
-              keyword: searchTerm || "",
-              claim_status: status,
-              claim_start_date: startDate || "",
-              claim_end_date: endDate || "",
-              is_delete: false,
-            },
-            pageInfo: {
-              pageNum: 1,
-              pageSize: 1, // Just need to get the total count
-            },
+      // Single request to get all claims with all statuses
+      const response = await axios.post(
+        `${API_URL}/claims/approval-search`,
+        {
+          searchCondition: {
+            keyword: searchTerm || "",
+            claim_status: "", // Empty string to get all statuses
+            claim_start_date: startDate || "",
+            claim_end_date: endDate || "",
+            is_delete: false,
           },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (countResponse.data.success) {
-          const totalItems = countResponse.data.data.pageInfo.totalItems;
-
-          // Now fetch all data in one request with the exact page size needed
-          if (totalItems > 0) {
-            const dataResponse = await axios.post(
-              `${API_URL}/claims/approval-search`,
-              {
-                searchCondition: {
-                  keyword: searchTerm || "",
-                  claim_status: status,
-                  claim_start_date: startDate || "",
-                  claim_end_date: endDate || "",
-                  is_delete: false,
-                },
-                pageInfo: {
-                  pageNum: 1,
-                  pageSize: totalItems, // Use the exact count
-                },
-              },
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              }
-            );
-
-            if (dataResponse.data.success) {
-              allClaimsData.push(...dataResponse.data.data.pageData);
-            }
-          }
+          pageInfo: {
+            pageNum: 1,
+            pageSize: 1000, // Use a reasonable large number
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      }
-
-      const filteredData = allClaimsData.filter(
-        (claim: Claim) =>
-          claim.claim_status !== "Draft" && claim.claim_status !== "Canceled"
       );
 
-      console.log("All claims data:", filteredData);
+      if (response.data.success) {
+        const filteredData = response.data.data.pageData.filter(
+          (claim: Claim) =>
+            claim.claim_status !== "Draft" && claim.claim_status !== "Canceled"
+        );
 
-      setClaims(filteredData);
-      setFilteredClaims(filteredData);
-      setTotalCount(filteredData.length);
+        setClaims(filteredData);
+        setFilteredClaims(filteredData);
+        setTotalCount(filteredData.length);
+      }
     } catch (error) {
       console.error("Error fetching all claims:", error);
     } finally {
@@ -181,36 +155,12 @@ const ApprovalPage: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 11000); // Đợi 1000ms sau khi người dùng ngừng gõ
-
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
-
-  // Sửa lại useEffect để sử dụng debouncedSearchTerm thay vì searchTerm
-  useEffect(() => {
-    if (!token) return;
-    // Reset pagination when filters change
-    setCurrentPage(1);
-    setClaims([]);
-    fetchClaims(1, true);
-  }, [
-    token,
-    statusFilter,
-    debouncedSearchTerm,
-    startDate,
-    endDate,
-    // Remove page and rowsPerPage from here
-  ]);
-
   const fetchClaims = async (pageNum = currentPage, isNewSearch = false) => {
     try {
       setLoading(true);
 
-      // First, get the total count
-      const countResponse = await axios.post(
+      // Single request to get claims with current status filter
+      const response = await axios.post(
         `${API_URL}/claims/approval-search`,
         {
           searchCondition: {
@@ -222,7 +172,7 @@ const ApprovalPage: React.FC = () => {
           },
           pageInfo: {
             pageNum: 1,
-            pageSize: 1, // Just need to get the total count
+            pageSize: 1000, // Use a reasonable large number
           },
         },
         {
@@ -232,47 +182,18 @@ const ApprovalPage: React.FC = () => {
         }
       );
 
-      if (countResponse.data.success) {
-        const totalItems = countResponse.data.data.pageInfo.totalItems;
-        setTotalCount(totalItems);
-
-        // Now fetch all data in one request
-        const response = await axios.post(
-          `${API_URL}/claims/approval-search`,
-          {
-            searchCondition: {
-              keyword: debouncedSearchTerm || "",
-              claim_status: statusFilter === "All" ? "" : statusFilter,
-              claim_start_date: startDate || "",
-              claim_end_date: endDate || "",
-              is_delete: false,
-            },
-            pageInfo: {
-              pageNum: 1,
-              pageSize: totalItems, // Use the exact count
-            },
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+      if (response.data.success) {
+        const filteredData = response.data.data.pageData.filter(
+          (claim: Claim) =>
+            claim.claim_status !== "Draft" && claim.claim_status !== "Canceled"
         );
 
-        if (response.data.success) {
-          const filteredData = response.data.data.pageData.filter(
-            (claim: Claim) =>
-              claim.claim_status !== "Draft" &&
-              claim.claim_status !== "Canceled"
-          );
+        setClaims(filteredData);
+        setFilteredClaims(filteredData);
+        setTotalCount(filteredData.length);
 
-          setClaims(filteredData);
-          setFilteredClaims(filteredData);
-
-          // Only reset page to 0 for new searches
-          if (isNewSearch) {
-            setPage(0);
-          }
+        if (isNewSearch) {
+          setPage(0);
         }
       }
     } catch (error) {
