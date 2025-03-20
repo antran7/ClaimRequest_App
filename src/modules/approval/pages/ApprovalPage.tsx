@@ -64,10 +64,9 @@ const ApprovalPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
-  const [totalCount, setTotalCount] = useState<number>(0);
+  const [totalItems, setTotalItems] = useState<number>(0);
   const [allClaims, setAllClaims] = useState<Claim[]>([]);
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
-  const [hasMore, setHasMore] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const tableCellStyle = {
     borderRight: "2px solid rgba(224, 224, 224, 1)",
@@ -101,65 +100,20 @@ const ApprovalPage: React.FC = () => {
 
   useEffect(() => {
     if (!token) return;
-    setCurrentPage(1);
-    setClaims([]);
-    if (statusFilter === "All") {
-      fetchAllClaims();
-    } else {
-      fetchClaims(1, true);
-    }
-  }, [token, statusFilter, debouncedSearchTerm, startDate, endDate]);
+    fetchClaims();
+  }, [
+    token,
+    statusFilter,
+    debouncedSearchTerm,
+    startDate,
+    endDate,
+    page,
+    rowsPerPage,
+  ]);
 
-  const fetchAllClaims = async () => {
+  const fetchClaims = async () => {
     try {
       setLoading(true);
-      const statuses = ["Pending Approval", "Approved", "Rejected", "Paid"];
-
-      // Single request to get all claims with all statuses
-      const response = await axios.post(
-        `${API_URL}/claims/approval-search`,
-        {
-          searchCondition: {
-            keyword: searchTerm || "",
-            claim_status: "", // Empty string to get all statuses
-            claim_start_date: startDate || "",
-            claim_end_date: endDate || "",
-            is_delete: false,
-          },
-          pageInfo: {
-            pageNum: 1,
-            pageSize: 1000, // Use a reasonable large number
-          },
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.data.success) {
-        const filteredData = response.data.data.pageData.filter(
-          (claim: Claim) =>
-            claim.claim_status !== "Draft" && claim.claim_status !== "Canceled"
-        );
-
-        setClaims(filteredData);
-        setFilteredClaims(filteredData);
-        setTotalCount(filteredData.length);
-      }
-    } catch (error) {
-      console.error("Error fetching all claims:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchClaims = async (pageNum = currentPage, isNewSearch = false) => {
-    try {
-      setLoading(true);
-
-      // Single request to get claims with current status filter
       const response = await axios.post(
         `${API_URL}/claims/approval-search`,
         {
@@ -171,8 +125,8 @@ const ApprovalPage: React.FC = () => {
             is_delete: false,
           },
           pageInfo: {
-            pageNum: 1,
-            pageSize: 1000, // Use a reasonable large number
+            pageNum: page + 1, // Convert to 1-based for API
+            pageSize: rowsPerPage,
           },
         },
         {
@@ -190,11 +144,7 @@ const ApprovalPage: React.FC = () => {
 
         setClaims(filteredData);
         setFilteredClaims(filteredData);
-        setTotalCount(filteredData.length);
-
-        if (isNewSearch) {
-          setPage(0);
-        }
+        setTotalItems(response.data.data.pageInfo.totalItems);
       }
     } catch (error) {
       console.error("Error fetching claims:", error);
@@ -202,66 +152,6 @@ const ApprovalPage: React.FC = () => {
       setLoading(false);
     }
   };
-
-  const handleLoadMore = () => {
-    setCurrentPage((prev) => prev + 1);
-  };
-
-  useEffect(() => {
-    const filtered = claims.filter((claim) => {
-      const matchesStatus =
-        statusFilter === "All" || claim.claim_status === statusFilter;
-      const matchesSearch =
-        claim.claim_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        claim.staff_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (claim.project_info?.project_name || "")
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase());
-
-      return matchesStatus && matchesSearch;
-    });
-
-    setFilteredClaims(filtered);
-    // Don't reset page here
-  }, [claims, statusFilter, searchTerm]);
-
-  useEffect(() => {
-    // Chỉ lọc khi không phải All hoặc đã có dữ liệu All
-    if (statusFilter !== "All" || claims.length > 0) {
-      console.log("Current claims:", claims);
-
-      const filtered = claims.filter((claim) => {
-        // Loại bỏ các claim có status là "Draft" hoặc "Canceled"
-        if (claim.claim_status === "Draft" || claim.claim_status === "Canceled")
-          return false;
-
-        // Khi chọn All, hiển thị tất cả các status
-        const matchesStatus =
-          statusFilter === "All" || claim.claim_status === statusFilter;
-
-        const matchesSearch =
-          !searchTerm ||
-          claim.claim_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          claim.staff_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (claim.project_info?.project_name || "")
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase());
-
-        return matchesStatus && matchesSearch;
-      });
-
-      console.log("Filtered claims:", filtered);
-
-      // Log số lượng claim theo từng status sau khi lọc
-      const statusCounts = filtered.reduce((acc: any, claim: Claim) => {
-        acc[claim.claim_status] = (acc[claim.claim_status] || 0) + 1;
-        return acc;
-      }, {});
-      console.log("Filtered claims by status:", statusCounts);
-
-      setFilteredClaims(filtered);
-    }
-  }, [claims, statusFilter, searchTerm]);
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
@@ -432,151 +322,167 @@ const ApprovalPage: React.FC = () => {
             </div>
           </div>
 
-          {loading ? (
-            <div className="loading-container">
-              <div className="flex justify-center flex-row gap-2">
-                <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce"></div>
-                <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce [animation-delay:-.3s]"></div>
-                <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce [animation-delay:-.5s]"></div>
-              </div>
-            </div>
-          ) : filteredClaims.length === 0 ? (
-            <div className="no-claims">
-              <p>No claims found matching your criteria.</p>
-            </div>
-          ) : (
-            <>
-              <TableContainer
-                component={Paper}
-                className="approval-table-container"
-              >
-                <Table stickyHeader aria-label="claims table">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell align="center" sx={headerCellStyle}>
-                        Claim Name
+          <TableContainer
+            component={Paper}
+            className="approval-table-container"
+          >
+            <Table stickyHeader aria-label="claims table">
+              <TableHead>
+                <TableRow>
+                  <TableCell align="center" sx={headerCellStyle}>
+                    Claim Name
+                  </TableCell>
+                  <TableCell align="center" sx={headerCellStyle}>
+                    Project
+                  </TableCell>
+                  <TableCell align="center" sx={headerCellStyle}>
+                    Requester
+                  </TableCell>
+                  <TableCell align="center" sx={headerCellStyle}>
+                    Role
+                  </TableCell>
+                  <TableCell align="center" sx={headerCellStyle}>
+                    Start Date
+                  </TableCell>
+                  <TableCell align="center" sx={headerCellStyle}>
+                    End Date
+                  </TableCell>
+                  <TableCell align="center" sx={headerCellStyle}>
+                    Times
+                  </TableCell>
+                  <TableCell align="center" sx={headerCellStyle}>
+                    Status
+                  </TableCell>
+                  <TableCell align="center" sx={headerCellStyle}>
+                    Actions
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={9} align="center">
+                      <div className="flex justify-center flex-row gap-2 py-4">
+                        <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce"></div>
+                        <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce [animation-delay:-.3s]"></div>
+                        <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce [animation-delay:-.5s]"></div>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : filteredClaims.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={9} align="center">
+                      <div className="no-claims py-4">
+                        <p>No claims found matching your criteria.</p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredClaims.map((claim) => (
+                    <TableRow key={claim._id}>
+                      <TableCell sx={tableCellStyle}>
+                        {claim.claim_name}
                       </TableCell>
-                      <TableCell align="center" sx={headerCellStyle}>
-                        Project
+                      <TableCell sx={tableCellStyle}>
+                        {claim.project_info
+                          ? `${claim.project_info.project_name} (${claim.project_info.project_code})`
+                          : "N/A"}
                       </TableCell>
-                      <TableCell align="center" sx={headerCellStyle}>
-                        Requester
+                      <TableCell align="center" sx={tableCellStyle}>
+                        {claim.staff_name}
                       </TableCell>
-                      <TableCell align="center" sx={headerCellStyle}>
-                        Role
+                      <TableCell align="center" sx={tableCellStyle}>
+                        {claim.role_in_project || "N/A"}
                       </TableCell>
-                      <TableCell align="center" sx={headerCellStyle}>
-                        Start Date
+                      <TableCell align="center" sx={tableCellStyle}>
+                        {formatDate(claim.claim_start_date)}
                       </TableCell>
-                      <TableCell align="center" sx={headerCellStyle}>
-                        End Date
+                      <TableCell align="center" sx={tableCellStyle}>
+                        {formatDate(claim.claim_end_date)}
                       </TableCell>
-                      <TableCell align="center" sx={headerCellStyle}>
-                        Times
+                      <TableCell align="center" sx={tableCellStyle}>
+                        {claim.total_work_time} (hours)
                       </TableCell>
-                      <TableCell align="center" sx={headerCellStyle}>
-                        Status
+                      <TableCell align="center" sx={tableCellStyle}>
+                        <span
+                          className={`status-badge status-${claim.claim_status
+                            .toLowerCase()
+                            .replace(/\s+/g, "-")}`}
+                        >
+                          {claim.claim_status}
+                        </span>
                       </TableCell>
-                      <TableCell align="center" sx={headerCellStyle}>
-                        Actions
+                      <TableCell
+                        align="center"
+                        sx={{ ...tableCellStyle, minWidth: "250px" }}
+                      >
+                        {claim.claim_status === "Pending Approval" && (
+                          <div className="action-buttons">
+                            <Button
+                              variant="contained"
+                              size="small"
+                              sx={{
+                                backgroundColor: "gray",
+                                color: "white",
+                                "&:hover": { backgroundColor: "darkgray" },
+                                mr: 1,
+                              }}
+                              onClick={() => handleApprove(claim._id)}
+                            >
+                              Approve
+                            </Button>
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              color="error"
+                              onClick={() => handleReject(claim._id)}
+                              sx={{ mr: 1 }}
+                            >
+                              Reject
+                            </Button>
+                          </div>
+                        )}
                       </TableCell>
                     </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {filteredClaims
-                      .slice(
-                        page * rowsPerPage,
-                        page * rowsPerPage + rowsPerPage
-                      )
-                      .map((claim) => (
-                        <TableRow key={claim._id}>
-                          <TableCell sx={tableCellStyle}>
-                            {claim.claim_name}
-                          </TableCell>
-                          <TableCell sx={tableCellStyle}>
-                            {claim.project_info
-                              ? `${claim.project_info.project_name} (${claim.project_info.project_code})`
-                              : "N/A"}
-                          </TableCell>
-                          <TableCell align="center" sx={tableCellStyle}>
-                            {claim.staff_name}
-                          </TableCell>
-                          <TableCell align="center" sx={tableCellStyle}>
-                            {claim.role_in_project || "N/A"}
-                          </TableCell>
-                          <TableCell align="center" sx={tableCellStyle}>
-                            {formatDate(claim.claim_start_date)}
-                          </TableCell>
-                          <TableCell align="center" sx={tableCellStyle}>
-                            {formatDate(claim.claim_end_date)}
-                          </TableCell>
-                          <TableCell align="center" sx={tableCellStyle}>
-                            {claim.total_work_time} (hours)
-                          </TableCell>
-                          <TableCell align="center" sx={tableCellStyle}>
-                            <span
-                              className={`status-badge status-${claim.claim_status
-                                .toLowerCase()
-                                .replace(/\s+/g, "-")}`}
-                            >
-                              {claim.claim_status}
-                            </span>
-                          </TableCell>
-                          <TableCell
-                            align="center"
-                            sx={{ ...tableCellStyle, minWidth: "250px" }}
-                          >
-                            {claim.claim_status === "Pending Approval" && (
-                              <div className="action-buttons">
-                                <Button
-                                  variant="contained"
-                                  size="small"
-                                  sx={{
-                                    backgroundColor: "gray",
-                                    color: "white",
-                                    "&:hover": { backgroundColor: "darkgray" },
-                                    mr: 1,
-                                  }}
-                                  onClick={() => handleApprove(claim._id)}
-                                >
-                                  Approve
-                                </Button>
-                                <Button
-                                  variant="outlined"
-                                  size="small"
-                                  color="error"
-                                  onClick={() => handleReject(claim._id)}
-                                  sx={{ mr: 1 }}
-                                >
-                                  Reject
-                                </Button>
-                              </div>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
 
-              <TablePagination
-                rowsPerPageOptions={[5, 10, 25]}
-                component="div"
-                count={totalCount}
-                rowsPerPage={rowsPerPage}
-                page={page}
-                onPageChange={handleChangePage}
-                onRowsPerPageChange={handleChangeRowsPerPage}
-                labelDisplayedRows={({ from, to, count }) => {
-                  const computedFrom = page * rowsPerPage + 1;
-                  const computedTo = Math.min((page + 1) * rowsPerPage, count);
-                  return `${computedFrom}-${computedTo} of ${count}`;
-                }}
-                showFirstButton
-                showLastButton
-              />
-            </>
-          )}
+          <TablePagination
+            component="div"
+            count={totalItems}
+            page={page}
+            onPageChange={handleChangePage}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            rowsPerPageOptions={[5, 10, 25, 50]}
+            labelDisplayedRows={({ from, to, count }) => {
+              const computedFrom = count === 0 ? 0 : page * rowsPerPage + 1;
+              const computedTo = Math.min((page + 1) * rowsPerPage, count);
+              return `${computedFrom}-${computedTo} of ${
+                count !== -1 ? count : `more than ${to}`
+              }`;
+            }}
+            labelRowsPerPage="Items per page:"
+            showFirstButton
+            showLastButton
+            sx={{
+              ".MuiTablePagination-toolbar": {
+                alignItems: "center",
+                "& > *": {
+                  marginBottom: 0,
+                },
+              },
+              ".MuiTablePagination-displayedRows": {
+                margin: 0,
+              },
+              ".MuiTablePagination-selectLabel": {
+                margin: 0,
+              },
+            }}
+          />
         </div>
 
         <Dialog
