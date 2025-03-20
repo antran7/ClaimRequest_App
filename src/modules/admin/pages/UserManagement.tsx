@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback } from "react";
-import BackButton from "../components/BackButton";
 import { toast } from "react-hot-toast";
 import { format } from "date-fns";
 import {
@@ -7,6 +6,7 @@ import {
   createUser,
   updateUser,
   changeUserStatus,
+  fetchUser,
   deleteUser,
   changeUserRole,
   getEmployeeById,
@@ -27,16 +27,15 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-  FormControl,
+  Paper,
   Grid,
   CardContent,
   Card,
   Typography,
   MenuItem,
-  InputLabel,
 } from "@mui/material";
 
-import Select from "@mui/material/Select";
+import Select, { SelectChangeEvent } from "@mui/material/Select";
 import AccessibilityIcon from "@mui/icons-material/Accessibility";
 import { User, Employee } from "../types/user";
 import { Pagination } from "@mui/material";
@@ -99,27 +98,6 @@ const UserManagement = () => {
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  useEffect(() => {
-    if (editingUser) {
-      // When switching to edit mode, reset password-related fields & errors
-      setForm((prev) => ({
-        ...prev,
-        password: "",
-        confirmPassword: "",
-      }));
-      setErrors({});
-    } else {
-      // When switching to add mode, reset the form
-      setForm({
-        email: "",
-        user_name: "",
-        role_code: "A001",
-        password: "",
-        confirmPassword: "",
-      });
-      setErrors({});
-    }
-  }, [editingUser]);
 
   const validateForm = () => {
     let newErrors = {};
@@ -299,46 +277,30 @@ const UserManagement = () => {
 
   const handleSaveEmployeeDetails = async () => {
     try {
-      const { created_at, updated_at, ...employeeDataToSend } = employeeData; // Exclude date fields
-  
-      console.log("Sending to API:", employeeDataToSend);
-  
-      await updateEmployee(employeeData.user_id, employeeDataToSend);
-  
-      console.log(" Employee updated successfully!");
+      if (!employeeData.created_at) {
+        console.error("Error: created_at is missing!");
+        return;
+      }
+
+      const updatedEmployeeData = {
+        ...employeeData,
+        created_at: new Date(employeeData.created_at), // Ensure it's a Date
+        updated_at: new Date(),
+      };
+
+      console.log(
+        "Sending to API:",
+        JSON.stringify(updatedEmployeeData, null, 2)
+      );
+
+      await updateEmployee(userId, updatedEmployeeData);
+      setPopupOpen2(false);
     } catch (error) {
-      console.error(" Error updating employee details:", error);
+      console.error("Error updating employee details:", error);
+      toast.error("Error updating employee details");
     }
   };
-  
-  // const handleSaveEmployeeDetails = async () => {
-  //   try {
-  //     if (!employeeData.created_at) {
-  //       console.error("Error: created_at is missing!");
-  //       return;
-  //     }
 
-  //     const updatedEmployeeData = {
-  //       ...employeeData,
-  //       created_at: new Date(employeeData.created_at), // Ensure it's a Date
-  //       updated_at: new Date(),
-  //     };
-
-  //     console.log(
-  //       "Sending to API:",
-  //       JSON.stringify(updatedEmployeeData, null, 2)
-  //     );
-
-  //     await updateEmployee(userId, updatedEmployeeData);
-  //     setPopupOpen2(false);
-  //   } catch (error) {
-  //     console.error("Error updating employee details:", error);
-  //     toast.error("Error updating employee details");
-  //   }
-  // };
-
-
-  
   const handleRoleChange = async (userId: string, newRoleCode: string) => {
     if (!userId) return;
 
@@ -361,713 +323,693 @@ const UserManagement = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gray-100">
-        <BackButton to="/admin/dashboard" />
-        <h1 className="text-6xl p-4 font-mono bold bg-gray-100">
-          USER MANAGEMENT
-        </h1>
-        <div className="p-4 bg-gray-100">
-          <div className="flex justify-end items-center gap-4 mb-4">
-            <div className="w-[250px] min-w-[150px] ">
-              <div className="relative">
-                <input
-                  placeholder="Search..."
-                  className="input bg-white shadow-sm focus:border-2 border-gray-300 px-5 py-3 rounded-xl w-180 transition-all outline-none [&::-webkit-search-cancel-button]:hidden [&::-moz-search-clear-button]:hidden"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  style={{
-                    position: "absolute",
-                    border: "100px !important ",
-                    backgroundColor: "white",
-                    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
+      <h1 className="text-6xl p-4 font-mono bold bg-gray-100">
+        USER MANAGEMENT
+      </h1>
+      <div className="p-4 bg-gray-100">
+        <div className="flex justify-end items-center gap-4 mb-4">
+          <div className="w-[250px] min-w-[150px] ">
+            <div className="relative">
+              <input
+                placeholder="Search..."
+                className="input bg-white shadow-sm focus:border-2 border-gray-300 px-5 py-3 rounded-xl w-180 transition-all outline-none [&::-webkit-search-cancel-button]:hidden [&::-moz-search-clear-button]:hidden"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{
+                  position: "absolute",
+                  border: "100px !important ",
+                  backgroundColor: "white",
+                  boxShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
 
-                    transition: "ease-in-out",
+                  transition: "ease-in-out",
 
-                    width: "28rem",
-                    overflow: "hidden",
-                    left: "-200px",
-                    top: "-22px",
-                  }}
-                />
-                <Search className="absolute right-3 -top-2.5" />
-              </div>
+                  width: "28rem",
+                  overflow: "hidden",
+                  left: "-200px",
+                  top: "-22px",
+                }}
+              />
+              <Search className="absolute right-3 -top-2.5" />
             </div>
-            <Dialog
-              open={popupOpen}
-              onClose={() => setPopupOpen(false)}
-              sx={{
-                "& .MuiPaper-root": {
-                  borderRadius: "12px",
-                  padding: "20px",
-                  width: "500px",
-                },
-              }}
-            >
-              <DialogTitle>
-                <Typography variant="h6" fontWeight="bold" fontSize="27px">
-                  {editingUser ? "Edit User" : "Create  new user"}
-                </Typography>
-              </DialogTitle>
+          </div>
+          <Dialog
+            open={popupOpen}
+            onClose={() => setPopupOpen(false)}
+            sx={{
+              "& .MuiPaper-root": {
+                borderRadius: "12px",
+                padding: "20px",
+                width: "500px",
+              },
+            }}
+          >
+            <DialogTitle>
+              <Typography variant="h6" fontWeight="bold" fontSize="27px">
+                {editingUser ? "Edit User" : "Create  new user"}
+              </Typography>
+            </DialogTitle>
 
-              <DialogContent>
-                {/* Email Field */}
-                Email*
-                <TextField
-                  type="email"
-                  fullWidth
-                  margin="dense"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  error={!!errors.email}
-                  helperText={errors.email}
-                  sx={{
-                    backgroundColor: "#E3F2FD",
-                    borderRadius: "6px",
-                    color: "gray",
-                  }}
-                />
-                {/* Username Field */}
-                Username*
-                <TextField
-                  fullWidth
-                  margin="dense"
-                  value={form.user_name}
-                  onChange={(e) =>
-                    setForm({ ...form, user_name: e.target.value })
-                  }
-                  error={!!errors.user_name}
-                  helperText={errors.user_name}
-                  sx={{
-                    backgroundColor: "#E3F2FD",
-                    borderRadius: "6px",
-                    color: "gray",
-                  }}
-                />
-                  {/* Role Dropdown (ONLY for Adding New User) */}
-                  {!editingUser && (
-                    <>
-                      Role
-                      <Select
-                        fullWidth
-                        margin="dense"
-                        value={form.role_code}
-                        onChange={(e) => setForm({ ...form, role_code: e.target.value })}
-                        sx={{
-                          backgroundColor: "#E3F2FD",
-                          borderRadius: "6px",
-                        }}
-                      >
-                        {Object.entries(roleMap).map(([code, label]) => (
-                          <MenuItem key={code} value={code}>
-                            {label}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </>
-                  )}
-
-                {/* Password Field (ONLY for Adding New User) */}
-                <span
-                  style={{ visibility: editingUser ? "hidden" : "visible" }}
-                >
-                  Password*
-                </span>
-                {!editingUser && (
-                  <TextField
-                    fullWidth
-                    margin="dense"
-                    type="password"
-                    value={form.password}
-                    onChange={(e) =>
-                      setForm({ ...form, password: e.target.value })
-                    }
-                    error={!!errors.password}
-                    helperText={errors.password}
-                    sx={{ backgroundColor: "#E3F2FD", borderRadius: "6px" }}
-                    InputProps={{
-                      endAdornment: (
-                        <IconButton
-                          onClick={() => setShowPassword(!showPassword)}
-                          edge="end"
-                        >
-                          {showPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      ),
-                    }}
-                  />
-                )}
-                {/* Confirm Password Field */}
-                <span
-                  style={{ visibility: editingUser ? "hidden" : "visible" }}
-                >
-                  Confirm Password*
-                </span>
-                {!editingUser && (
-                  <TextField
-                    fullWidth
-                    margin="dense"
-                    type={showConfirmPassword ? "text" : "password"}
-                    value={form.confirmPassword}
-                    onChange={(e) =>
-                      setForm({ ...form, confirmPassword: e.target.value })
-                    }
-                    error={!!errors.confirmPassword}
-                    helperText={errors.confirmPassword}
-                    sx={{ backgroundColor: "#E3F2FD", borderRadius: "6px" }}
-                    InputProps={{
-                      endAdornment: (
-                        <IconButton
-                          onClick={() =>
-                            setShowConfirmPassword(!showConfirmPassword)
-                          }
-                          edge="end"
-                        >
-                          {showConfirmPassword ? (
-                            <VisibilityOff />
-                          ) : (
-                            <Visibility />
-                          )}
-                        </IconButton>
-                      ),
-                    }}
-                  />
-                )}
-              </DialogContent>
-
-              <DialogActions>
-                <Button onClick={() => setPopupOpen(false)} color="error">
-                  Cancel
-                </Button>
-                <Button onClick={handleSave} color="primary">
-                  Save
-                </Button>
-              </DialogActions>
-            </Dialog>
-
-            <Dialog
-              open={Boolean(viewUser)}
-              onClose={() => setViewUser(null)}
-              sx={{}}
-            >
-              <DialogTitle
+            <DialogContent>
+              {/* Email Field */}
+              <span>
+                Email <span className="text-red-600">*</span>
+              </span>
+              <TextField
+                type="email"
+                fullWidth
+                margin="dense"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                error={!!errors.email}
+                helperText={errors.email}
                 sx={{
-                  font: "bold",
-                  fontSize: "50px",
+                  backgroundColor: "#E3F2FD",
+                  borderRadius: "6px",
+                  color: "gray",
+                }}
+              />
+              {/* Username Field */}
+              <span>
+                Username <span className="text-red-600">*</span>
+              </span>
+              <TextField
+                fullWidth
+                margin="dense"
+                value={form.user_name}
+                onChange={(e) =>
+                  setForm({ ...form, user_name: e.target.value })
+                }
+                error={!!errors.user_name}
+                helperText={errors.user_name}
+                sx={{
+                  backgroundColor: "#E3F2FD",
+                  borderRadius: "6px",
+                  color: "gray",
+                }}
+              />
+              {/* Role Field */}
+              <span>
+                Role <span className="text-red-600">*</span>
+              </span>
+              <Select
+                fullWidth
+                value={form.role_code}
+                onChange={(e: SelectChangeEvent) =>
+                  setForm({ ...form, role_code: e.target.value })
+                }
+                sx={{
+                  backgroundColor: "#E3F2FD",
+                  borderRadius: "6px",
+                  color: "gray",
                 }}
               >
-                User Details
-              </DialogTitle>
-              <DialogContent>
-                {viewUser && (
-                  <Grid container spacing={2}>
-                    {/* UserID */}
-                    <Grid item xs={12}>
-                      <Card sx={{ backgroundColor: "#EAF2FF" }}>
-                        <CardContent>
-                          <Typography
-                            fontWeight="bold"
-                            sx={{
-                              color: "#3EAEF4",
-                            }}
-                          >
-                            UserID
-                          </Typography>
-                          <Typography>{viewUser._id}</Typography>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-
-                    {/* Username */}
-                    <Grid item xs={12} sm={6}>
-                      <Card sx={{ backgroundColor: "#EAF2FF" }}>
-                        <CardContent>
-                          <Typography
-                            fontWeight="bold"
-                            sx={{
-                              color: "#3EAEF4",
-                            }}
-                          >
-                            Username
-                          </Typography>
-                          <Typography>{viewUser.user_name}</Typography>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-
-                    {/* Email */}
-                    <Grid item xs={12} sm={6}>
-                      <Card sx={{ backgroundColor: "#F5EFFF" }}>
-                        <CardContent>
-                          <Typography
-                            fontWeight="bold"
-                            sx={{
-                              color: "#FF99FF",
-                            }}
-                          >
-                            Email
-                          </Typography>
-                          <Typography>{viewUser.email}</Typography>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-
-                    {/* Role */}
-                    <Grid item xs={12} sm={6}>
-                      <Card sx={{ backgroundColor: "#E6FAE6" }}>
-                        <CardContent>
-                          <Typography
-                            fontWeight="bold"
-                            sx={{
-                              color: "#00FF66",
-                            }}
-                          >
-                            Role
-                          </Typography>
-                          <Typography>{roleMap[viewUser.role_code]}</Typography>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-
-                    {/* Created At */}
-                    <Grid item xs={12} sm={6}>
-                      <Card sx={{ backgroundColor: "#EAF2FF" }}>
-                        <CardContent>
-                          <Typography
-                            fontWeight="bold"
-                            sx={{
-                              color: "#3EAEF4",
-                            }}
-                          >
-                            Created At
-                          </Typography>
-                          <Typography>{viewUser.created_at}</Typography>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-
-                    {/* Updated At */}
-                    <Grid item xs={12} sm={6}>
-                      <Card sx={{ backgroundColor: "#FFEAF2" }}>
-                        <CardContent>
-                          <Typography
-                            fontWeight="bold"
-                            sx={{
-                              color: "#FFCC99",
-                            }}
-                          >
-                            Updated At
-                          </Typography>
-                          <Typography>{viewUser.updated_at}</Typography>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                  </Grid>
-                )}
-              </DialogContent>
-              <DialogActions>
-                <Button onClick={() => setViewUser(null)} color="primary">
-                  Close
-                </Button>
-              </DialogActions>
-            </Dialog>
-
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => {
-                setEditingUser(null); // Reset editing state
-                setForm({
-                  email: "",
-                  user_name: "",
-                  role_code: "A001",
-                  password: "",
-                  confirmPassword: "",
-                }); // Reset form
-                setPopupOpen(true); // Open popup
-              }}
-              sx={{
-                backgroundColor: "blue", // Màu cam
-                color: "white", // Màu chữ trắng
-                fontWeight: "bold",
-                textTransform: "none", // Không in hoa
-                borderRadius: "30px", // Bo tròn
-                padding: "10px 20px", // Kích thước padding
-                fontSize: "16px", // Cỡ chữ
-                "&:hover": {
-                  backgroundColor: "Navy", // Màu khi hover
-                },
-                display: "flex",
-                alignItems: "center",
-                gap: "8px", // Khoảng cách giữa icon và chữ
-              }}
-            >
-              <Plus />
-              Create Account
-            </Button>
-          </div>
-
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell
-                    sx={{
-                      color: "white",
-                      fontWeight: "bold",
-                      backgroundColor: "#6B7280",
-                      width: "20%",
-
-                      fontSize: "17px",
-                      borderRight: "2px solid #ffff",
-                      textAlign: "center",
-                    }}
-                  >
-                    Username
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      color: "white",
-                      fontWeight: "bold",
-                      backgroundColor: "#6B7280",
-                      borderRight: "2px solid #ffff",
-                      width: "30%",
-                      textAlign: "center",
-                    }}
-                  >
-                    Email
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      color: "white",
-                      fontWeight: "bold",
-                      backgroundColor: "#6B7280",
-                      borderRight: "2px solid #ffff",
-                      textAlign: "center",
-                    }}
-                  >
-                    Role
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      color: "white",
-                      fontWeight: "bold",
-                      backgroundColor: "#6B7280",
-                      borderRight: "2px solid #ffff",
-                      textAlign: "center",
-                    }}
-                  >
-                    Blocked
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      color: "white",
-                      fontWeight: "bold",
-                      backgroundColor: "#6B7280",
-                      textAlign: "center",
-                    }}
-                  >
-                    Actions
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow>
-                    <TableCell>{user.user_name}</TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell
-                      sx={{
-                        textAlign: "center",
-                        borderRadius: "15px",
-
-                        color:
-                          user.role_code === "A001"
-                            ? "#D32F2F" // Đỏ đậm
-                            : user.role_code === "A002"
-                            ? "#FBC02D" // Vàng đậm
-                            : user.role_code === "A003"
-                            ? "#388E3C" // Xanh lá đậm
-                            : "#424242", // Xám đậm
-                      }}
-                    >
-                      <Select
-                        value={user.role_code}
-                        onChange={(event) =>
-                          handleRoleChange(user._id, event.target.value)
-                        }
-                        sx={{
-                          fontWeight: "bold",
-                          color: "inherit",
-                          backgroundColor: "transparent",
-                          "& .MuiSelect-icon": { color: "inherit" },
-                        }}
-                      >
-                        <MenuItem value="A001" sx={{ color: "#D32F2F" }}>
-                          Admin
-                        </MenuItem>
-                        <MenuItem value="A002" sx={{ color: "#FBC02D" }}>
-                          Finance
-                        </MenuItem>
-                        <MenuItem value="A003" sx={{ color: "#388E3C" }}>
-                          Approval
-                        </MenuItem>
-                        <MenuItem value="A004" sx={{ color: "black" }}>
-                          Member
-                        </MenuItem>
-                      </Select>
-                    </TableCell>
-
-                    <TableCell>
-                      <Button
-                        onClick={() =>
-                          setConfirmDialog({
-                            open: true,
-                            user,
-                            action: "block",
-                          })
-                        }
-                        variant="contained"
-                        startIcon={
-                          user.is_blocked ? (
-                            <Lock size={16} />
-                          ) : (
-                            <Unlock size={16} />
-                          )
-                        }
-                        sx={{
-                          textAlign: "center",
-                          textTransform: "none", // Không viết hoa chữ
-                          borderRadius: "12px", // Bo tròn góc
-                          fontWeight: 600, // Chữ đậm
-                          backgroundColor: user.is_blocked
-                            ? "#FF3B30"
-                            : "#34C759",
-                          "&:hover": {
-                            backgroundColor: user.is_blocked
-                              ? "#D32F2F"
-                              : "#2E7D32", // Màu khi hover
-                          },
-                        }}
-                      >
-                        {user.is_blocked ? "Locked" : "Unlocked"}
-                      </Button>
-                    </TableCell>
-
-                    <TableCell sx={{ textAlign: "center" }}>
-                      <Button onClick={() => setViewUser(user)}>
-                        <Eye />
-                      </Button>
-
-                      <Button
-                        color="inherit"
-                        onClick={() => {
-                          setEditingUser(user); // Set user being edited
-                          setForm({
-                            email: user.email,
-                            user_name: user.user_name,
-                            role_code: user.role_code,
-                          });
-                          setPopupOpen(true); // Open popup
-                        }}
-                      >
-                        <Pencil size={18} />
-                      </Button>
-
-                      <Button
-                        color="warning"
-                        onClick={() =>
-                          setConfirmDialog({
-                            open: true,
-                            user,
-                            action: "delete",
-                          })
-                        }
-                      >
-                        <CircleX size={18} />
-                      </Button>
-
-                      <Button
-                        onClick={() => {
-                          console.log("Selected User ID:", user._id); // ✅ Check if user.id exists
-                          handleOpenEmployeeDetails(user._id);
-                        }}
-                      >
-                        <AccessibilityIcon />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
+                {Object.entries(roleMap).map(([code, label]) => (
+                  <MenuItem key={code} value={code}>
+                    {label}
+                  </MenuItem>
                 ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </div>
-        <Pagination
-          count={totalPages}
-          page={pageNum}
-          onChange={(event, newPage) => setPageNum(newPage)} // Change page
-          color="primary"
-        />
-        <Dialog
-          open={confirmDialog.open}
-          onClose={() =>
-            setConfirmDialog({ open: false, user: null, action: null })
-          }
-        >
-          <DialogTitle>Confirm Action</DialogTitle>
-          <DialogContent>
-            <DialogContentText>
-              Are you sure you want to{" "}
-              {confirmDialog.action === "delete"
-                ? "delete"
-                : confirmDialog.user?.is_blocked
-                ? "unblock"
-                : "block"}{" "}
-              this user?
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button
-              onClick={() =>
-                setConfirmDialog({ open: false, user: null, action: null })
-              }
-              color="error"
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleConfirmAction} color="success">
-              Confirm
-            </Button>
-          </DialogActions>
-        </Dialog>
-
-        <Dialog open={popupOpen2} onClose={() => setPopupOpen2(false)}>
-          <DialogTitle>Employee Details</DialogTitle>
-          <DialogContent>
-            {/* Employee Fields */}
-            {employeeData && (
-              <>
+              </Select>
+              {/* Password Field (ONLY for Adding New User) */}
+              <span style={{ visibility: editingUser ? "hidden" : "visible" }}>
+                <span>
+                  Password <span className="text-red-600">*</span>
+                </span>
+              </span>
+              {!editingUser && (
                 <TextField
-                  label="Full Name"
-                  value={employeeData.full_name}
-                  onChange={(e) =>
-                    setEmployeeData({
-                      ...employeeData,
-                      full_name: e.target.value,
-                    })
-                  }
                   fullWidth
+                  type={showPassword ? "text" : "password"}
                   margin="dense"
-                />
-                <TextField
-                  label="UserID"
-                  value={employeeData.user_id}
+                  value={form.password}
                   onChange={(e) =>
-                    setEmployeeData({
-                      ...employeeData,
-                      user_id: e.target.value,
-                    })
+                    setForm({ ...form, password: e.target.value })
                   }
-                  fullWidth
-                  margin="dense"
-                />
-                <TextField
-                  label="Phone"
-                  type="number"
-                  value={employeeData.phone}
-                  onChange={(e) =>
-                    setEmployeeData({ ...employeeData, phone: e.target.value })
-                  }
-                  fullWidth
-                  margin="dense"
-                  slotProps={{
-                    htmlInput: { inputMode: "numeric", style: { textAlign: "right" } }, // ✅ Use slotProps.htmlInput
+                  error={!!errors.password}
+                  helperText={errors.password}
+                  sx={{ backgroundColor: "#E3F2FD", borderRadius: "6px" }}
+                  InputProps={{
+                    endAdornment: (
+                      <IconButton
+                        onClick={() => setShowPassword(!showPassword)}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    ),
                   }}
                 />
+              )}
+              {/* Confirm Password Field */}
+              <span style={{ visibility: editingUser ? "hidden" : "visible" }}>
+                <span>
+                  Confirm Password <span className="text-red-600">*</span>
+                </span>
+              </span>
+              {!editingUser && (
                 <TextField
-                  label="Address"
-                  value={employeeData.address}
-                  onChange={(e) =>
-                    setEmployeeData({
-                      ...employeeData,
-                      address: e.target.value,
-                    })
-                  }
                   fullWidth
                   margin="dense"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={form.confirmPassword}
+                  onChange={(e) =>
+                    setForm({ ...form, confirmPassword: e.target.value })
+                  }
+                  error={!!errors.confirmPassword}
+                  helperText={errors.confirmPassword}
+                  sx={{ backgroundColor: "#E3F2FD", borderRadius: "6px" }}
+                  InputProps={{
+                    endAdornment: (
+                      <IconButton
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                        edge="end"
+                      >
+                        {showConfirmPassword ? (
+                          <VisibilityOff />
+                        ) : (
+                          <Visibility />
+                        )}
+                      </IconButton>
+                    ),
+                  }}
                 />
-                <FormControl fullWidth margin="dense">
-                <InputLabel id="job-rank-label">Job Rank</InputLabel>
-                <Select
-                  labelId="job-rank-label"
-                  value={employeeData.job_rank || ""}
-                  onChange={(e) => setEmployeeData({ ...employeeData, job_rank: e.target.value })}
-                  displayEmpty
-                >
-                  <MenuItem value="" disabled>
-                  </MenuItem>
-                  {[
-                    "TC3", "TC2", "TC1",
-                    "TEST3", "TEST2", "TEST1",
-                    "DEV3", "DEV2", "DEV1",
-                    "QA3", "QA2", "QA1",
-                    "BA3", "BA2", "BA1",
-                    "TL3", "TL2", "TL1",
-                    "PM3", "PM2", "PM1",
-                    "BUL", "FI3", "FI2", "FI1",
-                    "Admin"
-                  ].map((job_rank) => (
-                    <MenuItem key={job_rank} value={job_rank}>
-                      {job_rank}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              )}
+            </DialogContent>
 
-               <FormControl fullWidth margin="dense">
-                <InputLabel>Department Code</InputLabel>
-                <Select
-                  value={employeeData.department_code || ""}
-                  onChange={(e) => setEmployeeData({ ...employeeData, department_code: e.target.value })}
-                  displayEmpty
+            <DialogActions>
+              <Button onClick={() => setPopupOpen(false)} color="error">
+                Cancel
+              </Button>
+              <Button onClick={handleSave} color="primary">
+                Save
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          <Dialog
+            open={Boolean(viewUser)}
+            onClose={() => setViewUser(null)}
+            sx={{}}
+          >
+            <DialogTitle
+              sx={{
+                font: "bold",
+                fontSize: "50px",
+              }}
+            >
+              User Details
+            </DialogTitle>
+            <DialogContent>
+              {viewUser && (
+                <Grid container spacing={2}>
+                  {/* UserID */}
+                  <Grid item xs={12}>
+                    <Card sx={{ backgroundColor: "#EAF2FF" }}>
+                      <CardContent>
+                        <Typography
+                          fontWeight="bold"
+                          sx={{
+                            color: "#3EAEF4",
+                          }}
+                        >
+                          UserID
+                        </Typography>
+                        <Typography>{viewUser._id}</Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+
+                  {/* Username */}
+                  <Grid item xs={12} sm={6}>
+                    <Card sx={{ backgroundColor: "#EAF2FF" }}>
+                      <CardContent>
+                        <Typography
+                          fontWeight="bold"
+                          sx={{
+                            color: "#3EAEF4",
+                          }}
+                        >
+                          Username
+                        </Typography>
+                        <Typography>{viewUser.user_name}</Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+
+                  {/* Email */}
+                  <Grid item xs={12} sm={6}>
+                    <Card sx={{ backgroundColor: "#F5EFFF" }}>
+                      <CardContent>
+                        <Typography
+                          fontWeight="bold"
+                          sx={{
+                            color: "#FF99FF",
+                          }}
+                        >
+                          Email
+                        </Typography>
+                        <Typography>{viewUser.email}</Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+
+                  {/* Role */}
+                  <Grid item xs={12} sm={6}>
+                    <Card sx={{ backgroundColor: "#E6FAE6" }}>
+                      <CardContent>
+                        <Typography
+                          fontWeight="bold"
+                          sx={{
+                            color: "#00FF66",
+                          }}
+                        >
+                          Role
+                        </Typography>
+                        <Typography>{roleMap[viewUser.role_code]}</Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+
+                  {/* Created At */}
+                  <Grid item xs={12} sm={6}>
+                    <Card sx={{ backgroundColor: "#EAF2FF" }}>
+                      <CardContent>
+                        <Typography
+                          fontWeight="bold"
+                          sx={{
+                            color: "#3EAEF4",
+                          }}
+                        >
+                          Created At
+                        </Typography>
+                        <Typography>{viewUser.created_at}</Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+
+                  {/* Updated At */}
+                  <Grid item xs={12} sm={6}>
+                    <Card sx={{ backgroundColor: "#FFEAF2" }}>
+                      <CardContent>
+                        <Typography
+                          fontWeight="bold"
+                          sx={{
+                            color: "#FFCC99",
+                          }}
+                        >
+                          Updated At
+                        </Typography>
+                        <Typography>{viewUser.updated_at}</Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                </Grid>
+              )}
+            </DialogContent>
+            {/* <DialogContent>
+              {viewUser && (
+                <div>
+                  <Typography>
+                    <strong>UserID:</strong> {viewUser._id}
+                  </Typography>
+                  <Typography>
+                    <strong>Username:</strong> {viewUser.user_name}
+                  </Typography>
+                  <Typography>
+                    <strong>Email:</strong> {viewUser.email}
+                  </Typography>
+                  <Typography>
+                    <strong>Role:</strong> {roleMap[viewUser.role_code]}
+                  </Typography>
+                  <Typography>
+                    <strong>Created at:</strong> {viewUser.created_at ? format(viewUser.created_at, "yyyy-MM-dd HH:mm:ss") : "N/A"}
+                  </Typography>
+                  <Typography>
+                    <strong>Updated at:</strong> {viewUser.updated_at ? format(viewUser.updated_at, "yyyy-MM-dd HH:mm:ss") : "N/A"}
+                  </Typography>
+                </div>
+              )}
+            </DialogContent> */}
+            <DialogActions>
+              <Button onClick={() => setViewUser(null)} color="primary">
+                Close
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => {
+              setEditingUser(null); // Reset editing state
+              setForm({
+                email: "",
+                user_name: "",
+                role_code: "A001",
+                password: "",
+                confirmPassword: "",
+              }); // Reset form
+              setPopupOpen(true); // Open popup
+            }}
+            sx={{
+              backgroundColor: "blue", // Màu cam
+              color: "white", // Màu chữ trắng
+              fontWeight: "bold",
+              textTransform: "none", // Không in hoa
+              borderRadius: "30px", // Bo tròn
+              padding: "10px 20px", // Kích thước padding
+              fontSize: "16px", // Cỡ chữ
+              "&:hover": {
+                backgroundColor: "Navy", // Màu khi hover
+              },
+              display: "flex",
+              alignItems: "center",
+              gap: "8px", // Khoảng cách giữa icon và chữ
+            }}
+          >
+            <Plus />
+            Create Account
+          </Button>
+        </div>
+
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell
+                  sx={{
+                    color: "white",
+                    fontWeight: "bold",
+                    backgroundColor: "#6B7280",
+                    width: "20%",
+
+                    fontSize: "17px",
+                    borderRight: "2px solid #ffff",
+                    textAlign: "center",
+                  }}
                 >
-                  <MenuItem value="" disabled></MenuItem>
-                  {["DE01", "DE02", "DE03", "DE04"].map((dept) => (
-                    <MenuItem key={dept} value={dept}>
-                      {dept}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-                <TextField
-                  label="Avatar URL"
-                  value={employeeData.avatar_url}
-                  onChange={(e) =>
-                    setEmployeeData({
-                      ...employeeData,
-                      avatar_url: e.target.value,
-                    })
-                  }
-                  fullWidth
-                  margin="dense"
-                  InputLabelProps={{ shrink: true }}
-                />
-                <FormControl fullWidth margin="dense">
-                <InputLabel>Contract Type</InputLabel>
-                <Select
-                  value={employeeData.contract_type || ""}
-                  onChange={(e) =>
-                    setEmployeeData({ ...employeeData, contract_type: e.target.value })
-                  }
-                  displayEmpty
+                  Username
+                </TableCell>
+                <TableCell
+                  sx={{
+                    color: "white",
+                    fontWeight: "bold",
+                    backgroundColor: "#6B7280",
+                    borderRight: "2px solid #ffff",
+                    width: "30%",
+                    textAlign: "center",
+                  }}
                 >
-                  <MenuItem value="" disabled></MenuItem>
-                  {["INDEFINITE", "THREE YEAR", "ONE YEAR"].map((type) => (
-                    <MenuItem key={type} value={type}>
-                      {type}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+                  Email
+                </TableCell>
+                <TableCell
+                  sx={{
+                    color: "white",
+                    fontWeight: "bold",
+                    backgroundColor: "#6B7280",
+                    borderRight: "2px solid #ffff",
+                    textAlign: "center",
+                  }}
+                >
+                  Role
+                </TableCell>
+                <TableCell
+                  sx={{
+                    color: "white",
+                    fontWeight: "bold",
+                    backgroundColor: "#6B7280",
+                    borderRight: "2px solid #ffff",
+                    textAlign: "center",
+                  }}
+                >
+                  Blocked
+                </TableCell>
+                <TableCell
+                  sx={{
+                    color: "white",
+                    fontWeight: "bold",
+                    backgroundColor: "#6B7280",
+                    textAlign: "center",
+                  }}
+                >
+                  Actions
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredUsers.map((user) => (
+                <TableRow>
+                  <TableCell>{user.user_name}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell
+                    sx={{
+                      textAlign: "center",
+                      borderRadius: "15px",
+
+                      color:
+                        user.role_code === "A001"
+                          ? "#D32F2F" // Đỏ đậm
+                          : user.role_code === "A002"
+                          ? "#FBC02D" // Vàng đậm
+                          : user.role_code === "A003"
+                          ? "#388E3C" // Xanh lá đậm
+                          : "#424242", // Xám đậm
+                    }}
+                  >
+                    <Select
+                      value={user.role_code}
+                      onChange={(event) =>
+                        handleRoleChange(user._id, event.target.value)
+                      }
+                      sx={{
+                        fontWeight: "bold",
+                        color: "inherit",
+                        backgroundColor: "transparent",
+                        "& .MuiSelect-icon": { color: "inherit" },
+                      }}
+                    >
+                      <MenuItem value="A001" sx={{ color: "#D32F2F" }}>
+                        Admin
+                      </MenuItem>
+                      <MenuItem value="A002" sx={{ color: "#FBC02D" }}>
+                        Finance
+                      </MenuItem>
+                      <MenuItem value="A003" sx={{ color: "#388E3C" }}>
+                        Approval
+                      </MenuItem>
+                      <MenuItem value="A004" sx={{ color: "black" }}>
+                        Member
+                      </MenuItem>
+                    </Select>
+                  </TableCell>
+
+                  <TableCell>
+                    <Button
+                      onClick={() =>
+                        setConfirmDialog({ open: true, user, action: "block" })
+                      }
+                      variant="contained"
+                      startIcon={
+                        user.is_blocked ? (
+                          <Lock size={16} />
+                        ) : (
+                          <Unlock size={16} />
+                        )
+                      }
+                      sx={{
+                        textAlign: "center",
+                        textTransform: "none", // Không viết hoa chữ
+                        borderRadius: "12px", // Bo tròn góc
+                        fontWeight: 600, // Chữ đậm
+                        backgroundColor: user.is_blocked
+                          ? "#FF3B30"
+                          : "#34C759",
+                        "&:hover": {
+                          backgroundColor: user.is_blocked
+                            ? "#D32F2F"
+                            : "#2E7D32", // Màu khi hover
+                        },
+                      }}
+                    >
+                      {user.is_blocked ? "Locked" : "Unlocked"}
+                    </Button>
+                  </TableCell>
+
+                  <TableCell sx={{ textAlign: "center" }}>
+                    <Button onClick={() => setViewUser(user)}>
+                      <Eye />
+                    </Button>
+
+                    <Button
+                      color="inherit"
+                      onClick={() => {
+                        setEditingUser(user); // Set user being edited
+                        setForm({
+                          email: user.email,
+                          user_name: user.user_name,
+                          role_code: user.role_code,
+                        });
+                        setPopupOpen(true); // Open popup
+                      }}
+                    >
+                      <Pencil size={18} />
+                    </Button>
+
+                    <Button
+                      color="warning"
+                      onClick={() =>
+                        setConfirmDialog({ open: true, user, action: "delete" })
+                      }
+                    >
+                      <CircleX size={18} />
+                    </Button>
+
+                    <Button
+                      onClick={() => {
+                        console.log("Selected User ID:", user._id); // ✅ Check if user.id exists
+                        handleOpenEmployeeDetails(user._id);
+                      }}
+                    >
+                      <AccessibilityIcon />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </div>
+      <Pagination
+        count={totalPages}
+        page={pageNum}
+        onChange={(event, newPage) => setPageNum(newPage)} // Change page
+        color="primary"
+      />
+      <Dialog
+        open={confirmDialog.open}
+        onClose={() =>
+          setConfirmDialog({ open: false, user: null, action: null })
+        }
+      >
+        <DialogTitle>Confirm Action</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to{" "}
+            {confirmDialog.action === "delete"
+              ? "delete"
+              : confirmDialog.user?.is_blocked
+              ? "unblock"
+              : "block"}{" "}
+            this user?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() =>
+              setConfirmDialog({ open: false, user: null, action: null })
+            }
+            color="error"
+          >
+            Cancel
+          </Button>
+          <Button onClick={handleConfirmAction} color="success">
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={popupOpen2} onClose={() => setPopupOpen2(false)}>
+        <DialogTitle>Employee Details</DialogTitle>
+        <DialogContent>
+          {/* Employee Fields */}
+          {employeeData && (
+            <>
+              <TextField
+                label="Full Name"
+                value={employeeData.full_name}
+                onChange={(e) =>
+                  setEmployeeData({
+                    ...employeeData,
+                    full_name: e.target.value,
+                  })
+                }
+                fullWidth
+                margin="dense"
+              />
+              <TextField
+                label="UserID"
+                value={employeeData.user_id}
+                onChange={(e) =>
+                  setEmployeeData({ ...employeeData, user_id: e.target.value })
+                }
+                fullWidth
+                margin="dense"
+              />
+              <TextField
+                label="Phone"
+                value={employeeData.phone}
+                onChange={(e) =>
+                  setEmployeeData({ ...employeeData, phone: e.target.value })
+                }
+                fullWidth
+                margin="dense"
+              />
+              <TextField
+                label="Address"
+                value={employeeData.address}
+                onChange={(e) =>
+                  setEmployeeData({ ...employeeData, address: e.target.value })
+                }
+                fullWidth
+                margin="dense"
+              />
+              <TextField
+                label="Job Rank"
+                value={employeeData.job_rank}
+                onChange={(e) =>
+                  setEmployeeData({ ...employeeData, job_rank: e.target.value })
+                }
+                fullWidth
+                margin="dense"
+              />
+              <TextField
+                label="Department Code"
+                value={employeeData.department_code}
+                onChange={(e) =>
+                  setEmployeeData({
+                    ...employeeData,
+                    department_code: e.target.value,
+                  })
+                }
+                fullWidth
+                margin="dense"
+              />
+              <TextField
+                label="Avatar URL"
+                value={employeeData.avatar_url}
+                onChange={(e) =>
+                  setEmployeeData({
+                    ...employeeData,
+                    avatar_url: e.target.value,
+                  })
+                }
+                fullWidth
+                margin="dense"
+                InputLabelProps={{ shrink: true }}
+              />
+              <TextField
+                label="Contract Type"
+                value={employeeData.contract_type}
+                onChange={(e) =>
+                  setEmployeeData({
+                    ...employeeData,
+                    contract_type: e.target.value,
+                  })
+                }
+                fullWidth
+                margin="dense"
+              />
               <TextField
                 label="Salary"
                 type="number"
@@ -1080,55 +1022,34 @@ const UserManagement = () => {
                 }
                 fullWidth
                 margin="dense"
-                slotProps={{
-                  htmlInput: { inputMode: "numeric", style: { textAlign: "right" } }, // ✅ Use slotProps.htmlInput
-                }}
               />
-
-                <div style={{ textAlign: "right" }}>
-                  <TextField
-                    label="Start Date"
-                    type="date"
-                    value={employeeData.start_date ? format(employeeData.start_date, "yyyy-MM-dd") : ""}
-                    onChange={(e) =>
-                      setEmployeeData({ ...employeeData, start_date: new Date(e.target.value) })
-                    }
-                    fullWidth
-                    margin="dense"
-                    slotProps={{
-                      inputLabel: { shrink: true },
-                    }}
-                  />
-                </div>
-
-                <div style={{ textAlign: "right" }}>
-                  <TextField
-                    label="End Date"
-                    type="date"
-                    value={employeeData.end_date ? format(employeeData.end_date, "yyyy-MM-dd") : ""}
-                    onChange={(e) =>
-                      setEmployeeData({ ...employeeData, end_date: new Date(e.target.value) })
-                    }
-                    fullWidth
-                    margin="dense"
-                    slotProps={{
-                      inputLabel: { shrink: true },
-                    }}
-                  />
-                </div>
-              </>
-            )}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setPopupOpen2(false)} color="secondary">
-              Cancel
-            </Button>
-            <Button onClick={handleSaveEmployeeDetails} color="primary" variant="contained">
-              Save
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </div>
+              <TextField
+                label="Start Date"
+                value={employeeData.start_date}
+                onChange={(e) =>
+                  setEmployeeData({
+                    ...employeeData,
+                    start_date: e.target.value,
+                  })
+                }
+                fullWidth
+                margin="dense"
+                InputLabelProps={{ shrink: true }}
+              />
+              <TextField
+                label="End Date"
+                value={employeeData.end_date}
+                onChange={(e) =>
+                  setEmployeeData({ ...employeeData, end_date: e.target.value })
+                }
+                fullWidth
+                margin="dense"
+                InputLabelProps={{ shrink: true }}
+              />
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
