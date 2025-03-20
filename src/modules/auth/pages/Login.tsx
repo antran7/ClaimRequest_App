@@ -225,7 +225,7 @@ const Login: React.FC = () => {
                     },
                   }}
                 >
-                  {isLoading ? <CircularProgress size={24} /> : "Sign in"}
+                  {isLoading ? <CircularProgress size={28} thickness={5}/> : "Sign in"}
                 </Button>
               </form>
             </div>
