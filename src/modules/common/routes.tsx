@@ -53,7 +53,7 @@ export const commonRoutes: RouteObject[] = [
     },
 
     {
-        path: "/account",
+        path: "",
         element: <PrivateRoute allowedRoles={
             [
                 Role.ADMIN,

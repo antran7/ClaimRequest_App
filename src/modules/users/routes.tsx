@@ -1,4 +1,4 @@
-import { RouteObject } from "react-router-dom";
+import { Navigate, RouteObject } from "react-router-dom";
 
 import PrivateRoute from "../../shared/routes/PrivateRoute";
 import { Role } from "../../shared/constants/roles";
@@ -20,6 +20,10 @@ export const userRoutes: RouteObject[] = [
         }
         />,
         children: [
+            {
+                path: "",
+                element: <Navigate to="dashboard" replace />
+            },
             {
                 path: "dashboard",
                 element: <UserDashboard />

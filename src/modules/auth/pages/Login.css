@@ -1,8 +1,25 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
 .login-page {
     display: flex;
+    justify-content: center;
+    align-items: center;
     height: 100vh;
     width: 100%;
-    background: linear-gradient(to right, #a0d8f1 20%, #caffd3 60%, #d5f7f8 100%);
+    background-color: #686279;
+    font-family: "Poppins", sans-serif;
+}
+
+.login-container {
+    display: flex;
+    width: 70%;
+    height: 80%;
+    background-color: #2C2638;
+    border-radius: 15px;
+    padding: 18px;
+    -webkit-box-shadow: 2px 7px 18px 3px rgba(128, 128, 128, 1);
+    -moz-box-shadow: 2px 7px 18px 3px rgba(128, 128, 128, 1);
+    box-shadow: 2px 7px 18px 3px rgba(128, 128, 128, 1);
 }
 
 .login-left {
@@ -11,17 +28,8 @@
     align-items: center;
     flex-direction: column;
     width: 45%;
-    padding: 40px;
-    background-color: #fff;
-    border-radius: 0 100px 100px 0;
-    box-shadow: 15px 16px 10px 0px rgba(0, 0, 0, 0.2);
-}
-
-.login-right {
-    width: 55%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    height: 100%;
+    padding: 40px 20px 40px 60px;
 }
 
 .login-form {
@@ -31,12 +39,38 @@
     flex-direction: column;
 }
 
-.login-form .MuiOutlinedInput-input {
-    padding: 12px !important;
-    line-height: 1.5 !important;
-    display: flex;
-    align-items: center;
-}   
+.login-form {
+    .MuiOutlinedInput-input {
+        padding: 15px;
+        display: flex;
+        align-items: center;
+    }
+
+    .MuiOutlinedInput-root {
+        color: #fff;
+        background-color: #3C364C;
+    }
+
+    /* Màu viền khi hover */
+    .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+        border-color: #fff !important;
+    }
+
+    /* Màu viền khi focus */
+    .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+        border-color: #8980A5 !important;
+    }
+
+    /* Đổi màu chữ của label */
+    .MuiInputLabel-root {
+        color: #7A748A !important;
+    }
+
+    /* Đổi màu label khi focus */
+    .MuiInputLabel-root.Mui-focused {
+        color: #ccc !important;
+    }
+}
 
 .login-options {
     display: flex;
@@ -47,138 +81,116 @@
 }
 
 .forgot-password {
-    color: #4F46E5;
+    color: #7A748A;
     text-decoration: none;
     font-size: 14px;
     cursor: pointer;
 }
 
 .forgot-password:hover {
-    color: #e43804;
-}
-
-.login-submit {
-    background-color: #4F46E5;
-    color: #eee;
-    font-weight: bold;
-    padding: 6px 10px;
-    border: 1px solid #4F46E5;
-    border-radius: 5px;
-    cursor: pointer;
-    width: 100%;
-    font-size: 16px;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-.login-submit:hover {
-    background: transparent;
-    border: 1px solid #4F46E5;
     color: #4F46E5;
-    font-weight: normal;
-}
-
-.login-logo {
-    margin-bottom: 20px;
 }
 
 .login-title {
-    font-size: 27px;
-    font-weight: 700;
+    font-size: 30px;
+    font-weight: 500;
+    color: #fff;
+    margin-bottom: 10px;
+    padding-right: 50px;
+}
+
+.login-verify {
+    color: #7D7988;
     margin-bottom: 50px;
-}
+    padding-right: 75px;
 
-.login-background {
-    background-image: url('https://resources.owllabs.com/hubfs/Blog%20Images/Stock/Remote/Remote-2793651_1152px.jpg');
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-position: center center;
-    border-radius: 10px;
-    box-shadow: 15px 16px 10px 0px rgba(0, 0, 0, 0.2);
-    width: 500px;
-    height: 500px;
-}
+    a {
+        text-decoration: underline;
+        color: #8980A5;
+        padding-left: 7px;
+    }
 
-.login-checkbox {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    cursor: pointer;
-}
-
-.login-checkbox input {
-    margin: 0;
-    width: 16px;
-    height: 16px;
+    a:hover {
+        color: #7464a5;
+    }
 }
 
 .login-home-link {
     position: absolute;
     top: 20px;
-    left: 20px;
+    left: 12%;
     font-size: 15px;
-    font-weight: 600;
-    border: 1px solid #eee;
-    color: #000;
-    border-radius: 1000px;
+    background-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    border: 1px solid transparent;
+    border-radius: 30px;
     font-family: 'Segoe UI', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    padding: 10px 20px;
-
+    padding: 5px 15px 5px 10px;
+    z-index: 1;
     display: flex;
     justify-content: center;
     align-items: center;
-}
-
-.login-home-link::after {
-    content: '';
-    position: absolute;
-    height: 107%;
-    width: 102%;
-    border-radius: 1000px;
-    background-image: linear-gradient(to bottom right, #4e46e583, #00ffdd81);
-    z-index: -1;
 }
 
 .login-home-link:hover {
+    background-color: transparent;
+    border: 1px solid #ffffff98;
+    color: #ffffff98;
+  }
+
+.login-right {
+    width: 55%;
+    position: relative;
+}
+
+.login-carousel {
+    width: 90%;
+    height: 100%;
+    right: 0;
+    position: absolute;
     z-index: 0;
-    box-shadow: 40px 0 100px #4e46e570, -40px 0 100px #00ffdd8f;
-    color: #eee;
 }
 
-.login-verify-link {
+.login-checkbox {
+    color: #fff !important;
+}
+
+.login-checkbox.Mui-checked {
+    color: #fff !important;
+}
+
+.login-checkbox-wrapper .MuiFormControlLabel-label {
+    color: #fff;
+    font-size: 13px;
+}
+
+.login-checkbox .MuiTouchRipple-root {
+    color: #fff !important;
+}
+
+.swiper-pagination-bullet {
+    width: 30px;
+    height: 5px;
+    border-radius: 5px;
+    background: #fff;
+    opacity: 0.5;
+    transition: opacity 0.3s;
+}
+
+.swiper-pagination-bullet-active {
+    opacity: 1;
+    background: #fff;
+    width: 45px;
+}
+
+.login-slogan {
     position: absolute;
-    top: 20px;
-    right: 20px;
-    font-size: 15px;
-    font-weight: 600;
-    color: #000;
-    border-radius: 1000px;
-    font-family: 'Segoe UI', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    padding: 10px 20px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-decoration: none;
-    border: none;
-    background: none;
-}
-
-.login-verify-link::before,
-.login-verify-link::after {
-    content: '';
-    position: absolute;
-    bottom: 0; 
-    width: 0;
-    height: 2px;
-    background: #f44336;
-    transition: width 0.5s ease; 
-}
-
-.login-verify-link::before {
-    left: 0; 
-}
-
-.login-verify-link:hover::before
- {
-    width: 100%;
+    left: 30%;
+    bottom: 60px;
+    text-align: center;
+    color: #fff;
+    font-weight: lighter;
+    font-size: 35px;
+    padding-left: 15px;
+    z-index: 1;
 }

@@ -28,7 +28,7 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response: AxiosResponse<ResponseModel<any>>) => {
-    return response.data;
+    return response;
   },
   (error) => {
     let errorMessage = "Unknown error!";
@@ -47,17 +47,25 @@ api.interceptors.response.use(
 );
 
 const apiService = {
-  get: <T>(url: string, config?: AxiosRequestConfig): Promise<ResponseModel<T>> =>
-    api.get<ResponseModel<T>>(url, config),
+  async get<T>(url: string, params?: any, config?: AxiosRequestConfig): Promise<ResponseModel<T>> {
+    const response = await api.get<ResponseModel<T>>(url, { ...config, params });  
+    return response.data;
+  },
 
-  post: <T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ResponseModel<T>> =>
-    api.post<ResponseModel<T>>(url, data, config),
+  async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ResponseModel<T>> {
+    const response = await api.post<ResponseModel<T>>(url, data, config);
+    return response.data;
+  },
 
-  put: <T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ResponseModel<T>> =>
-    api.put<ResponseModel<T>>(url, data, config),
+  async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ResponseModel<T>> {
+    const response = await api.put<ResponseModel<T>>(url, data, config);
+    return response.data;
+  },
 
-  delete: <T>(url: string, config?: AxiosRequestConfig): Promise<ResponseModel<T>> =>
-    api.delete<ResponseModel<T>>(url, config),
+  async delete<T>(url: string, config?: AxiosRequestConfig): Promise<ResponseModel<T>> {
+    const response = await api.delete<ResponseModel<T>>(url, config);
+    return response.data;
+  }
 };
 
 export default apiService;

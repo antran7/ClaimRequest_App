@@ -1,10 +1,17 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./Login.css";
-import { useAuth } from "../../../core/hooks/useAuth";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useForm } from "react-hook-form";
-import { TextField, Checkbox, FormControlLabel, Button,CircularProgress } from "@mui/material";
+import { TextField, Checkbox, FormControlLabel, Button, InputAdornment, IconButton, CircularProgress } from "@mui/material";
+import { getUserInfo, login } from "../services/authService";
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { Autoplay, Navigation, Pagination } from "swiper/modules";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 interface LoginFormInputs {
   email: string;
@@ -14,8 +21,37 @@ interface LoginFormInputs {
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login, getUserInfo } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [index, setIndex] = useState(0);
+  const [animation, setAnimation] = useState("animate__fadeIn");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const slogans = [
+    ["Optimize Workflow,", "Elevate Management"],
+    ["Streamline Claims,", "Enhance Efficiency"],
+  ]
+
+  const images = [
+    "https://images.unsplash.com/photo-1726066012825-b1ab9ba6e158?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDF8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "https://images.unsplash.com/photo-1554232456-8727aae0cfa4?q=80&w=1935&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "https://images.unsplash.com/photo-1693533846949-5df11d41642e?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+  ]
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAnimation("animate__animated animate__fadeOut"); // FadeOut trước
+
+      setTimeout(() => {
+        setIndex((prevIndex) => (prevIndex === 0 ? 1 : 0)); // Đổi đoạn văn
+        setAnimation("animate__animated animate__fadeIn"); // FadeIn đoạn mới
+      }, 1000); // Đợi 1s để đổi nội dung sau khi fadeOut xong
+    }, 4000); // Cứ sau 4s lặp lại
+    return () => clearInterval(interval); // Xóa interval khi component unmount
+  }, []);
+
+  const handleTogglePassword = () => {
+    setShowPassword((prev) => !prev);
+  };
 
   const {
     register,
@@ -28,8 +64,23 @@ const Login: React.FC = () => {
     setIsLoading(true);
     try {
       await login(data.email, data.password);
-      await getUserInfo();
-      navigate("/");
+      const user = await getUserInfo();
+      switch (user.data?.role_code) {
+        case "A001":
+          navigate("/admin");
+          break;
+        case "A002":
+          navigate("/finance");
+          break;
+        case "A003":
+          navigate("/approval");
+          break;
+        case "A004":
+          navigate("/user");
+          break;
+        default:
+          navigate("/");
+      }
       toast("Login successfully.", {
         icon: "🔥",
       });
@@ -44,59 +95,124 @@ const Login: React.FC = () => {
 
   return (
     <div className="login-page">
-      <div className="login-left">
-        <div className="login-home-container">
-          <Link to="/" className="login-home-link">HOME</Link>
-          <Link to="/verify" className="login-verify-link">Verify Account</Link>
-
-        </div>
-
-        <img
-          src="https://tailwindui.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600"
-          alt="#"
-          width="100px"
-          draggable="false"
-          className="login-logo"
-        />
-        <h1 className="login-title">Sign in to your account</h1>
-        <form className="login-form" onSubmit={handleSubmit(onSubmit)}>
-          <TextField
-            label="Email address"
-            type="email"
-            fullWidth
-            margin="normal"
-            {...register("email", { required: "Email is required", pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: "Invalid email format" } })}
-            error={!!errors.email}
-            helperText={errors.email?.message}
-          />
-          <TextField
-            label="Password"
-            type="password"
-            fullWidth
-            margin="normal"
-            {...register("password", { required: "Password is required", minLength: { value: 6, message: "Password must be at least 6 characters" } })}
-            error={!!errors.password}
-            helperText={errors.password?.message}
-          />
-          <div className="login-options">
-            <FormControlLabel
-              control={<Checkbox {...register("remember")} color="primary" />}
-              label="Remember me"
-            />
-            <div className="forgot-password" onClick={() => navigate("/forgotpassword")}>
-              Forgot password?
-            </div>
+      <div className="login-container">
+        <div className="login-left">
+          <h1 className="login-title">Sign in to your account</h1>
+          <div className="login-verify">
+            Haven't verify your email?
+            <span><a>Verify account</a></span>
           </div>
-          <div className="verify" onClick={() => navigate("/verify")}>
-              Verify Account
+          <form className="login-form" onSubmit={handleSubmit(onSubmit)}>
+            <TextField
+              label="Email address"
+              type="email"
+              fullWidth
+              margin="normal"
+              sx={{
+                "& input:-webkit-autofill": {
+                  WebkitBoxShadow: "0 0 0 30px #3C364C inset",
+                  WebkitTextFillColor: "#fff",
+                }
+              }}
+              {...register("email", { required: "Email is required", pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: "Invalid email format" } })}
+              error={!!errors.email}
+              helperText={errors.email?.message}
+            />
+            <TextField
+              label="Password"
+              type={showPassword ? "text" : "password"}
+              fullWidth
+              margin="normal"
+              sx={{
+                "& input:-webkit-autofill": {
+                  WebkitBoxShadow: "0 0 0 30px #3C364C inset",
+                  WebkitTextFillColor: "#fff",
+                }
+              }}
+              {...register("password", { required: "Password is required", minLength: { value: 6, message: "Password must be at least 6 characters" } })}
+              error={!!errors.password}
+              helperText={errors.password?.message}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={handleTogglePassword}
+                      edge="end"
+                      sx={{ color: "#7A748A" }}
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                )
+              }}
+            />
+            <div className="login-options">
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    {...register("remember")}
+                    color="primary"
+                    className="login-checkbox"
+                  />
+                }
+                label="Remember me"
+                className="login-checkbox-wrapper"
+              />
+              <div className="forgot-password" onClick={() => navigate("/forgotpassword")}>
+                Forgot password?
+              </div>
             </div>
-          <Button type="submit" variant="contained" fullWidth disabled={isLoading} className="login-submit">
-            {isLoading? <CircularProgress size={24}/>: "Sign in"}
-          </Button>
-        </form>
-      </div>
-      <div className="login-right">
-        <div className="login-background"></div>
+            <Button
+              type="submit"
+              variant="contained"
+              fullWidth
+              disableElevation
+              sx={{
+                backgroundColor: "#6D54B3",
+                color: "#eee",
+                fontWeight: "bold",
+                padding: "6px 10px",
+                border: "1px solid #6D54B3",
+                borderRadius: "5px",
+                cursor: "pointer",
+                fontSize: "16px",
+                fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  backgroundColor: "transparent",
+                  border: "1px solid #6D54B3",
+                  color: "#6D54B3",
+                  fontWeight: "normal",
+                },
+              }}
+            >
+              {isLoading ? <CircularProgress size={24} /> : "Sign in"}
+            </Button>
+          </form>
+        </div>
+        <div className="login-right">
+          <Link to="/" className="login-home-link">
+            <ArrowBackIcon sx={{ marginRight: "6px" }} />
+            Back to website
+          </Link>
+          <div className={`login-slogan ${animation}`}>
+            <p>{slogans[index][0]}</p>
+            <p>{slogans[index][1]}</p>
+          </div>
+          <Swiper
+            loop
+            autoplay={{ delay: 4000, disableOnInteraction: false }}
+            pagination={{ clickable: true }}
+            modules={[Navigation, Autoplay, Pagination]}
+            className="login-carousel"
+          >
+            {images.map((src, index) => (
+              <SwiperSlide key={index}>
+                <img src={src} alt={`Slide ${index}`} style={{ width: "100%" }} />
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        </div>
       </div>
     </div>
   );

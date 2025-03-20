@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState } from "react";
-import Loading from "../../shared/components/Loading";
+import Loading from "../components/Loading";
 
 interface PreloaderContextType {
   loading: boolean;
