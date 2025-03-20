@@ -51,6 +51,7 @@ import {
   ApiResponse,
 } from "../types/projectInterface";
 import { User } from "../types/user";
+import RoleSelect from "../components/RoleSelect";
 
 const ProjectManagementPage: React.FC = () => {
   const navigate = useNavigate();
@@ -383,7 +384,7 @@ const ProjectManagementPage: React.FC = () => {
                       <TableCell sx={{ textAlign: "center" }}>
                         <Button
                           sx={{
-                            color: "gray" 
+                            color: "gray"
                           }}
                           startIcon={<Eye />}
                           onClick={() => handleViewProject(project._id)}
@@ -618,38 +619,38 @@ const ProjectManagementPage: React.FC = () => {
                     </Select>
                   </FormControl>
 
-                  <FormControl fullWidth className="bg-white rounded-md">
-                    <InputLabel className="bg-white px-1">Role</InputLabel>
-                    <Select
-                      value={member.project_role}
-                      label="Role"
-                      onChange={(e) =>
-                        handleMemberChange(
-                          index,
-                          "project_role",
-                          e.target.value
-                        )
-                      }
-                      className="rounded-md"
+                  <FormControl
+                    fullWidth
+                    error={
+                      formik.touched.project_members?.[index]?.project_role &&
+                      Boolean(formik.errors.project_members?.[index]?.project_role)
+                    }
+                    className="bg-white rounded-md"
+                  >
+                    <InputLabel
+                      shrink
+                      id={`role-select-label-${index}`}
+                      className="bg-white px-1 text-gray-600"
                     >
-                      <MenuItem value="Project Manager">
-                        Project Manager
-                      </MenuItem>
-                      <MenuItem value="Technical Leader">
-                        Technical Leader
-                      </MenuItem>
-                      <MenuItem value="Developer">Developer</MenuItem>
-                      <MenuItem value="Tester">Tester</MenuItem>
-                      <MenuItem value="Business Analytics">
-                        Business Analytics
-                      </MenuItem>
-                      <MenuItem value="Technical Consultant">
-                        Technical Consultant
-                      </MenuItem>
-                      <MenuItem value="Quality Analytics">
-                        Quality Analytics
-                      </MenuItem>
-                    </Select>
+                      Role
+                    </InputLabel>
+                    <div className="mt-2">
+                      <RoleSelect
+                        value={formik.values.project_members[index].project_role}
+                        onChange={(value) =>
+                          handleMemberChange(index, "project_role", value)
+                        }
+                        required
+                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Select Role"
+                      />
+                    </div>
+                    {formik.touched.project_members?.[index]?.project_role &&
+                      formik.errors.project_members?.[index]?.project_role && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {formik.errors.project_members[index].project_role as string}
+                        </p>
+                      )}
                   </FormControl>
 
                   <div className="flex items-center justify-end">

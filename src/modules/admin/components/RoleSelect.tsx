@@ -1,32 +1,32 @@
 import React, { useEffect, useState } from 'react';
-import { getDepartmentOptions } from '../services/departmentService';
+import { getRoleOptions } from '../services/roleService';
 import { SelectProps } from "../types/SelectProps"
 
 
-const DepartmentSelect: React.FC<SelectProps> = ({
+const RoleSelect: React.FC<SelectProps> = ({
   onChange,
   value,
   className = '',
-  placeholder = 'Select Department',
+  placeholder = 'Select Role',
   required = false
 }) => {
   const [options, setOptions] = useState<{ value: string; label: string }[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const fetchDepartments = async () => {
+    const fetchRoles = async () => {
       try {
         setLoading(true);
-        const departmentOptions = await getDepartmentOptions();
-        setOptions(departmentOptions);
+        const roleOptions = await getRoleOptions();
+        setOptions(roleOptions);
       } catch (error) {
-        console.error('Error fetching departments:', error);
+        console.error('Error fetching roles:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchDepartments();
+    fetchRoles();
   }, []);
 
   return (
@@ -38,7 +38,7 @@ const DepartmentSelect: React.FC<SelectProps> = ({
       disabled={loading}
     >
       <option value="" disabled>
-        {loading ? 'Loading departments...' : placeholder}
+        {loading ? 'Loading roles...' : placeholder}
       </option>
       {options.map((option) => (
         <option key={option.value} value={option.value}>
@@ -49,4 +49,4 @@ const DepartmentSelect: React.FC<SelectProps> = ({
   );
 };
 
-export default DepartmentSelect; 
+export default RoleSelect; 
