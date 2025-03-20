@@ -139,7 +139,7 @@ const Login: React.FC = () => {
               <h1 className="login-title">Sign in to your account</h1>
               <div className="login-verify">
                 Haven't verify your email?
-                <span><a>Verify account</a></span>
+                <span><a href="https://mail.google.com/mail/u/0/#inbox">Verify account</a></span>
               </div>
               <form className="login-form" onSubmit={handleSubmit(onSubmitLogin)}>
                 <TextField
@@ -225,7 +225,7 @@ const Login: React.FC = () => {
                     },
                   }}
                 >
-                  {isLoading ? <CircularProgress size={24} /> : "Sign in"}
+                  {isLoading ? <CircularProgress size={28} thickness={5}/> : "Sign in"}
                 </Button>
               </form>
             </div>

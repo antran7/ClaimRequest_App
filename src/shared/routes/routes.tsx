@@ -18,7 +18,8 @@ const PageLoader: React.FC = () => {
     if (!visitedPages.has(path)) {
       setLoading(true);
       markPageAsVisited(path);
-      setTimeout(() => setLoading(false), 1200);
+      const randomDelay = Math.random() * (2000 - 1000) + 1000;
+      setTimeout(() => setLoading(false), randomDelay);
     }
   }, [location.pathname]);
 

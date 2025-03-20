@@ -3,7 +3,6 @@ import PrivateRoute from "../../shared/routes/PrivateRoute";
 import { Role } from "../../shared/constants/roles";
 import Home from "./pages/Home";
 import Login from "../auth/pages/Login";
-import ForgotPassword from "../auth/pages/ForgotPassword";
 import Verify from "../auth/pages/Verify";
 import Error from "../auth/pages/Error";
 import About from "./pages/About";
@@ -23,12 +22,7 @@ export const commonRoutes: RouteObject[] = [
     },
 
     {
-        path: "/forgotpassword",
-        element: <ForgotPassword />,
-    },
-
-    {
-        path: "/verify/:token",
+        path: "/verify-email/:token",
         element: <Verify />
     },
 

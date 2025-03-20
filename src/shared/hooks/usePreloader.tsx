@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState } from "react";
-import Loading from "../components/Loading";
+import Preloader from "../components/Preloader";
 
 interface PreloaderContextType {
   loading: boolean;
@@ -20,7 +20,7 @@ export const PreloaderProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   return (
     <PreloaderContext.Provider value={{ loading, setLoading, visitedPages, markPageAsVisited }}>
-      {loading && <Loading />}
+      {loading && <Preloader />}
       {children}
     </PreloaderContext.Provider>
   );

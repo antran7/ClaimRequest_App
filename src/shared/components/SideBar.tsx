@@ -77,7 +77,7 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
     {
       text: "Approve Claims",
       icon: <CheckBoxIcon />,
-      path: "/approval/claims",
+      path: "/approval",
     },
   ];
 
