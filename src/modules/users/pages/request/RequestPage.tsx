@@ -97,6 +97,7 @@ interface Project {
 interface Approver {
   _id: string;
   user_name: string;
+  email: string;
 }
 
 const RequestPage = () => {
@@ -123,8 +124,8 @@ const RequestPage = () => {
     claim_end_date: null,
     total_work_time: 0,
   });
-  const [selectedApproverName, setSelectedApproverName] = useState<string>(""); // New state for approver display
-  const [selectedProjectName, setSelectedProjectName] = useState<string>(""); // New state for project display
+  const [selectedApproverName, setSelectedApproverName] = useState<string>("");
+  const [selectedProjectName, setSelectedProjectName] = useState<string>("");
   const [userEmail, setUserEmail] = useState<string>("");
   const [userId, setUserId] = useState<string | null>(null);
   const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false);
@@ -172,95 +173,100 @@ const RequestPage = () => {
     fetchUser();
   }, []);
 
-  useEffect(() => {
-    const fetchRequests = async () => {
-      setLoading(true);
-      try {
-        console.log("Fetching requests...");
-        const response = await axios.post(
-          `${API_URL}/claims/claimer-search`,
-          {
-            searchCondition: {
-              keyword: "",
-              claim_status: "",
-              claim_start_date: "",
-              claim_end_date: "",
-              is_delete: false,
-            },
-            pageInfo: {
-              pageNum: page + 1,
-              pageSize: rowsPerPage,
-            },
+  const fetchRequests = async () => {
+    setLoading(true);
+    try {
+      console.log("Fetching requests with page:", page + 1, "rowsPerPage:", rowsPerPage, "search:", search);
+      const response = await axios.post(
+        `${API_URL}/claims/claimer-search`,
+        {
+          searchCondition: {
+            keyword: search, // Include the search keyword
+            claim_status: "",
+            claim_start_date: "",
+            claim_end_date: "",
+            is_delete: false,
           },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        console.log("Response received:", response.data);
-        if (response.data.success) {
-          setRequests(response.data.data.pageData);
-          setTotalCount(response.data.data.pageInfo.totalItems);
-        } else {
-          console.error("Failed to fetch requests:", response.data.message);
+          pageInfo: {
+            pageNum: page + 1, // API expects 1-based indexing
+            pageSize: rowsPerPage,
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      } catch (error) {
-        console.error("Error fetching requests:", error);
-      } finally {
-        setLoading(false);
+      );
+      console.log("Response received:", response.data);
+      if (response.data.success) {
+        console.log("Fetched requests:", response.data.data.pageData);
+        console.log("Total items:", response.data.data.pageInfo.totalItems);
+        setRequests(response.data.data.pageData);
+        setTotalCount(response.data.data.pageInfo.totalItems); // Total items after search filter
+      } else {
+        console.error("Failed to fetch requests:", response.data.message);
       }
-    };
-    fetchRequests();
-  }, [userEmail, userId, token, page, rowsPerPage]);
+    } catch (error) {
+      console.error("Error fetching requests:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        console.log("Fetching projects for userId:", userId);
-        const projectsResponse = await axios.post(
-          `${API_URL}/projects/search`,
-          {
-            searchCondition: {
-              keyword: "",
-              project_start_date: "",
-              project_end_date: "",
-              is_delete: false,
-            },
-            pageInfo: {
-              pageNum: 1,
-              pageSize: 100,
-            },
+    if (userId && token) {
+      fetchRequests();
+    }
+  }, [userEmail, userId, token, page, rowsPerPage, search]); // Add search to dependencies
+
+  const fetchProjects = async () => {
+    try {
+      console.log("Fetching projects for userId:", userId);
+      const projectsResponse = await axios.post(
+        `${API_URL}/projects/search`,
+        {
+          searchCondition: {
+            keyword: "",
+            project_start_date: "",
+            project_end_date: "",
+            is_delete: false,
           },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (projectsResponse.data.success) {
-          const allProjects = projectsResponse.data.data.pageData;
-          console.log("All projects:", allProjects);
-
-          const userProjects = allProjects.filter((project: Project) => {
-            const isMember = project.project_members?.some(
-              (member) => member.user_id === userId
-            );
-            console.log(
-              `Project ${project.project_name} - User is member: ${isMember}`
-            );
-            return isMember;
-          });
-
-          console.log("Filtered user projects:", userProjects);
-          setProjects(userProjects);
+          pageInfo: {
+            pageNum: 1,
+            pageSize: 100,
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      } catch (error) {
-        console.error("Error fetching projects:", error);
-      }
-    };
+      );
 
+      if (projectsResponse.data.success) {
+        const allProjects = projectsResponse.data.data.pageData;
+        console.log("All projects:", allProjects);
+
+        const userProjects = allProjects.filter((project: Project) => {
+          const isMember = project.project_members?.some(
+            (member) => member.user_id === userId
+          );
+          console.log(
+            `Project ${project.project_name} - User is member: ${isMember}`
+          );
+          return isMember;
+        });
+
+        console.log("Filtered user projects:", userProjects);
+        setProjects(userProjects);
+      }
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+    }
+  };
+
+  useEffect(() => {
     if (userId) {
       fetchProjects();
     }
@@ -278,15 +284,6 @@ const RequestPage = () => {
       localStorage.setItem("requests", JSON.stringify(requests));
     }
   }, [requests]);
-
-  useEffect(() => {
-    const fetchDataForEdit = async () => {
-      if (currentRequest && (!projects.length || !approvers.length)) {
-        await Promise.all([fetchProjects(), fetchApprovers("")]);
-      }
-    };
-    fetchDataForEdit();
-  }, [currentRequest, projects.length, approvers.length]);
 
   const fetchApprovers = async (keyword: string) => {
     try {
@@ -324,6 +321,20 @@ const RequestPage = () => {
 
   const debouncedFetchApprovers = useCallback(debounce(fetchApprovers, 800), [token]);
 
+  // Ensure projects are fetched if not already present
+  const ensureProjectsFetched = async () => {
+    if (projects.length === 0 && userId) {
+      await fetchProjects();
+    }
+  };
+
+  // Ensure approvers are fetched if not already present
+  const ensureApproversFetched = async () => {
+    if (approvers.length === 0) {
+      await fetchApprovers("");
+    }
+  };
+
   const handleAddModalOk = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     console.log("handleAddModalOk called with formValues:", formValues);
@@ -339,6 +350,7 @@ const RequestPage = () => {
       console.error(
         "All fields are required and total work time must be positive"
       );
+      alert("Please fill in all fields and ensure total work time is positive.");
       return;
     }
 
@@ -411,23 +423,25 @@ const RequestPage = () => {
       return;
     }
 
-    if (
-      !formValues.claim_name ||
-      !formValues.project_id ||
-      !formValues.approval_id ||
-      !formValues.claim_start_date ||
-      !formValues.claim_end_date ||
-      formValues.total_work_time <= 0
-    ) {
-      console.error("All fields are required and total work time must be positive");
-      alert("Please fill in all fields and ensure total work time is positive.");
+    // Use the current request's values as defaults, and only update the fields that have changed
+    const updatedClaimName = formValues.claim_name || currentRequest.claim_name;
+    const updatedProjectId = formValues.project_id || currentRequest.project_id;
+    const updatedApprovalId = formValues.approval_id || currentRequest.approval_id;
+    const updatedStartDate = formValues.claim_start_date || moment(currentRequest.claim_start_date);
+    const updatedEndDate = formValues.claim_end_date || moment(currentRequest.claim_end_date);
+    const updatedTotalWorkTime = formValues.total_work_time || currentRequest.total_work_time;
+
+    // Validate only the fields that are being updated
+    if (updatedTotalWorkTime <= 0) {
+      console.error("Total work time must be positive");
+      alert("Total work time must be a positive number.");
       return;
     }
 
     if (
-      formValues.claim_end_date &&
-      formValues.claim_start_date &&
-      formValues.claim_end_date.isBefore(formValues.claim_start_date)
+      updatedEndDate &&
+      updatedStartDate &&
+      updatedEndDate.isBefore(updatedStartDate)
     ) {
       setDateError("End date cannot be before start date");
       console.error("Date validation failed:", dateError);
@@ -438,12 +452,12 @@ const RequestPage = () => {
       const updatedRequest = {
         _id: currentRequest._id,
         user_id: userId,
-        project_id: formValues.project_id,
-        approval_id: formValues.approval_id,
-        claim_name: formValues.claim_name,
-        claim_start_date: formValues.claim_start_date?.toISOString() || "",
-        claim_end_date: formValues.claim_end_date?.toISOString() || "",
-        total_work_time: Number(formValues.total_work_time),
+        project_id: updatedProjectId,
+        approval_id: updatedApprovalId,
+        claim_name: updatedClaimName,
+        claim_start_date: updatedStartDate.toISOString(),
+        claim_end_date: updatedEndDate.toISOString(),
+        total_work_time: Number(updatedTotalWorkTime),
         claim_status: currentRequest.claim_status,
       };
 
@@ -469,6 +483,8 @@ const RequestPage = () => {
                   ...updatedRequest,
                   claim_start_date: updatedRequest.claim_start_date,
                   claim_end_date: updatedRequest.claim_end_date,
+                  project_info: projects.find((p) => p._id === updatedProjectId) || req.project_info,
+                  approval_info: approvers.find((a) => a._id === updatedApprovalId) || req.approval_info,
                 }
               : req
           )
@@ -491,34 +507,31 @@ const RequestPage = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    setRequestToDelete(id);
-    setIsDeleteModalVisible(true);
-  };
+  const handleEditClick = async (req: Request) => {
+    // Ensure projects and approvers are fetched before opening the modal
+    await Promise.all([ensureProjectsFetched(), ensureApproversFetched()]);
 
-  const handleConfirmDelete = async () => {
-    if (requestToDelete === null || !token) return;
+    // Use project_info and approval_info from the request to pre-populate the names
+    const projectName = req.project_info?.project_name || "";
+    const approverName = req.approval_info?.user_name || "";
 
-    try {
-      await axios.put(
-        `${API_URL}/claims/change-status`,
-        {
-          claim_id: requestToDelete,
-          claim_status: "Canceled",
-          comment: "Canceled by user",
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      setRequests(requests.filter((req) => req._id !== requestToDelete));
-      setIsDeleteModalVisible(false);
-      setRequestToDelete(null);
-    } catch (error) {
-      console.error("Error deleting request:", error);
-    }
+    // Set the form values with the current request's data as defaults
+    setFormValues({
+      claim_name: req.claim_name,
+      project_id: req.project_id,
+      approval_id: req.approval_id,
+      claim_start_date: moment(req.claim_start_date),
+      claim_end_date: moment(req.claim_end_date),
+      total_work_time: req.total_work_time,
+    });
+
+    // Set the display names for the project and approver
+    setSelectedProjectName(projectName);
+    setSelectedApproverName(approverName);
+
+    // Set the current request and open the modal
+    setCurrentRequest(req);
+    setIsEditModalVisible(true);
   };
 
   const handleRequestApproval = async (id: string) => {
@@ -528,35 +541,31 @@ const RequestPage = () => {
 
   const handleConfirmApproval = async () => {
     if (requestToApprove === null || !token) return;
-  
+
     try {
-      // Gọi API để thay đổi trạng thái sang "Pending"
       const response = await axios.put(
         `${API_URL}/claims/change-status`,
         {
-          _id: requestToApprove, // Sử dụng _id thay vì claim_id vì API yêu cầu _id
-          claim_status: "Pending Approval", // Trạng thái mới
-          comment: "", // Bình luận rỗng nếu không cần giải thích
+          _id: requestToApprove,
+          claim_status: "Pending Approval",
+          comment: "",
         },
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json", // Đảm bảo header này được thêm vào
+            "Content-Type": "application/json",
           },
         }
       );
-  
-      // Kiểm tra phản hồi từ API
+
       if (response.data.success) {
-        // Cập nhật danh sách requests trong state
         setRequests(
           requests.map((req) =>
             req._id === requestToApprove
-              ? { ...req, claim_status: "Pending Approval" } // Cập nhật trạng thái trong UI
+              ? { ...req, claim_status: "Pending Approval" }
               : req
           )
         );
-        // Đóng modal xác nhận
         setIsConfirmModalVisible(false);
         setRequestToApprove(null);
         alert("Request has been submitted for approval!");
@@ -728,125 +737,103 @@ const RequestPage = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {requests
-                      .filter((req) =>
-                        req.claim_name
-                          .toLowerCase()
-                          .includes(search.toLowerCase())
-                      )
-                      .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                      .map((req) => (
-                        <TableRow key={req._id}>
-                          <TableCell align="center" sx={tableCellStyle}>
-                            {req.claim_name}
-                          </TableCell>
-                          <TableCell align="center" sx={tableCellStyle}>
-                            {req.project_info?.project_name || "Unknown Project"}
-                          </TableCell>
-                          <TableCell align="center" sx={tableCellStyle}>
-                            {req.approval_info?.user_name || "Unknown Approver"}
-                          </TableCell>
-                          <TableCell align="center" sx={tableCellStyle}>
-                            <span
-                              className={`status-badge status-${req.claim_status
-                                .toLowerCase()
-                                .replace(/\s+/g, "-")}`}
-                            >
-                              {req.claim_status}
-                            </span>
-                          </TableCell>
-                          <TableCell align="center" sx={tableCellStyle}>
-                            {moment(req.claim_start_date).format("DD/MM/YYYY")}
-                          </TableCell>
-                          <TableCell align="center" sx={tableCellStyle}>
-                            {moment(req.claim_end_date).format("DD/MM/YYYY")}
-                          </TableCell>
-                          <TableCell align="center" sx={tableCellStyle}>
-                            {req.total_work_time} (hours)
-                          </TableCell>
-                          <TableCell
-                            align="center"
-                            sx={{ ...tableCellStyle, minWidth: "250px" }}
+                    {requests.map((req) => (
+                      <TableRow key={req._id}>
+                        <TableCell align="center" sx={tableCellStyle}>
+                          {req.claim_name}
+                        </TableCell>
+                        <TableCell align="center" sx={tableCellStyle}>
+                          {req.project_info?.project_name || "Unknown Project"}
+                        </TableCell>
+                        <TableCell align="center" sx={tableCellStyle}>
+                          {req.approval_info?.user_name || "Unknown Approver"}
+                        </TableCell>
+                        <TableCell align="center" sx={tableCellStyle}>
+                          <span
+                            className={`status-badge status-${req.claim_status
+                              .toLowerCase()
+                              .replace(/\s+/g, "-")}`}
                           >
-                            <div className="action-buttons">
+                            {req.claim_status}
+                          </span>
+                        </TableCell>
+                        <TableCell align="center" sx={tableCellStyle}>
+                          {moment(req.claim_start_date).format("DD/MM/YYYY")}
+                        </TableCell>
+                        <TableCell align="center" sx={tableCellStyle}>
+                          {moment(req.claim_end_date).format("DD/MM/YYYY")}
+                        </TableCell>
+                        <TableCell align="center" sx={tableCellStyle}>
+                          {req.total_work_time} (hours)
+                        </TableCell>
+                        <TableCell
+                          align="center"
+                          sx={{ ...tableCellStyle, minWidth: "250px" }}
+                        >
+                          <div className="action-buttons">
+                            <Button
+                              variant="contained"
+                              size="small"
+                              onClick={() => handleEditClick(req)}
+                              disabled={
+                                req.claim_status !== "Draft" &&
+                                req.claim_status !== "Returned"
+                              }
+                              sx={{
+                                backgroundColor: "#e6cb62",
+                                color: "black",
+                                "&:hover": {
+                                  backgroundColor: "#eab308",
+                                  color: "white",
+                                },
+                                mr: 1,
+                              }}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="contained"
+                              size="small"
+                              onClick={() => handleRequestCancel(req._id)}
+                              disabled={
+                                req.claim_status === "Canceled" ||
+                                req.claim_status === "Pending Approval" ||
+                                req.claim_status === "Paid" ||
+                                req.claim_status === "Rejected" ||
+                                req.claim_status === "Approved"
+                              }
+                              sx={{
+                                backgroundColor: "#dc2626",
+                                color: "white",
+                                "&:hover": {
+                                  backgroundColor: "#ef4444",
+                                },
+                                mr: 1,
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                            {(req.claim_status === "Draft" ||
+                              req.claim_status === "Returned") && (
                               <Button
                                 variant="contained"
                                 size="small"
-                                onClick={() => {
-                                  setCurrentRequest(req);
-                                  setIsEditModalVisible(true);
-                                  const project = projects.find((p) => p._id === req.project_id);
-                                  const approver = approvers.find((a) => a._id === req.approval_id);
-                                  setFormValues({
-                                    claim_name: req.claim_name,
-                                    project_id: req.project_id,
-                                    approval_id: req.approval_id,
-                                    claim_start_date: moment(req.claim_start_date),
-                                    claim_end_date: moment(req.claim_end_date),
-                                    total_work_time: req.total_work_time,
-                                  });
-                                  setSelectedApproverName(approver?.user_name || "");
-                                  setSelectedProjectName(project?.project_name || "");
-                                }}
-                                disabled={
-                                  req.claim_status !== "Draft" &&
-                                  req.claim_status !== "Returned"
-                                }
+                                onClick={() => handleRequestApproval(req._id)}
                                 sx={{
-                                  backgroundColor: "#e6cb62",
-                                  color: "black",
-                                  "&:hover": {
-                                    backgroundColor: "#eab308",
-                                    color: "white",
-                                  },
-                                  mr: 1,
-                                }}
-                              >
-                                Edit
-                              </Button>
-                              <Button
-                                variant="contained"
-                                size="small"
-                                onClick={() => handleRequestCancel(req._id)}
-                                disabled={
-                                  req.claim_status === "Canceled" ||
-                                  req.claim_status === "Pending Approval" ||
-                                  req.claim_status === "Paid" ||
-                                  req.claim_status === "Rejected" ||
-                                  req.claim_status === "Approved"
-                                }
-                                sx={{
-                                  backgroundColor: "#dc2626",
+                                  backgroundColor: "#46d179",
                                   color: "white",
                                   "&:hover": {
-                                    backgroundColor: "#ef4444",
+                                    backgroundColor: "#16a34a",
                                   },
-                                  mr: 1,
                                 }}
                               >
-                                Cancel
+                                Request Approval
                               </Button>
-                              {(req.claim_status === "Draft" ||
-                                req.claim_status === "Returned") && (
-                                <Button
-                                  variant="contained"
-                                  size="small"
-                                  onClick={() => handleRequestApproval(req._id)}
-                                  sx={{
-                                    backgroundColor: "#46d179",
-                                    color: "white",
-                                    "&:hover": {
-                                      backgroundColor: "#16a34a",
-                                    },
-                                  }}
-                                >
-                                  Request Approval
-                                </Button>
-                              )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
                 <TablePagination
@@ -858,12 +845,10 @@ const RequestPage = () => {
                   onPageChange={(event, newPage) => setPage(newPage)}
                   onRowsPerPageChange={(event) => {
                     setRowsPerPage(parseInt(event.target.value, 10));
-                    setPage(0);
+                    setPage(0); // Reset to the first page when rows per page changes
                   }}
                   labelDisplayedRows={({ from, to, count }) => {
-                    const computedFrom = page * rowsPerPage + 1;
-                    const computedTo = Math.min((page + 1) * rowsPerPage, count);
-                    return `${computedFrom}-${computedTo} of ${count}`;
+                    return `${from}-${to} of ${count}`;
                   }}
                   showFirstButton
                   showLastButton
@@ -914,19 +899,33 @@ const RequestPage = () => {
                   margin="normal"
                 />
                 <FormControl fullWidth margin="normal">
-                  <InputLabel>Project Name</InputLabel>
-                  <Select
-                    name="project_id"
-                    value={formValues.project_id}
-                    onChange={handleSelectChange}
-                    required
-                  >
-                    {projects.map((project) => (
-                      <MenuItem key={project._id} value={project._id}>
-                        {project.project_name}
-                      </MenuItem>
-                    ))}
-                  </Select>
+                  <Autocomplete
+                    freeSolo
+                    options={projects.map((project) => project.project_name)}
+                    value={selectedProjectName || ""}
+                    onInputChange={(event, newInputValue) => {
+                      setSelectedProjectName(newInputValue);
+                      if (newInputValue) {
+                        const selectedProject = projects.find(
+                          (project) => project.project_name === newInputValue
+                        );
+                        if (selectedProject) {
+                          setFormValues({
+                            ...formValues,
+                            project_id: selectedProject._id,
+                          });
+                        } else {
+                          setFormValues({
+                            ...formValues,
+                            project_id: "",
+                          });
+                        }
+                      }
+                    }}
+                    renderInput={(params) => (
+                      <TextField {...params} label="Project Name" required />
+                    )}
+                  />
                 </FormControl>
                 <FormControl fullWidth margin="normal">
                   <Autocomplete
@@ -949,6 +948,12 @@ const RequestPage = () => {
                           approval_id: selectedApprover._id,
                         });
                         setSelectedApproverName(selectedApprover.user_name);
+                      } else {
+                        setFormValues({
+                          ...formValues,
+                          approval_id: "",
+                        });
+                        setSelectedApproverName(newValue || "");
                       }
                     }}
                     renderInput={(params) => (
@@ -1043,30 +1048,43 @@ const RequestPage = () => {
                   name="claim_name"
                   value={formValues.claim_name}
                   onChange={handleInputChange}
-                  required
                   fullWidth
                   margin="normal"
                 />
                 <FormControl fullWidth margin="normal">
-                  <InputLabel>Project Name</InputLabel>
-                  <Select
-                    name="project_id"
-                    value={formValues.project_id}
-                    onChange={handleSelectChange}
-                    required
-                  >
-                    {projects.map((project) => (
-                      <MenuItem key={project._id} value={project._id}>
-                        {project.project_name}
-                      </MenuItem>
-                    ))}
-                  </Select>
+                  <Autocomplete
+                    freeSolo
+                    options={projects.map((project) => project.project_name)}
+                    value={selectedProjectName || ""}
+                    onInputChange={(event, newInputValue) => {
+                      setSelectedProjectName(newInputValue);
+                      if (newInputValue) {
+                        const selectedProject = projects.find(
+                          (project) => project.project_name === newInputValue
+                        );
+                        if (selectedProject) {
+                          setFormValues({
+                            ...formValues,
+                            project_id: selectedProject._id,
+                          });
+                        } else {
+                          setFormValues({
+                            ...formValues,
+                            project_id: "",
+                          });
+                        }
+                      }
+                    }}
+                    renderInput={(params) => (
+                      <TextField {...params} label="Project Name" required />
+                    )}
+                  />
                 </FormControl>
                 <FormControl fullWidth margin="normal">
                   <Autocomplete
                     freeSolo
                     options={approvers.map((approver) => approver.user_name)}
-                    value={selectedApproverName}
+                    value={selectedApproverName || ""}
                     onInputChange={(event, newInputValue) => {
                       setSelectedApproverName(newInputValue);
                       if (newInputValue) {
@@ -1083,10 +1101,16 @@ const RequestPage = () => {
                           approval_id: selectedApprover._id,
                         });
                         setSelectedApproverName(selectedApprover.user_name);
+                      } else if (newValue === "") {
+                        setFormValues({
+                          ...formValues,
+                          approval_id: "",
+                        });
+                        setSelectedApproverName("");
                       }
                     }}
                     renderInput={(params) => (
-                      <TextField {...params} label="Approver" required />
+                      <TextField {...params} label="Approver" />
                     )}
                   />
                 </FormControl>
@@ -1099,7 +1123,6 @@ const RequestPage = () => {
                       slotProps={{
                         textField: {
                           fullWidth: true,
-                          required: true,
                         },
                       }}
                     />
@@ -1110,7 +1133,6 @@ const RequestPage = () => {
                       slotProps={{
                         textField: {
                           fullWidth: true,
-                          required: true,
                         },
                       }}
                     />
@@ -1123,7 +1145,6 @@ const RequestPage = () => {
                   type="number"
                   value={formValues.total_work_time}
                   onChange={handleInputChange}
-                  required
                   fullWidth
                   margin="normal"
                   inputProps={{ min: 1 }}
