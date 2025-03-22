@@ -12,6 +12,16 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  InputAdornment,
+  List,
+  ListItem,
+  ListItemText,
+  Paper,
 } from "@mui/material";
 import { fetchProjectById } from "../services/projectService";
 import { Project, User } from "../types/projectInterface";
@@ -23,14 +33,11 @@ import { deleteProject } from "../services/projectService";
 import { updateProject } from "../services/projectService";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import {
-  TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-} from "@mui/material";
 import { searchUsers } from "../services/userService";
+import { Search } from "lucide-react";
+import DepartmentSelect from "../components/DepartmentSelect";
+import RoleSelect from "../components/RoleSelect";
+import useDebounce from "../../../shared/hooks/useDebounce";
 
 const ProjectDetail = () => {
   const { projectId } = useParams();
@@ -40,6 +47,10 @@ const ProjectDetail = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
+  const [userSearchTerm, setUserSearchTerm] = useState("");
+  const debouncedUserSearchTerm = useDebounce(userSearchTerm, 500);
+  const [showUserDropdown, setShowUserDropdown] = useState<number | null>(null);
 
   useEffect(() => {
     if (projectId) {
@@ -57,6 +68,12 @@ const ProjectDetail = () => {
         });
     }
   }, [projectId]);
+
+  useEffect(() => {
+    if (editDialogOpen) {
+      fetchUsers();
+    }
+  }, [editDialogOpen, debouncedUserSearchTerm]);
 
   const validationSchema = Yup.object({
     project_name: Yup.string().required("Project name is required"),
@@ -128,11 +145,12 @@ const ProjectDetail = () => {
   const fetchUsers = async () => {
     try {
       const response = await searchUsers(
-        { keyword: "" },
+        { keyword: debouncedUserSearchTerm },
         { pageNum: 1, pageSize: 100 }
       );
       if (response?.pageData) {
         setUsers(response.pageData);
+        setFilteredUsers(response.pageData);
       }
     } catch (error) {
       console.error("Failed to fetch users:", error);
@@ -178,6 +196,29 @@ const ProjectDetail = () => {
       };
     }
     formik.setFieldValue("project_members", updatedMembers);
+  };
+
+  const handleUserSearch = (index: number, searchValue: string) => {
+    setUserSearchTerm(searchValue);
+    setShowUserDropdown(index);
+    
+    // Filter users based on search term
+    if (searchValue.trim() === '') {
+      setFilteredUsers(users);
+    } else {
+      const filtered = users.filter(
+        user => 
+          user.email.toLowerCase().includes(searchValue.toLowerCase()) ||
+          user.user_name.toLowerCase().includes(searchValue.toLowerCase())
+      );
+      setFilteredUsers(filtered);
+    }
+  };
+
+  const handleSelectUser = (index: number, user: any) => {
+    handleMemberChange(index, "user_id", user._id);
+    setShowUserDropdown(null);
+    setUserSearchTerm("");
   };
 
   if (!project) {
@@ -332,19 +373,18 @@ const ProjectDetail = () => {
         onClose={() => setEditDialogOpen(false)}
         maxWidth="md"
         fullWidth
+        classes={{ paper: "rounded-lg" }}
       >
-        <DialogTitle className="bg-gray-100 border-b border-gray-200 py-4">
-          <h2 className="text-xl font-semibold text-gray-800">Edit Project</h2>
+        <DialogTitle className="bg-gray-500 border-b border-gray-200 py-4">
+          <h2 className="text-xl font-semibold text-gray-50">Edit Project</h2>
         </DialogTitle>
-        <form onSubmit={formik.handleSubmit}>
-          <DialogContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <DialogContent className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+            <div className="space-y-1">
               <TextField
                 fullWidth
-                name="project_name"
                 label="Project Name"
-                value={formik.values.project_name}
-                onChange={formik.handleChange}
+                {...formik.getFieldProps("project_name")}
                 error={
                   formik.touched.project_name &&
                   Boolean(formik.errors.project_name)
@@ -352,13 +392,18 @@ const ProjectDetail = () => {
                 helperText={
                   formik.touched.project_name && formik.errors.project_name
                 }
+                className="bg-white"
+                InputProps={{
+                  className: "rounded-md",
+                }}
               />
+            </div>
+
+            <div className="space-y-1">
               <TextField
                 fullWidth
-                name="project_code"
                 label="Project Code"
-                value={formik.values.project_code}
-                onChange={formik.handleChange}
+                {...formik.getFieldProps("project_code")}
                 error={
                   formik.touched.project_code &&
                   Boolean(formik.errors.project_code)
@@ -366,30 +411,56 @@ const ProjectDetail = () => {
                 helperText={
                   formik.touched.project_code && formik.errors.project_code
                 }
+                className="bg-white"
+                InputProps={{
+                  className: "rounded-md",
+                }}
               />
-              <TextField
+            </div>
+
+            <div className="space-y-1">
+              <FormControl
                 fullWidth
-                name="project_department"
-                label="Department"
-                value={formik.values.project_department}
-                onChange={formik.handleChange}
                 error={
                   formik.touched.project_department &&
                   Boolean(formik.errors.project_department)
                 }
-                helperText={
-                  formik.touched.project_department &&
-                  formik.errors.project_department
-                }
-              />
+                className="bg-white rounded-md"
+              >
+                <InputLabel
+                  shrink
+                  id="department-select-label"
+                  className="bg-white px-1 text-gray-600"
+                >
+                  Department
+                </InputLabel>
+                <div className="mt-2">
+                  <DepartmentSelect
+                    value={formik.values.project_department}
+                    onChange={(value) =>
+                      formik.setFieldValue("project_department", value)
+                    }
+                    required
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Select Department"
+                  />
+                </div>
+                {formik.touched.project_department &&
+                  formik.errors.project_department && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {formik.errors.project_department as string}
+                    </p>
+                  )}
+              </FormControl>
+            </div>
+
+            <div className="space-y-1 md:col-span-2">
               <TextField
                 fullWidth
-                name="project_description"
                 label="Description"
                 multiline
-                rows={4}
-                value={formik.values.project_description}
-                onChange={formik.handleChange}
+                rows={3}
+                {...formik.getFieldProps("project_description")}
                 error={
                   formik.touched.project_description &&
                   Boolean(formik.errors.project_description)
@@ -398,14 +469,20 @@ const ProjectDetail = () => {
                   formik.touched.project_description &&
                   formik.errors.project_description
                 }
+                className="bg-white"
+                InputProps={{
+                  className: "rounded-md",
+                }}
               />
+            </div>
+
+            <div className="space-y-1">
               <TextField
                 fullWidth
-                type="date"
-                name="project_start_date"
                 label="Start Date"
-                value={formik.values.project_start_date}
-                onChange={formik.handleChange}
+                type="date"
+                InputLabelProps={{ shrink: true }}
+                {...formik.getFieldProps("project_start_date")}
                 error={
                   formik.touched.project_start_date &&
                   Boolean(formik.errors.project_start_date)
@@ -414,15 +491,20 @@ const ProjectDetail = () => {
                   formik.touched.project_start_date &&
                   formik.errors.project_start_date
                 }
-                InputLabelProps={{ shrink: true }}
+                className="bg-white"
+                InputProps={{
+                  className: "rounded-md",
+                }}
               />
+            </div>
+
+            <div className="space-y-1">
               <TextField
                 fullWidth
-                type="date"
-                name="project_end_date"
                 label="End Date"
-                value={formik.values.project_end_date}
-                onChange={formik.handleChange}
+                type="date"
+                InputLabelProps={{ shrink: true }}
+                {...formik.getFieldProps("project_end_date")}
                 error={
                   formik.touched.project_end_date &&
                   Boolean(formik.errors.project_end_date)
@@ -431,145 +513,191 @@ const ProjectDetail = () => {
                   formik.touched.project_end_date &&
                   formik.errors.project_end_date
                 }
-                InputLabelProps={{ shrink: true }}
+                className="bg-white"
+                InputProps={{
+                  className: "rounded-md",
+                }}
               />
             </div>
-            <div className="mt-6">
-              <div className="flex justify-between items-center mb-2">
-                <Typography variant="h6">Project Members</Typography>
-                {/* <Button
-                  variant="outlined"
-                  color="primary"
+          </div>
 
-                >
-                  Add Member
-                </Button> */}
-                <div
-                  className="group relative flex size-10 items-center justify-center gap-1 rounded-lg border border-black"
-                  onClick={handleAddMember}
-                >
-                  <div className="size-1 rounded-full bg-black duration-300 group-hover:opacity-0"></div>
-                  <div className="relative size-1 origin-center rounded-full bg-black duration-300 before:absolute before:left-1 before:h-1 before:origin-center before:rounded-full before:bg-black before:delay-300 before:duration-300 after:absolute after:left-1 after:h-1 after:origin-center after:rounded-full after:bg-black after:delay-300 after:duration-300 group-hover:w-6 group-hover:before:w-3.5 group-hover:before:-rotate-90 group-hover:after:w-3.5 group-hover:after:rotate-90"></div>
+          <div className="mt-8">
+            <div className="flex justify-between items-center mb-4 border-b border-gray-200 pb-2">
+              <Typography
+                variant="h6"
+                className="text-gray-700 font-semibold"
+              >
+                Project Members
+              </Typography>
+              <Button
+                sx={{
+                  color: "white",
+                  backgroundColor: "gray",
+                  "&:hover": { backgroundColor: "darkgray" },
+                }}
+                onClick={handleAddMember}
+                className="rounded-md"
+                size="small"
+              >
+                Add Member
+              </Button>
+            </div>
 
-                  <div className="size-1 rounded-full bg-black duration-300 group-hover:opacity-0"></div>
+            {formik.values.project_members.map((member, index) => (
+              <div
+                key={index}
+                className="grid grid-cols-1 gap-4 mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200"
+              >
+                <div className="flex flex-row justify-between items-center">
+                  <div className="w-full pr-2">
+                    <div className="relative">
+                      <TextField
+                        fullWidth
+                        label="Search User"
+                        placeholder="Search by username or email"
+                        value={showUserDropdown === index ? userSearchTerm : users.find(u => u._id === member.user_id || u._id === member._id)?.user_name || member.user_name || ''}
+                        onChange={(e) => handleUserSearch(index, e.target.value)}
+                        onFocus={() => setShowUserDropdown(index)}
+                        className="bg-white rounded-md"
+                        InputProps={{
+                          endAdornment: (
+                            <InputAdornment position="end">
+                              <Search size={20} />
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                      {showUserDropdown === index && (
+                        <Paper 
+                          style={{
+                            position: 'absolute',
+                            zIndex: 1000,
+                            width: '100%',
+                            maxHeight: '200px',
+                            overflow: 'auto'
+                          }}
+                        >
+                          <List>
+                            {filteredUsers.length > 0 ? (
+                              filteredUsers.map((user) => (
+                                <ListItem 
+                                  key={user._id}
+                                  onClick={() => handleSelectUser(index, user)}
+                                  divider
+                                  sx={{ cursor: 'pointer' }}
+                                >
+                                  <ListItemText 
+                                    primary={user.user_name} 
+                                    secondary={user.email} 
+                                  />
+                                </ListItem>
+                              ))
+                            ) : (
+                              <ListItem>
+                                <ListItemText primary="No users found" />
+                              </ListItem>
+                            )}
+                          </List>
+                        </Paper>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex-shrink-0">
+                    <Button
+                      color="error"
+                      onClick={() => handleRemoveMember(index)}
+                      disabled={formik.values.project_members.length <= 1}
+                      className="rounded-md"
+                      variant="outlined"
+                      size="small"
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="w-full">
+                  <FormControl
+                    fullWidth
+                    error={!!(
+                      formik.touched.project_members?.[index] && 
+                      formik.errors.project_members?.[index] && 
+                      typeof formik.errors.project_members[index] === 'object' &&
+                      'project_role' in (formik.errors.project_members[index] as any)
+                    )}
+                    className="bg-white rounded-md"
+                  >
+                    <InputLabel
+                      shrink
+                      id={`role-select-label-${index}`}
+                      className="bg-white px-1 text-gray-600"
+                    >
+                      Role
+                    </InputLabel>
+                    <div className="mt-2">
+                      <RoleSelect
+                        value={member.project_role || ''}
+                        onChange={(value) =>
+                          handleMemberChange(index, "project_role", value)
+                        }
+                        required
+                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Select Role"
+                      />
+                    </div>
+                    {formik.touched.project_members?.[index] &&
+                      formik.errors.project_members?.[index] &&
+                      typeof formik.errors.project_members[index] === 'object' &&
+                      'project_role' in (formik.errors.project_members[index] as any) && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {(formik.errors.project_members[index] as any).project_role}
+                        </p>
+                      )}
+                  </FormControl>
                 </div>
               </div>
+            ))}
 
-              {formik.values.project_members.map((member, index) => (
-                <div key={index} className="grid grid-cols-3 gap-4 mb-4">
-                  <FormControl fullWidth>
-                    <InputLabel id={`user-select-label-${index}`}>
-                      User
-                    </InputLabel>
-                    <Select
-                      labelId={`user-select-label-${index}`}
-                      value={member.user_id || member._id || ""} // Thêm member.user_id
-                      label="User"
-                      onChange={(e) =>
-                        handleMemberChange(index, "user_id", e.target.value)
-                      }
-                      displayEmpty
-                    >
-                      <MenuItem value="" disabled>
-                        Select User
-                      </MenuItem>
-                      {users.map((user) => (
-                        <MenuItem
-                          key={user._id}
-                          value={user._id}
-                          selected={
-                            member.user_id === user._id ||
-                            member._id === user._id
-                          }
-                        >
-                          {user.user_name} ({user.email})
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-
-                  <FormControl fullWidth>
-                    <InputLabel>Role</InputLabel>
-                    <Select
-                      value={member.project_role || ""}
-                      label="Role"
-                      onChange={(e) =>
-                        handleMemberChange(
-                          index,
-                          "project_role",
-                          e.target.value
-                        )
-                      }
-                    >
-                      <MenuItem value="Project Manager">
-                        Project Manager
-                      </MenuItem>
-                      <MenuItem value="Technical Leader">
-                        Technical Leader
-                      </MenuItem>
-                      <MenuItem value="Developer">Developer</MenuItem>
-                      <MenuItem value="Tester">Tester</MenuItem>
-                      <MenuItem value="Business Analytics">
-                        Business Analytics
-                      </MenuItem>
-                      <MenuItem value="Technical Consultant">
-                        Technical Consultant
-                      </MenuItem>
-                      <MenuItem value="Quality Analytics">
-                        Quality Analytics
-                      </MenuItem>
-                    </Select>
-                  </FormControl>
-
-                  <Button
-                    color="error"
-                    onClick={() => handleRemoveMember(index)}
-                    disabled={formik.values.project_members.length <= 1}
-                  >
-                    Remove
-                  </Button>
-                </div>
-              ))}
-
-              {formik.touched.project_members &&
-                typeof formik.errors.project_members === "string" && (
-                  <Typography color="error">
-                    {formik.errors.project_members}
-                  </Typography>
-                )}
-            </div>
-          </DialogContent>
-          <DialogActions>
-            <Button
-              onClick={() => setEditDialogOpen(false)}
-              sx={{ color: "gray" }}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="contained"
-              disabled={loading}
-              sx={{
-                backgroundColor: "gray",
-                color: "white",
-                "&:hover": { backgroundColor: "darkgray" },
-              }}
-            >
-              {loading ? (
-                <>
-                  <div className="flex justify-center flex-row gap-2">
-                    <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce"></div>
-                    <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce [animation-delay:-.3s]"></div>
-                    <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce [animation-delay:-.5s]"></div>
-                  </div>
-                </>
-              ) : (
-                "Save Changes"
+            {formik.touched.project_members &&
+              typeof formik.errors.project_members === "string" && (
+                <Typography color="error" className="mt-2 text-sm">
+                  {formik.errors.project_members}
+                </Typography>
               )}
-            </Button>
-          </DialogActions>
-        </form>
+          </div>
+        </DialogContent>
+        <DialogActions className="bg-gray-100 border-t border-gray-200 p-4 flex justify-end gap-2">
+          <Button
+            onClick={() => setEditDialogOpen(false)}
+            sx={{
+              color: "gray",
+            }}
+            className="bg-white text-gray-700 hover:bg-gray-200 px-4 py-2 rounded-md border border-gray-300"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() => formik.handleSubmit()}
+            variant="contained"
+            disabled={loading}
+            sx={{
+              color: "white",
+              backgroundColor: "gray",
+              "&:hover": { backgroundColor: "darkgray" },
+            }}
+            className="text-white px-6 py-2 rounded-md"
+          >
+            {loading ? (
+              <div className="flex justify-center flex-row gap-2">
+                <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce"></div>
+                <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce [animation-delay:-.3s]"></div>
+                <div className="w-4 h-4 rounded-full bg-gray-700 animate-bounce [animation-delay:-.5s]"></div>
+              </div>
+            ) : (
+              "Save Changes"
+            )}
+          </Button>
+        </DialogActions>
       </Dialog>
     </Layout>
   );
