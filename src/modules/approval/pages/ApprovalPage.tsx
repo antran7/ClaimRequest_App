@@ -17,7 +17,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  CircularProgress,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -67,9 +66,7 @@ const ApprovalPage: React.FC = () => {
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [totalItems, setTotalItems] = useState<number>(0);
-  const [allClaims, setAllClaims] = useState<Claim[]>([]);
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
-  const [currentPage, setCurrentPage] = useState(1);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -585,7 +582,7 @@ const ApprovalPage: React.FC = () => {
                 backgroundColor: "gray",
                 color: "white",
                 "&:hover": { backgroundColor: "darkgray" },
-                minWidth: "100px", // Tăng độ rộng tối thiểu của button
+                minWidth: "100px",
               }}
             >
               {currentAction === "Approved" ? "Approve" : "Submit"}
