@@ -71,25 +71,23 @@
     box-shadow: 0px 10px 13px 3px rgba(0, 0, 0, 0.1);
 
     .profile-avatar {
-      width: 250px;
-      height: 250px;
-      margin: 20px 0;
+      width: 200px;
+      height: 200px;
+      margin: 20px 0 10px 0;
     }
 
-    .profile-login-session {
+    .profile-bio {
       display: flex;
-      justify-content: space-between;
+      flex-direction: column;
+      align-items: center;
       width: 100%;
-      padding: 0 65px;
 
       h3 {
-        font-weight: bold;
         font-size: 18px;
       }
 
       p {
-        color: #ccc;
-        text-align: end;
+        color: #727273;
         font-size: 15px;
       }
     }
@@ -99,18 +97,24 @@
       flex-direction: column;
       align-items: center;
       width: 80%;
-      margin: 50px auto 25px;
+      margin: 10px auto 25px;
 
       input {
         outline: none;
-        border-bottom: 1px solid #ccc;
+        border-bottom: 2px solid #ccc;
         padding: 5px 0;
         width: 100%;
-        margin-bottom: 20px;
+        margin-top: 20px;
+        background-image: linear-gradient(to right, #F89904, #DB27D2);
+        background-size: 100% 0px; 
+        background-position: bottom left;
+        background-repeat: no-repeat;
+        transition: border-bottom background-size 0.3s ease-in-out;
       }
 
       input:focus {
-        border-bottom: 2px solid #000;
+        border-bottom: 2px solid transparent;
+        background-size: 100% 2px;
       }
 
       button {
@@ -120,6 +124,7 @@
         font-weight: bold;
         border-radius: 30px;
         padding: 10px 40px;
+        margin-top: 20px;
         cursor: pointer;
         transition: all 0.3s ease-in-out;
       }
@@ -131,6 +136,7 @@
       .activate-info {
         display: flex;
         align-items: center;
+        margin-top: 20px;
         width: 100%;
 
         p {
@@ -146,6 +152,15 @@
         }
       }
     }
+
+    .switch-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: auto;
+      margin-bottom: 20px;
+    }
+
   }
 
   .profile-right-top-panel {
@@ -153,7 +168,7 @@
     margin: 40px 40px 0 0;
     box-shadow: 0px 10px 13px 3px rgba(0, 0, 0, 0.1);
 
-    .create-update-title {
+    .profile-information-title {
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -167,7 +182,7 @@
       }
     }
 
-    .create-update-title::after {
+    .profile-information-title::after {
       content: '';
       width: 100%;
       height: 1px;
@@ -177,24 +192,36 @@
       top: 60px;
     }
 
-    .create-update-date {
-      display: flex;
-      flex-direction: column;
-      row-gap: 20px;
+    .profile-information-content {
       width: 100%;
       padding: 10px 50px;
     }
 
-    h4 {
-      font-size: 18px;
-    }
+    .profile-information {
+      display: flex;
+      flex-direction: column;
+      row-gap: 20px;
 
-    small {
-      color: #ccc;
-    }
+      label {
+        font-weight: bold;
+      }
 
-    small:hover {
-      color: #F89904;
+      input {
+        outline: none;
+        border-bottom: 2px solid #ccc;
+        padding: 5px 0;
+        width: 100%;
+        background-image: linear-gradient(to right, #F89904, #DB27D2);
+        background-size: 100% 0px; 
+        background-position: bottom left;
+        background-repeat: no-repeat;
+        transition: border-bottom background-size 0.3s ease-in-out;
+      }
+      
+      input:hover {
+        border-bottom: 2px solid transparent;
+        background-size: 100% 2px;
+      }
     }
   }
 
@@ -253,36 +280,22 @@
       .MuiListItem-padding {
         padding: 0;
       }
+
       .MuiListItemText-primary {
         font-size: 18px;
       }
 
       .view-project-btn {
-        background: linear-gradient(to bottom, #00FFCC, #07FC13);
+        background: linear-gradient(to right, #F89904, #DB27D2);
         border-radius: 30px;
         color: #fff;
         padding: 7px 15px;
-        position: relative;
-        overflow: hidden;
         cursor: pointer;
+        transition: all 0.3s ease-in-out;
       }
 
-      .view-project-btn::before {
-        content: '';
-        position: absolute;
-        height: 100px;
-        width: 20px;
-        background: #f3f3f3;
-        box-shadow: 0 0 10px #fff;
-        filter: blur(1px);
-        opacity: 0.9;
-        top: -30px;
-        transition: 0.7s;
-        transform: rotate(-20deg) translateX(-75px);
-      }
-
-      .view-project-btn:hover::before {
-        transform: rotate(-20deg) translate(140px, 70px);
+      .view-project-btn:hover {
+        animation: colorChange 1s infinite alternate;
       }
     }
   }

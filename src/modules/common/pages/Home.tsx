@@ -5,7 +5,7 @@ import { Box, Button } from "@mui/material";
 import EastIcon from '@mui/icons-material/East';
 import { useNavigate } from "react-router-dom";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-import Footer from "../../../shared/components/Footer";
+import Footer from "../../../shared/components/layoutComponent/Footer";
 const Home: React.FC = () => {
     const navigate = useNavigate();
     const [isHovering, setIsHovering] = useState(false);

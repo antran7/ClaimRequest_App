@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react'
-import Header from '../components/Header'
-import SideBar from '../components/SideBar';
+import Header from '../components/layoutComponent/Header';
+import SideBar from '../components/layoutComponent/SideBar';
 
 type LayoutProps = {
     children: React.ReactNode;
