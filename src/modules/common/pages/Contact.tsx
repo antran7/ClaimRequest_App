@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Layout from "../../../shared/layouts/Layout";
 import { ArrowForward } from "@mui/icons-material";
-import Footer from "../../../shared/components/Footer";
+import Footer from "../../../shared/components/layoutComponent/Footer";
 
 
 const Contact: React.FC = () => {

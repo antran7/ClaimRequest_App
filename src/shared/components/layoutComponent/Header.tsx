@@ -1,12 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
 import "./Header.css";
 import React, { useEffect, useState } from "react";
-import { Role } from "../constants/roles";
 import MenuIcon from "@mui/icons-material/Menu";
 import IconButton from "@mui/material/IconButton";
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import { Menu, MenuItem } from "@mui/material";
-import { logout } from "../../modules/auth/services/authService";
+import LogoutIcon from '@mui/icons-material/Logout';
+import { Divider, Menu, MenuItem } from "@mui/material";
+import { logout } from "../../../modules/auth/services/authService";
+import ConfirmModal from "../ConfirmModal";
 
 interface HeaderProps {
   toggleSidebar?: () => void;
@@ -16,7 +17,8 @@ const Header = ({ toggleSidebar = () => { } }: HeaderProps) => {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const token = localStorage.getItem("token") as Role | null;
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const token = localStorage.getItem("token") || null;
 
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -77,9 +79,6 @@ const Header = ({ toggleSidebar = () => { } }: HeaderProps) => {
           <div>
             <IconButton
               size="large"
-              aria-label="account of current user"
-              aria-controls="menu-appbar"
-              aria-haspopup="true"
               onClick={handleMenu}
             >
               <AccountCircleIcon />
@@ -88,27 +87,56 @@ const Header = ({ toggleSidebar = () => { } }: HeaderProps) => {
               id="menu-appbar"
               anchorEl={anchorEl}
               anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'right',
+                vertical: "bottom",
+                horizontal: "right",
               }}
               keepMounted
               transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
+                vertical: "top",
+                horizontal: "right",
               }}
               open={Boolean(anchorEl)}
               onClose={handleClose}
               disableScrollLock={true} // Giữ thanh cuộn
             >
-              <MenuItem onClick={() => navigate("/profile")}>
-                My Profile
+              <MenuItem
+                onClick={() => navigate("/profile")}
+                sx={{
+                  minWidth: "150px",
+                  display: "flex",
+                  alignItems: "center",
+                  columnGap: "8px",
+                }}
+              >
+                <AccountCircleIcon sx={{ color: "#727273" }}/>
+                <span className="flex-1">My Profile</span>
               </MenuItem>
-              <MenuItem onClick={handleClose}>
-                <button onClick={handleLogOut}>
+              <Divider />
+              <MenuItem
+                onClick={handleClose}
+                sx={{
+                  minWidth: "150px",
+                  display: "flex",
+                  alignItems: "center",
+                  columnGap: "8px",
+                  color: "red",
+                }}
+              >
+                <LogoutIcon />
+                <button className="flex-1 text-left" onClick={() => setIsModalOpen(true)}>
                   Log Out
                 </button>
               </MenuItem>
             </Menu>
+
+            {/* Confirm logout */}
+            <ConfirmModal
+              isOpen={isModalOpen}
+              title="Confirmation Logout"
+              content="Are you sure want to log out?"
+              onClose={() => setIsModalOpen(false)}
+              onConfirm={handleLogOut}
+            />
           </div>
         )}
       </div>

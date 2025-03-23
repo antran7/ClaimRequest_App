@@ -129,14 +129,11 @@ const ProfilePage: React.FC = () => {
                   <Avatar
                     alt="Remy Sharp"
                     className='profile-avatar'
-                    src={employee?.avatar_url}
+                    src={employee.avatar_url}
                   />
-                  <div className='profile-login-session'>
-                    <h3>My profile</h3>
-                    <p>
-                      Last login 05 Mar 2024 14:36 <br />
-                      Windom 11 Pro Ho Chi Minh city (Viet Nam)
-                    </p>
+                  <div className='profile-bio'>
+                    <h3>{employee.full_name}</h3>
+                    <p>{employee.job_rank}</p>
                   </div>
                   <form
                     onSubmit={handleSubmit(onSubmit)} className='update-form'>
@@ -245,10 +242,10 @@ const ProfilePage: React.FC = () => {
               )}
             </div>
             <div className='profile-right-top-panel'>
-              <div className='create-update-title'>
+              <div className='profile-information-title'>
                 {employee ? (
                   <>
-                    <h3>Created & Updated</h3>
+                    <h3>Profile Information</h3>
                     <CalendarMonthOutlinedIcon />
                   </>
                 ) : (
@@ -263,22 +260,69 @@ const ProfilePage: React.FC = () => {
                   </div>
                 )}
               </div>
-              <div className='create-update-date'>
+              <div className='profile-information-content'>
                 {employee ? (
-                  <>
-                    <div>
-                      <h4>Created at</h4>
-                      <small>{formatDateToUTC7(user?.created_at)}</small>
+                  <div className='profile-information'>
+                    <div style={{ display: "flex", gap: "30px" }}>
+                      <div style={{ width: "50%" }}>
+                        <label>Phone number:</label>
+                        <input
+                          value={employee.phone || ''}
+                          readOnly
+                          style={{ width: "100%" }}
+                        />
+                      </div>
+                      <div style={{ width: "50%" }}>
+                        <label>Salary:</label>
+                        <input
+                          value={employee.salary || ''}
+                          readOnly
+                          style={{ width: "100%" }}
+                        />
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: "30px" }}>
+                      <div style={{ width: "50%" }}>
+                        <label>Start date:</label>
+                        <input
+                          value={formatDateToUTC7(employee.start_date) || ''}
+                          readOnly
+                          style={{ width: "100%" }}
+                        />
+                      </div>
+                      <div style={{ width: "50%" }}>
+                        <label>End date:</label>
+                        <input
+                          value={formatDateToUTC7(employee.end_date) || ''}
+                          readOnly
+                          style={{ width: "100%" }}
+                        />
+                      </div>
                     </div>
                     <div>
-                      <h4>Updated at</h4>
-                      <small>{formatDateToUTC7(user?.updated_at)}</small>
+                      <label>Address:</label>
+                      <input
+                        value={employee.address || ''}
+                        readOnly
+                        style={{ width: "100%" }}
+                      />
                     </div>
-                  </>
+                  </div>
                 ) : (
-                  <div>
-                    <Skeleton height={40} width={565} style={{ margin: "8px 0 25px" }} />
-                    <Skeleton height={40} width={565} />
+                  <div style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "20px"
+                  }}>
+                    <div style={{ display: "flex", gap: "30px" }}>
+                      <Skeleton height={60} width={270} />
+                      <Skeleton height={60} width={270} />
+                    </div>
+                    <div style={{ display: "flex", gap: "30px" }}>
+                      <Skeleton height={60} width={270} />
+                      <Skeleton height={60} width={270} />
+                    </div>
+                    <Skeleton height={60} width={570}/>
                   </div>
                 )}
               </div>
@@ -302,44 +346,44 @@ const ProfilePage: React.FC = () => {
                   </div>
                 )}
               </div>
-                <div id='projectsScrollDiv' className='my-projects-list'>
-                  <InfiniteScroll
-                    dataLength={myProjects.length}
-                    next={fetchProject}
-                    hasMore={hasMore}
-                    loader={
-                      <div style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        rowGap: "20px",
-                        width: "100%",
-                      }}>
-                        <Skeleton height={40} width="100%" />
-                        <Skeleton height={40} width="100%" />
-                        <Skeleton height={40} width="100%" />
-                        <Skeleton height={40} width="100%" />
-                      </div>
-                    }
-                    endMessage={
-                      <p style={{ textAlign: "center", marginTop: 10 }}>
-                        Đã hiển thị tất cả project
-                      </p>
-                    }
-                    scrollableTarget="projectsScrollDiv"
-                  >
-                    <List>
-                      {myProjects.map((project, index) => (
-                        <ListItem key={index} divider>
-                          <ListItemText
-                            primary={project.project_name}
-                            secondary={`Code: ${project.project_code}`}
-                          />
-                          <Button className='view-project-btn'>View detail</Button>
-                        </ListItem>
-                      ))}
-                    </List>
-                  </InfiniteScroll>
-                </div>
+              <div id='projectsScrollDiv' className='my-projects-list'>
+                <InfiniteScroll
+                  dataLength={myProjects.length}
+                  next={fetchProject}
+                  hasMore={hasMore}
+                  loader={
+                    <div style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      rowGap: "20px",
+                      width: "100%",
+                    }}>
+                      <Skeleton height={40} width="100%" />
+                      <Skeleton height={40} width="100%" />
+                      <Skeleton height={40} width="100%" />
+                      <Skeleton height={40} width="100%" />
+                    </div>
+                  }
+                  endMessage={
+                    <p style={{ textAlign: "center", marginTop: 10 }}>
+                      Đã hiển thị tất cả project
+                    </p>
+                  }
+                  scrollableTarget="projectsScrollDiv"
+                >
+                  <List>
+                    {myProjects.map((project, index) => (
+                      <ListItem key={index} divider>
+                        <ListItemText
+                          primary={project.project_name}
+                          secondary={`Code: ${project.project_code}`}
+                        />
+                        <Button className='view-project-btn'>View detail</Button>
+                      </ListItem>
+                    ))}
+                  </List>
+                </InfiniteScroll>
+              </div>
             </div>
           </div>
         </div>

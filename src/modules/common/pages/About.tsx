@@ -1,4 +1,4 @@
-import Footer from "../../../shared/components/Footer";
+import Footer from "../../../shared/components/layoutComponent/Footer";
 import Layout from "../../../shared/layouts/Layout"
 
 const About = () => {

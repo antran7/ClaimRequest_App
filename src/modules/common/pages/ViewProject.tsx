@@ -10,7 +10,7 @@ import { searchProjectWithData } from '../../admin/services/projectService'
 import { getEmployeeInfo } from '../../employee/services/employeeApi'
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import { debounce } from "lodash";
-import Footer from '../../../shared/components/Footer'
+import Footer from '../../../shared/components/layoutComponent/Footer'
 import { searchUsers } from '../../admin/services/userService'
 
 

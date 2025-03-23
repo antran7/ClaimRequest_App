@@ -9,26 +9,37 @@ import {
   ListItemIcon,
   ListItemText,
   Collapse,
-  patch,
 } from "@mui/material";
-import HouseIcon from "@mui/icons-material/House";
-import BadgeIcon from "@mui/icons-material/Badge";
-import RequestPageIcon from "@mui/icons-material/RequestPage";
-import BusinessRoundedIcon from "@mui/icons-material/BusinessRounded";
-import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
-import TaskIcon from "@mui/icons-material/Task";
-import AssignmentTurnedInRoundedIcon from "@mui/icons-material/AssignmentTurnedInRounded";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-import CheckBoxIcon from "@mui/icons-material/CheckBox";
-import PaidIcon from "@mui/icons-material/Paid";
+import { styled } from "@mui/material/styles"; // Import styled
 import { useNavigate } from "react-router-dom";
-import { Role } from "../constants/roles";
+import {
+  House as HouseIcon,
+  Badge as BadgeIcon,
+  RequestPage as RequestPageIcon,
+  BusinessRounded as BusinessRoundedIcon,
+  PeopleAltRounded as PeopleAltRoundedIcon,
+  Task as TaskIcon,
+  AssignmentTurnedInRounded as AssignmentTurnedInRoundedIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
+  CheckBox as CheckBoxIcon,
+  Paid as PaidIcon,
+} from "@mui/icons-material";
+import { Role } from "../../constants/roles";
 
 interface SideBarProps {
   isOpen: boolean;
   toggleSidebar: () => void;
 }
+
+const CustomListItemButton = styled(ListItemButton)({
+  "&:hover": {
+    background: "linear-gradient(to right, #dfdfdf, #D1D7F1)",
+    "& .MuiListItemIcon-root": {
+      color: "black",
+    },
+  },
+});
 
 const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
   const navigate = useNavigate();
@@ -37,21 +48,9 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
 
   const menuItems = [
     { text: "Home", icon: <HouseIcon />, path: "/" },
-    {
-      text: "Dashboard",
-      icon: <BadgeIcon />,
-      path: "/dashboard",
-    },
-    {
-      text: "View Project",
-      icon: <TaskIcon />,
-      path: "/viewprojects",
-    },
-    {
-      text: "My Claims",
-      icon: <RequestPageIcon />,
-      path: "/my-requests",
-    },
+    { text: "Dashboard", icon: <BadgeIcon />, path: "/dashboard" },
+    { text: "View Project", icon: <TaskIcon />, path: "/viewprojects" },
+    { text: "My Claims", icon: <RequestPageIcon />, path: "/my-requests" },
   ];
 
   const adminItems = [
@@ -59,16 +58,8 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
       text: "Management",
       icon: <BusinessRoundedIcon />,
       children: [
-        {
-          text: "Manage Staff",
-          icon: <PeopleAltRoundedIcon />,
-          path: "/admin/managestaff",
-        },
-        {
-          text: "Manage Project",
-          icon: <AssignmentTurnedInRoundedIcon />,
-          path: "/admin/manageproject",
-        },
+        { text: "Manage Staff", icon: <PeopleAltRoundedIcon />, path: "/admin/managestaff" },
+        { text: "Manage Project", icon: <AssignmentTurnedInRoundedIcon />, path: "/admin/manageproject" },
       ],
     },
   ];
@@ -81,31 +72,25 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
     },
   ];
 
-  const finaceItems = [
-    { text: "Paid Claims", icon: <PaidIcon />, path: "/finance/claims" },
-  ];
+  const financeItems = [{ 
+    text: "Paid Claims", 
+    icon: <PaidIcon />, 
+    path: "/finance/claims" 
+  }];
 
   const handleNavigation = (path: string) => {
     if (path === "/my-requests") {
       navigate("/user/my-requests");
+    } else if (path === "/dashboard") {
+      if (user?.role_code === "A004") navigate("/user/dashboard");
+      else if (user?.role_code === "A001") navigate("/admin/dashboard");
+      else if (user?.role_code === "A003") navigate("/approval/dashboard");
+      else navigate("/#");
     } else {
-      if (path === "/dashboard") {
-        if (user?.role_code === "A004") {
-          navigate("/user/dashboard");
-        } else if (user?.role_code === "A001") {
-          navigate("/admin/dashboard");
-        } else if (user?.role_code === "A003") {
-          navigate("/approval/dashboard");
-        } else {
-          navigate("/#");
-        }
-      } else {
-        navigate(path);
-      }
-      toggleSidebar();
+      navigate(path);
     }
+    toggleSidebar();
   };
-  useEffect(() => {}, []);
 
   return (
     <Drawer open={isOpen} onClose={toggleSidebar}>
@@ -113,10 +98,10 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
         <List>
           {menuItems.map(({ text, icon, path }) => (
             <ListItem key={text} disablePadding>
-              <ListItemButton onClick={() => handleNavigation(path)}>
+              <CustomListItemButton onClick={() => handleNavigation(path)}>
                 <ListItemIcon>{icon}</ListItemIcon>
                 <ListItemText primary={text} />
-              </ListItemButton>
+              </CustomListItemButton>
             </ListItem>
           ))}
         </List>
@@ -128,24 +113,21 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
             adminItems.map(({ text, icon, children }) => (
               <Box key={text}>
                 <ListItem disablePadding>
-                  <ListItemButton
-                    onClick={() => setOpenManagement(!openManagement)}
-                  >
+                  <CustomListItemButton onClick={() => setOpenManagement(!openManagement)}>
                     <ListItemIcon>{icon}</ListItemIcon>
                     <ListItemText primary={text} />
                     {openManagement ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                  </ListItemButton>
+                  </CustomListItemButton>
                 </ListItem>
 
-                {/* Hiển thị danh sách con nếu openManagement === true */}
                 <Collapse in={openManagement} timeout="auto" unmountOnExit>
                   <List component="div" disablePadding>
                     {children.map(({ text, icon, path }) => (
                       <ListItem key={text} disablePadding sx={{ pl: 1 }}>
-                        <ListItemButton onClick={() => handleNavigation(path)}>
+                        <CustomListItemButton onClick={() => handleNavigation(path)}>
                           <ListItemIcon>{icon}</ListItemIcon>
                           <ListItemText primary={text} />
-                        </ListItemButton>
+                        </CustomListItemButton>
                       </ListItem>
                     ))}
                   </List>
@@ -156,20 +138,20 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
           {user?.role_code === Role.APPROVER &&
             approvalItems.map(({ text, icon, path }) => (
               <ListItem key={text} disablePadding>
-                <ListItemButton onClick={() => handleNavigation(path)}>
+                <CustomListItemButton onClick={() => handleNavigation(path)}>
                   <ListItemIcon>{icon}</ListItemIcon>
                   <ListItemText primary={text} />
-                </ListItemButton>
+                </CustomListItemButton>
               </ListItem>
             ))}
 
           {user?.role_code === Role.FINANCE &&
-            finaceItems.map(({ text, icon, path }) => (
+            financeItems.map(({ text, icon, path }) => (
               <ListItem key={text} disablePadding>
-                <ListItemButton onClick={() => handleNavigation(path)}>
+                <CustomListItemButton onClick={() => handleNavigation(path)}>
                   <ListItemIcon>{icon}</ListItemIcon>
                   <ListItemText primary={text} />
-                </ListItemButton>
+                </CustomListItemButton>
               </ListItem>
             ))}
         </List>
