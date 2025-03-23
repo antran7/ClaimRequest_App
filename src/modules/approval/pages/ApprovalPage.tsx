@@ -132,7 +132,7 @@ const ApprovalPage: React.FC = () => {
             is_delete: false,
           },
           pageInfo: {
-            pageNum: page + 1, // Convert to 1-based for API
+            pageNum: page + 1,
             pageSize: rowsPerPage,
           },
         },
@@ -464,7 +464,7 @@ const ApprovalPage: React.FC = () => {
                               size="small"
                               color="error"
                               onClick={() => handleReject(claim._id)}
-                              sx={{ mr: 1, textTransform: "none" }}
+                              sx={{ mr: 1 }}
                             >
                               Reject
                             </Button>
