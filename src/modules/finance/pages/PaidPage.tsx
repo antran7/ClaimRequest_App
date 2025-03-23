@@ -728,10 +728,9 @@ const PaidPage = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Success/Error Snackbar */}
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={6000}
+        autoHideDuration={3000}
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
         sx={{ marginTop: "80px" }}
