@@ -9,14 +9,14 @@ interface PrivateRouteProps {
 const PrivateRoute = ({ allowedRoles }: PrivateRouteProps) => {
   const user = JSON.parse(localStorage.getItem("userData") || "{}");
   const [loading, setLoading] = useState(true);
-  
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
       setLoading(false);
     }
-  })
-  
+  });
+
   if (loading) {
     return <div>Loading...</div>;
   }

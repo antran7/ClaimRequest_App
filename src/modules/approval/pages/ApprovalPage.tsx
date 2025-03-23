@@ -22,6 +22,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import moment from "moment";
 import { IconButton } from "@mui/material";
@@ -68,6 +70,11 @@ const ApprovalPage: React.FC = () => {
   const [allClaims, setAllClaims] = useState<Claim[]>([]);
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success" as "success" | "error",
+  });
   const tableCellStyle = {
     borderRight: "2px solid rgba(224, 224, 224, 1)",
     borderBottom: "2px solid rgba(224, 224, 224, 1)",
@@ -210,6 +217,7 @@ const ApprovalPage: React.FC = () => {
       );
 
       if (response.data.success) {
+        // Cập nhật UI
         setFilteredClaims((prevClaims) =>
           prevClaims.map((claim) =>
             claim._id === currentClaimId
@@ -218,19 +226,34 @@ const ApprovalPage: React.FC = () => {
           )
         );
 
+        // Hiển thị thông báo thành công
+        setSnackbar({
+          open: true,
+          message: `Claim ${
+            currentAction === "Approved" ? "approved" : "rejected"
+          } successfully!`,
+          severity: "success",
+        });
+
         // Reset modal state
         setIsModalOpen(false);
         setModalReason("");
         setCurrentClaimId(null);
         setCurrentAction(null);
         setError(null);
+
+        // Refresh data
+        fetchClaims();
       }
     } catch (error: any) {
       console.error(`Error updating claim status:`, error);
-      setError(
-        error.response?.data?.message ||
-          "Failed to update claim status. Please try again."
-      );
+      setSnackbar({
+        open: true,
+        message:
+          error.response?.data?.message ||
+          "Failed to update claim status. Please try again.",
+        severity: "error",
+      });
     }
   };
 
@@ -244,6 +267,10 @@ const ApprovalPage: React.FC = () => {
 
   const formatDate = (dateString: string) => {
     return moment(dateString).format("DD/MM/YYYY");
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar((prev) => ({ ...prev, open: false }));
   };
 
   return (
@@ -565,6 +592,21 @@ const ApprovalPage: React.FC = () => {
           </DialogActions>
         </Dialog>
       </div>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        sx={{ marginTop: "80px" }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };

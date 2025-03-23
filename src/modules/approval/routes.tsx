@@ -1,4 +1,4 @@
-import { RouteObject } from "react-router-dom";
+import { Navigate, RouteObject } from "react-router-dom";
 import { Role } from "../../shared/constants/roles";
 import PrivateRoute from "../../shared/routes/PrivateRoute";
 import ApprovalDashboard from "./pages/ApprovalDashboard";
@@ -10,16 +10,20 @@ export const approvalRoutes: RouteObject[] = [
     element: <PrivateRoute allowedRoles={[Role.APPROVER]} />,
     children: [
       {
-        path: "claims",
+        path: "dashboard",
         element: <ApprovalDashboard />,
       },
       {
-        path: "dashboard",
+        path: "claims",
         element: <ApprovalDashboard />,
       },
       {
         path: "my-requests",
         element: <RequestPage />,
+      },
+      {
+        path: "",
+        element: <Navigate to="/approval/claims" replace />,
       },
     ],
   },
