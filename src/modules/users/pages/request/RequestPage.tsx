@@ -100,14 +100,27 @@ interface Approver {
   email: string;
 }
 
+interface ClaimLog {
+  _id: string;
+  claim_id: string;
+  old_status: string;
+  new_status: string;
+  updated_by: string;
+  updated_at: string;
+  comment: string;
+}
+
 const RequestPage = () => {
   const [requests, setRequests] = useState<Request[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [approvers, setApprovers] = useState<Approver[]>([]);
+  const [claimLogs, setClaimLogs] = useState<ClaimLog[]>([]);
   const [search, setSearch] = useState("");
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [isLogModalVisible, setIsLogModalVisible] = useState(false);
   const [currentRequest, setCurrentRequest] = useState<Request | null>(null);
+  const [selectedClaimId, setSelectedClaimId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [formValues, setFormValues] = useState<{
     claim_name: string;
@@ -181,14 +194,14 @@ const RequestPage = () => {
         `${API_URL}/claims/claimer-search`,
         {
           searchCondition: {
-            keyword: search, // Include the search keyword
+            keyword: search,
             claim_status: "",
             claim_start_date: "",
             claim_end_date: "",
             is_delete: false,
           },
           pageInfo: {
-            pageNum: page + 1, // API expects 1-based indexing
+            pageNum: page + 1,
             pageSize: rowsPerPage,
           },
         },
@@ -203,7 +216,7 @@ const RequestPage = () => {
         console.log("Fetched requests:", response.data.data.pageData);
         console.log("Total items:", response.data.data.pageInfo.totalItems);
         setRequests(response.data.data.pageData);
-        setTotalCount(response.data.data.pageInfo.totalItems); // Total items after search filter
+        setTotalCount(response.data.data.pageInfo.totalItems);
       } else {
         console.error("Failed to fetch requests:", response.data.message);
       }
@@ -218,7 +231,7 @@ const RequestPage = () => {
     if (userId && token) {
       fetchRequests();
     }
-  }, [userEmail, userId, token, page, rowsPerPage, search]); // Add search to dependencies
+  }, [userEmail, userId, token, page, rowsPerPage, search]);
 
   const fetchProjects = async () => {
     try {
@@ -319,16 +332,47 @@ const RequestPage = () => {
     }
   };
 
+  const fetchClaimLogs = async (claimId: string) => {
+    try {
+      console.log("Fetching logs for claimId:", claimId);
+      const response = await axios.post(
+        `${API_URL}/claim-logs/search`,
+        {
+          searchCondition: {
+            claim_id: claimId,
+            is_deleted: false,
+          },
+          pageInfo: {
+            pageNum: 1,
+            pageSize: 100,
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        console.log("Fetched claim logs:", response.data.data.pageData);
+        setClaimLogs(response.data.data.pageData);
+      } else {
+        console.error("Failed to fetch claim logs:", response.data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching claim logs:", error);
+    }
+  };
+
   const debouncedFetchApprovers = useCallback(debounce(fetchApprovers, 800), [token]);
 
-  // Ensure projects are fetched if not already present
   const ensureProjectsFetched = async () => {
     if (projects.length === 0 && userId) {
       await fetchProjects();
     }
   };
 
-  // Ensure approvers are fetched if not already present
   const ensureApproversFetched = async () => {
     if (approvers.length === 0) {
       await fetchApprovers("");
@@ -423,7 +467,6 @@ const RequestPage = () => {
       return;
     }
 
-    // Use the current request's values as defaults, and only update the fields that have changed
     const updatedClaimName = formValues.claim_name || currentRequest.claim_name;
     const updatedProjectId = formValues.project_id || currentRequest.project_id;
     const updatedApprovalId = formValues.approval_id || currentRequest.approval_id;
@@ -431,7 +474,6 @@ const RequestPage = () => {
     const updatedEndDate = formValues.claim_end_date || moment(currentRequest.claim_end_date);
     const updatedTotalWorkTime = formValues.total_work_time || currentRequest.total_work_time;
 
-    // Validate only the fields that are being updated
     if (updatedTotalWorkTime <= 0) {
       console.error("Total work time must be positive");
       alert("Total work time must be a positive number.");
@@ -508,14 +550,9 @@ const RequestPage = () => {
   };
 
   const handleEditClick = async (req: Request) => {
-    // Ensure projects and approvers are fetched before opening the modal
     await Promise.all([ensureProjectsFetched(), ensureApproversFetched()]);
-
-    // Use project_info and approval_info from the request to pre-populate the names
     const projectName = req.project_info?.project_name || "";
     const approverName = req.approval_info?.user_name || "";
-
-    // Set the form values with the current request's data as defaults
     setFormValues({
       claim_name: req.claim_name,
       project_id: req.project_id,
@@ -524,12 +561,8 @@ const RequestPage = () => {
       claim_end_date: moment(req.claim_end_date),
       total_work_time: req.total_work_time,
     });
-
-    // Set the display names for the project and approver
     setSelectedProjectName(projectName);
     setSelectedApproverName(approverName);
-
-    // Set the current request and open the modal
     setCurrentRequest(req);
     setIsEditModalVisible(true);
   };
@@ -583,10 +616,17 @@ const RequestPage = () => {
     }
   };
 
+  const handleViewLogs = (claimId: string) => {
+    setSelectedClaimId(claimId);
+    fetchClaimLogs(claimId);
+    setIsLogModalVisible(true);
+  };
+
   const handleModalCancel = () => {
     setIsAddModalVisible(false);
     setIsEditModalVisible(false);
     setIsDeleteModalVisible(false);
+    setIsLogModalVisible(false);
     setCurrentRequest(null);
     setFormValues({
       claim_name: "",
@@ -768,7 +808,7 @@ const RequestPage = () => {
                         </TableCell>
                         <TableCell
                           align="center"
-                          sx={{ ...tableCellStyle, minWidth: "250px" }}
+                          sx={{ ...tableCellStyle, minWidth: "300px" }}
                         >
                           <div className="action-buttons">
                             <Button
@@ -825,11 +865,27 @@ const RequestPage = () => {
                                   "&:hover": {
                                     backgroundColor: "#16a34a",
                                   },
+                                  mr: 1,
                                 }}
                               >
                                 Request Approval
                               </Button>
                             )}
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              onClick={() => handleViewLogs(req._id)}
+                              sx={{
+                                borderColor: "#6b7280",
+                                color: "#6b7280",
+                                "&:hover": {
+                                  borderColor: "#374151",
+                                  color: "#374151",
+                                },
+                              }}
+                            >
+                              View Logs
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -845,7 +901,7 @@ const RequestPage = () => {
                   onPageChange={(event, newPage) => setPage(newPage)}
                   onRowsPerPageChange={(event) => {
                     setRowsPerPage(parseInt(event.target.value, 10));
-                    setPage(0); // Reset to the first page when rows per page changes
+                    setPage(0);
                   }}
                   labelDisplayedRows={({ from, to, count }) => {
                     return `${from}-${to} of ${count}`;
@@ -1261,6 +1317,98 @@ const RequestPage = () => {
                 color="error"
               >
                 Confirm
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* Claim Logs Modal */}
+          <Dialog
+            open={isLogModalVisible}
+            onClose={() => setIsLogModalVisible(false)}
+            maxWidth="md"
+            fullWidth
+          >
+            <DialogTitle
+              sx={{
+                m: 0,
+                p: 2,
+                fontSize: "1.25rem",
+                position: "relative",
+                backgroundColor: "#f3f4f6",
+              }}
+            >
+              Claim Logs
+              <IconButton
+                aria-label="close"
+                onClick={() => setIsLogModalVisible(false)}
+                sx={{
+                  position: "absolute",
+                  right: 8,
+                  top: 8,
+                  color: (theme) => theme.palette.grey[500],
+                }}
+              >
+                <CloseIcon />
+              </IconButton>
+            </DialogTitle>
+            <DialogContent sx={{ p: 3 }}>
+              {claimLogs.length > 0 ? (
+                <TableContainer component={Paper}>
+                  <Table aria-label="claim logs table">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell align="center" sx={headerCellStyle}>
+                          Updated At
+                        </TableCell>
+                        <TableCell align="center" sx={headerCellStyle}>
+                          Status Before
+                        </TableCell>
+                        <TableCell align="center" sx={headerCellStyle}>
+                          Status After
+                        </TableCell>
+                        <TableCell align="center" sx={headerCellStyle}>
+                          Updated By
+                        </TableCell>
+                        <TableCell align="center" sx={headerCellStyle}>
+                          Comment
+                        </TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {claimLogs
+                        .sort((a, b) => moment(a.updated_at).diff(moment(b.updated_at)))
+                        .map((log) => (
+                          <TableRow key={log._id}>
+                            <TableCell align="center" sx={tableCellStyle}>
+                              {moment(log.updated_at).format("DD/MM/YYYY HH:mm:ss")}
+                            </TableCell>
+                            <TableCell align="center" sx={tableCellStyle}>
+                              {log.old_status}
+                            </TableCell>
+                            <TableCell align="center" sx={tableCellStyle}>
+                              {log.new_status}
+                            </TableCell>
+                            <TableCell align="center" sx={tableCellStyle}>
+                              {log.updated_by}
+                            </TableCell>
+                            <TableCell align="center" sx={tableCellStyle}>
+                              {log.comment || "N/A"}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              ) : (
+                <p>No logs available for this request.</p>
+              )}
+            </DialogContent>
+            <DialogActions sx={{ p: 3 }}>
+              <Button
+                onClick={() => setIsLogModalVisible(false)}
+                variant="outlined"
+              >
+                Close
               </Button>
             </DialogActions>
           </Dialog>
