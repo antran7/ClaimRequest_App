@@ -17,7 +17,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  CircularProgress,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -67,9 +66,7 @@ const ApprovalPage: React.FC = () => {
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [totalItems, setTotalItems] = useState<number>(0);
-  const [allClaims, setAllClaims] = useState<Claim[]>([]);
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
-  const [currentPage, setCurrentPage] = useState(1);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -464,7 +461,7 @@ const ApprovalPage: React.FC = () => {
                               size="small"
                               color="error"
                               onClick={() => handleReject(claim._id)}
-                              sx={{ mr: 1 }}
+                              sx={{ mr: 1, textTransform: "none" }}
                             >
                               Reject
                             </Button>
@@ -585,7 +582,7 @@ const ApprovalPage: React.FC = () => {
                 backgroundColor: "gray",
                 color: "white",
                 "&:hover": { backgroundColor: "darkgray" },
-                minWidth: "100px", // Tăng độ rộng tối thiểu của button
+                minWidth: "100px",
               }}
             >
               {currentAction === "Approved" ? "Approve" : "Submit"}
@@ -595,7 +592,7 @@ const ApprovalPage: React.FC = () => {
       </div>
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={6000}
+        autoHideDuration={3000}
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
         sx={{ marginTop: "80px" }}

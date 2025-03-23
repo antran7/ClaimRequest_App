@@ -8,8 +8,6 @@ import {
   TableCell,
   Paper,
   TextField,
-  IconButton,
-  Tooltip,
   TablePagination,
   Button,
   Dialog,
@@ -22,12 +20,16 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText,
+  FormControl,
+  Select,
+  InputLabel,
 } from "@mui/material";
 import {
   Search,
   Download,
   PictureAsPdf,
   TableChart,
+  AttachMoney,
 } from "@mui/icons-material";
 import axios from "axios";
 import "./PaidPage.css";
@@ -67,9 +69,12 @@ const PaidPage = () => {
   const [token, setToken] = useState("");
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>("Approved");
   const [downloadAnchorEl, setDownloadAnchorEl] = useState<null | HTMLElement>(
     null
   );
+  const [downloadAllAnchorEl, setDownloadAllAnchorEl] =
+    useState<null | HTMLElement>(null);
   const [selectedClaimForDownload, setSelectedClaimForDownload] =
     useState<Claim | null>(null);
   const [snackbar, setSnackbar] = useState({
@@ -112,10 +117,13 @@ const PaidPage = () => {
     try {
       setLoading(true);
       const response = await axios.post(
-        `${API_URL}/claims/finance-search`,
+        `${API_URL}/claims/search`,
         {
           searchCondition: {
-            keyword: debouncedSearchTerm || "", // Thay searchTerm bằng debouncedSearchTerm
+            keyword: debouncedSearchTerm || "",
+            claim_status: statusFilter, // Thêm status filter
+            claim_start_date: "",
+            claim_end_date: "",
             is_delete: false,
           },
           pageInfo: {
@@ -144,7 +152,12 @@ const PaidPage = () => {
   useEffect(() => {
     if (!token) return;
     fetchClaims();
-  }, [token, page, rowsPerPage, debouncedSearchTerm]);
+  }, [token, page, rowsPerPage, debouncedSearchTerm, statusFilter]);
+
+  const handleStatusFilterChange = (newStatus: string) => {
+    setStatusFilter(newStatus);
+    setPage(0);
+  };
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
@@ -345,6 +358,119 @@ const PaidPage = () => {
     handleDownloadClose();
   };
 
+  const handleDownloadAllClick = (event: React.MouseEvent<HTMLElement>) => {
+    setDownloadAllAnchorEl(event.currentTarget);
+  };
+
+  const handleDownloadAllClose = () => {
+    setDownloadAllAnchorEl(null);
+  };
+
+  // 4. Thêm functions để download all
+  const handleDownloadAllExcel = () => {
+    try {
+      const data = claims.map((claim) => ({
+        "Claim Name": claim.claim_name,
+        Project: claim.project_info
+          ? `${claim.project_info.project_name} (${claim.project_info.project_code})`
+          : "N/A",
+        Requester: claim.staff_name,
+        Role: claim.role_in_project || "N/A",
+        "Start Date": formatDate(claim.claim_start_date),
+        "End Date": formatDate(claim.claim_end_date),
+        "Total Hours": `${claim.total_work_time} hours`,
+        Status: claim.claim_status,
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "All Claims");
+      XLSX.writeFile(wb, `all-claims-${statusFilter.toLowerCase()}.xlsx`);
+
+      setSnackbar({
+        open: true,
+        message: "Excel file downloaded successfully!",
+        severity: "success",
+      });
+    } catch (error) {
+      console.error("Error creating Excel:", error);
+      setSnackbar({
+        open: true,
+        message: "Failed to create Excel file. Please try again.",
+        severity: "error",
+      });
+    }
+    handleDownloadAllClose();
+  };
+
+  const handleDownloadAllPDF = () => {
+    try {
+      const doc = new jsPDF({
+        orientation: "landscape",
+        unit: "pt",
+        format: "a4",
+      });
+
+      doc.setFontSize(16);
+      doc.text(`${statusFilter} Claims Report`, 40, 40);
+
+      const tableData = claims.map((claim) => [
+        claim.claim_name,
+        claim.project_info
+          ? `${claim.project_info.project_name} (${claim.project_info.project_code})`
+          : "N/A",
+        claim.staff_name,
+        claim.role_in_project || "N/A",
+        formatDate(claim.claim_start_date),
+        formatDate(claim.claim_end_date),
+        `${claim.total_work_time} hours`,
+        claim.claim_status,
+      ]);
+
+      autoTable(doc, {
+        startY: 60,
+        head: [
+          [
+            "Claim Name",
+            "Project",
+            "Requester",
+            "Role",
+            "Start Date",
+            "End Date",
+            "Hours",
+            "Status",
+          ],
+        ],
+        body: tableData,
+        theme: "grid",
+        headStyles: {
+          fillColor: [128, 128, 128],
+          textColor: [255, 255, 255],
+        },
+        styles: {
+          fontSize: 10,
+          cellPadding: 5,
+        },
+      });
+
+      doc.save(`all-claims-${statusFilter.toLowerCase()}.pdf`);
+
+      setSnackbar({
+        open: true,
+        message: "PDF file downloaded successfully!",
+        severity: "success",
+      });
+    } catch (error) {
+      console.error("Error creating PDF:", error);
+      setSnackbar({
+        open: true,
+        message: "Failed to create PDF file. Please try again.",
+        severity: "error",
+      });
+    }
+    handleDownloadAllClose();
+  };
+
   return (
     <Layout>
       <div className="min-h-screen bg-gray-100">
@@ -365,6 +491,38 @@ const PaidPage = () => {
                   startAdornment: <Search />,
                 }}
               />
+
+              <FormControl
+                variant="outlined"
+                size="small"
+                sx={{ minWidth: 200, ml: 2 }}
+              >
+                <InputLabel>Status</InputLabel>
+                <Select
+                  value={statusFilter}
+                  onChange={(e) => handleStatusFilterChange(e.target.value)}
+                  label="Status"
+                >
+                  <MenuItem value="Approved">Approved Claims</MenuItem>
+                  <MenuItem value="Paid">Paid Claims</MenuItem>
+                </Select>
+              </FormControl>
+
+              <Button
+                variant="contained"
+                size="small"
+                onClick={handleDownloadAllClick}
+                sx={{
+                  backgroundColor: "gray",
+                  color: "white",
+                  "&:hover": { backgroundColor: "darkgray" },
+                  textTransform: "none",
+                  ml: 2,
+                }}
+                startIcon={<Download />}
+              >
+                Download All
+              </Button>
             </div>
 
             {loading ? (
@@ -457,29 +615,50 @@ const PaidPage = () => {
                             sx={{ ...tableCellStyle, minWidth: "200px" }}
                           >
                             <div className="action-buttons">
-                              {claim.claim_status === "Approved" && (
+                              {claim.claim_status === "Approved" ? (
                                 <Button
                                   variant="contained"
-                                  size="small"
+                                  size="medium"
                                   sx={{
                                     backgroundColor: "gray",
                                     color: "white",
                                     "&:hover": { backgroundColor: "darkgray" },
                                     textTransform: "none",
+                                    padding: "8px 32px",
+                                    fontSize: "14px",
+                                    minWidth: "120px",
+                                    height: "30px",
+                                    width: "100px",
                                   }}
+                                  startIcon={<AttachMoney />}
                                   onClick={() => handleOpenConfirmDialog(claim)}
                                 >
                                   Paid
                                 </Button>
+                              ) : (
+                                claim.claim_status === "Paid" && (
+                                  <Button
+                                    variant="contained"
+                                    size="medium"
+                                    sx={{
+                                      backgroundColor: "gray",
+                                      color: "white",
+                                      "&:hover": {
+                                        backgroundColor: "darkgray",
+                                      },
+                                      textTransform: "none",
+                                      padding: "8px 16px",
+                                      fontSize: "14px",
+                                    }}
+                                    startIcon={<Download />}
+                                    onClick={(e) =>
+                                      handleDownloadClick(e, claim)
+                                    }
+                                  >
+                                    Download
+                                  </Button>
+                                )
                               )}
-                              <Tooltip title="Download">
-                                <IconButton
-                                  color="default"
-                                  onClick={(e) => handleDownloadClick(e, claim)}
-                                >
-                                  <Download />
-                                </IconButton>
-                              </Tooltip>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -549,10 +728,9 @@ const PaidPage = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Success/Error Snackbar */}
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={6000}
+        autoHideDuration={3000}
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
         sx={{ marginTop: "80px" }}
@@ -582,6 +760,25 @@ const PaidPage = () => {
             <PictureAsPdf fontSize="small" />
           </ListItemIcon>
           <ListItemText>Download PDF</ListItemText>
+        </MenuItem>
+      </Menu>
+
+      <Menu
+        anchorEl={downloadAllAnchorEl}
+        open={Boolean(downloadAllAnchorEl)}
+        onClose={handleDownloadAllClose}
+      >
+        <MenuItem onClick={handleDownloadAllExcel}>
+          <ListItemIcon>
+            <TableChart fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Download All as Excel</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={handleDownloadAllPDF}>
+          <ListItemIcon>
+            <PictureAsPdf fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Download All as PDF</ListItemText>
         </MenuItem>
       </Menu>
     </Layout>
