@@ -291,7 +291,7 @@ const ApprovalPage: React.FC = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="search-field"
-              placeholder="Search by name, requester, project..."
+              placeholder="Search by claim name"
             />
 
             <FormControl
@@ -453,6 +453,7 @@ const ApprovalPage: React.FC = () => {
                                 color: "white",
                                 "&:hover": { backgroundColor: "darkgray" },
                                 mr: 1,
+                                textTransform: "none",
                               }}
                               onClick={() => handleApprove(claim._id)}
                             >
@@ -463,7 +464,7 @@ const ApprovalPage: React.FC = () => {
                               size="small"
                               color="error"
                               onClick={() => handleReject(claim._id)}
-                              sx={{ mr: 1 }}
+                              sx={{ mr: 1, textTransform: "none" }}
                             >
                               Reject
                             </Button>
