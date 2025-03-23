@@ -5,7 +5,7 @@ import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 //Import từ thư viện bên ngoài
-import { CircleX, Eye } from "lucide-react";
+import { CircleX, Eye, Search } from "lucide-react";
 import {
   Button,
   Typography,
@@ -26,6 +26,11 @@ import {
   MenuItem,
   Pagination,
   Stack,
+  InputAdornment,
+  List,
+  ListItem,
+  ListItemText,
+  Paper,
 } from "@mui/material";
 import {
   Delete as DeleteIcon,
@@ -34,7 +39,7 @@ import {
 //Import các component dùng chung
 import Layout from "../../../shared/layouts/Layout";
 import BackButton from "../components/BackButton";
-import Search from "../../../shared/components/searchComponent/Search";
+import SearchComponent from "../../../shared/components/searchComponent/Search";
 import { searchUsers } from "../services/userService";
 import DepartmentSelect from "../components/DepartmentSelect";
 import useDebounce from "../../../shared/hooks/useDebounce";
@@ -57,17 +62,21 @@ const ProjectManagementPage: React.FC = () => {
   const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [userSearchTerm, setUserSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 500); // 500ms delay
+  const debouncedUserSearchTerm = useDebounce(userSearchTerm, 500); // 500ms delay
   const itemPerPage = 10;
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
     null
   );
+  const [showUserDropdown, setShowUserDropdown] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -90,14 +99,21 @@ const ProjectManagementPage: React.FC = () => {
     fetchProjects();
   }, [page, debouncedSearchTerm]);
 
+  useEffect(() => {
+    if (openDialog) {
+      fetchUsers();
+    }
+  }, [openDialog, debouncedUserSearchTerm]);
+
   const fetchUsers = async () => {
     try {
       const response = await searchUsers(
-        { keyword: "" },
-        { pageNum: 1, pageSize: 100 } // Fetch all users
+        { keyword: debouncedUserSearchTerm },
+        { pageNum: 1, pageSize: 100 }
       );
       if (response?.pageData) {
         setUsers(response.pageData);
+        setFilteredUsers(response.pageData);
       }
     } catch (error) {
       console.error("Failed to fetch users:", error);
@@ -245,6 +261,29 @@ const ProjectManagementPage: React.FC = () => {
     return date.toLocaleDateString();
   };
 
+  const handleUserSearch = (index: number, searchValue: string) => {
+    setUserSearchTerm(searchValue);
+    setShowUserDropdown(index);
+    
+    // Filter users based on search term
+    if (searchValue.trim() === '') {
+      setFilteredUsers(users);
+    } else {
+      const filtered = users.filter(
+        user => 
+          user.email.toLowerCase().includes(searchValue.toLowerCase()) ||
+          user.user_name.toLowerCase().includes(searchValue.toLowerCase())
+      );
+      setFilteredUsers(filtered);
+    }
+  };
+
+  const handleSelectUser = (index: number, user: User) => {
+    handleMemberChange(index, "user_id", user._id);
+    setShowUserDropdown(null);
+    setUserSearchTerm("");
+  };
+
   return (
     <Layout>
       <div className="min-h-screen bg-gray-100">
@@ -252,7 +291,7 @@ const ProjectManagementPage: React.FC = () => {
           <BackButton to="/admin/dashboard" />
           <div className="flex justify-between items-center mb-6 ">
             <Typography variant="h5" className="text-4xl">Project Management</Typography>
-            <Search onSearch={handleSearch} />
+            <SearchComponent onSearch={handleSearch} />
             <button
               title="Add New"
               className="group cursor-pointer outline-none hover:rotate-90 duration-300"
@@ -593,77 +632,114 @@ const ProjectManagementPage: React.FC = () => {
               {formik.values.project_members.map((member, index) => (
                 <div
                   key={index}
-                  className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200"
+                  className="grid grid-cols-1 gap-4 mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200"
                 >
-                  <FormControl fullWidth className="bg-white rounded-md">
-                    <InputLabel
-                      id={`user-select-label-${index}`}
-                      className="bg-white px-1"
-                    >
-                      User
-                    </InputLabel>
-                    <Select
-                      labelId={`user-select-label-${index}`}
-                      value={member.user_id}
-                      label="User"
-                      onChange={(e) =>
-                        handleMemberChange(index, "user_id", e.target.value)
-                      }
-                      className="rounded-md"
-                    >
-                      {users.map((user) => (
-                        <MenuItem key={user._id} value={user._id}>
-                          {user.user_name} ({user.email})
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-
-                  <FormControl
-                    fullWidth
-                    error={
-                      formik.touched.project_members?.[index]?.project_role &&
-                      Boolean(formik.errors.project_members?.[index]?.project_role)
-                    }
-                    className="bg-white rounded-md"
-                  >
-                    <InputLabel
-                      shrink
-                      id={`role-select-label-${index}`}
-                      className="bg-white px-1 text-gray-600"
-                    >
-                      Role
-                    </InputLabel>
-                    <div className="mt-2">
-                      <RoleSelect
-                        value={formik.values.project_members[index].project_role}
-                        onChange={(value) =>
-                          handleMemberChange(index, "project_role", value)
-                        }
-                        required
-                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="Select Role"
-                      />
+                  <div className="flex flex-row justify-between items-center">
+                    <div className="w-full pr-2">
+                      <div className="relative">
+                        <TextField
+                          fullWidth
+                          label="Search User"
+                          placeholder="Search by username or email"
+                          value={showUserDropdown === index ? userSearchTerm : users.find(u => u._id === member.user_id)?.user_name || ''}
+                          onChange={(e) => handleUserSearch(index, e.target.value)}
+                          onFocus={() => setShowUserDropdown(index)}
+                          className="bg-white rounded-md"
+                          InputProps={{
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                <Search size={20} />
+                              </InputAdornment>
+                            ),
+                          }}
+                        />
+                        {showUserDropdown === index && (
+                          <Paper 
+                            style={{
+                              position: 'absolute',
+                              zIndex: 1000,
+                              width: '100%',
+                              maxHeight: '200px',
+                              overflow: 'auto'
+                            }}
+                          >
+                            <List>
+                              {filteredUsers.length > 0 ? (
+                                filteredUsers.map((user) => (
+                                  <ListItem 
+                                    key={user._id}
+                                    onClick={() => handleSelectUser(index, user)}
+                                    divider
+                                    sx={{ cursor: 'pointer' }}
+                                  >
+                                    <ListItemText 
+                                      primary={user.user_name} 
+                                      secondary={user.email} 
+                                    />
+                                  </ListItem>
+                                ))
+                              ) : (
+                                <ListItem>
+                                  <ListItemText primary="No users found" />
+                                </ListItem>
+                              )}
+                            </List>
+                          </Paper>
+                        )}
+                      </div>
                     </div>
-                    {formik.touched.project_members?.[index]?.project_role &&
-                      formik.errors.project_members?.[index]?.project_role && (
-                        <p className="text-red-500 text-xs mt-1">
-                          {formik.errors.project_members[index].project_role as string}
-                        </p>
-                      )}
-                  </FormControl>
+                    <div className="flex-shrink-0">
+                      <Button
+                        color="error"
+                        onClick={() => handleRemoveMember(index)}
+                        disabled={formik.values.project_members.length <= 1}
+                        className="rounded-md"
+                        variant="outlined"
+                        size="small"
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  </div>
 
-                  <div className="flex items-center justify-end">
-                    <Button
-                      color="error"
-                      onClick={() => handleRemoveMember(index)}
-                      disabled={formik.values.project_members.length <= 1}
-                      className="rounded-md"
-                      variant="outlined"
-                      size="small"
+                  <div className="w-full">
+                    <FormControl
+                      fullWidth
+                      error={!!(
+                        formik.touched.project_members?.[index] && 
+                        formik.errors.project_members?.[index] && 
+                        typeof formik.errors.project_members[index] === 'object' &&
+                        'project_role' in (formik.errors.project_members[index] as any)
+                      )}
+                      className="bg-white rounded-md"
                     >
-                      Remove
-                    </Button>
+                      <InputLabel
+                        shrink
+                        id={`role-select-label-${index}`}
+                        className="bg-white px-1 text-gray-600"
+                      >
+                        Role
+                      </InputLabel>
+                      <div className="mt-2">
+                        <RoleSelect
+                          value={(formik.values.project_members[index] as any).project_role || ''}
+                          onChange={(value) =>
+                            handleMemberChange(index, "project_role", value)
+                          }
+                          required
+                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Select Role"
+                        />
+                      </div>
+                      {formik.touched.project_members?.[index] &&
+                        formik.errors.project_members?.[index] &&
+                        typeof formik.errors.project_members[index] === 'object' &&
+                        'project_role' in (formik.errors.project_members[index] as any) && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {(formik.errors.project_members[index] as any).project_role}
+                          </p>
+                        )}
+                    </FormControl>
                   </div>
                 </div>
               ))}

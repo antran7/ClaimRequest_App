@@ -64,11 +64,13 @@ const SideBar = ({ isOpen, toggleSidebar }: SideBarProps) => {
     },
   ];
 
-  const approvalItems = [{ 
-    text: "Approve Claims", 
-    icon: <CheckBoxIcon />, 
-    path: "/approval" 
-  }];
+  const approvalItems = [
+    {
+      text: "Approve Claims",
+      icon: <CheckBoxIcon />,
+      path: "/approval/claims",
+    },
+  ];
 
   const financeItems = [{ 
     text: "Paid Claims", 
