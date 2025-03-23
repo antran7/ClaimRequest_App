@@ -464,7 +464,7 @@ const ApprovalPage: React.FC = () => {
                               size="small"
                               color="error"
                               onClick={() => handleReject(claim._id)}
-                              sx={{ mr: 1 }}
+                              sx={{ mr: 1, textTransform: "none" }}
                             >
                               Reject
                             </Button>
