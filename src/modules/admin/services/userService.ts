@@ -11,9 +11,12 @@ export const searchUsers = async (
       pageInfo,
     });
 
-    console.log("Full API Response:", response.data); // ✅ Debug response
+    console.log("Full API Response:", response); // ✅ Debug response
 
-    return response.data; // ✅ Return the full response (not just users)
+    return response.data ?? {
+      pageData: [],
+      pageInfo: { pageNum: 1, pageSize: 10, totalItems: 0, totalPages: 1 },
+    };
   } catch (error) {
     console.error("Error fetching users:", error);
     return {
@@ -27,6 +30,9 @@ export const createUser = async (
   userData: Partial<User> & { password: string }
 ): Promise<User> => {
   const response = await apiService.post<User>("/users", userData);
+  if (!response || !response.data) {
+    return {} as User; // Giá trị mặc định tránh lỗi
+  }
   return response.data;
 };
 
@@ -35,6 +41,9 @@ export const updateUser = async (
   userData: Pick<User, "email" | "user_name">
 ): Promise<User> => {
   const response = await apiService.put<User>(`/users/${userId}`, userData);
+  if (!response || !response.data) {
+    return {} as User; // Giá trị mặc định tránh lỗi
+  }
   return response.data;
 };
 
@@ -52,6 +61,11 @@ export const deleteUser = async (userId: string) => {
 export const fetchUser = async (userId: string): Promise<User> => {
   try {
     const response = await apiService.get<User>(`/users/${userId}`);
+    
+    if (!response || !response.data) {
+      throw new Error(`User with ID: ${userId} not found`);
+    }
+    
     return response.data;
   } catch (error) {
     console.error(`Failed to fetch user with ID: ${userId}`, error);
@@ -82,7 +96,7 @@ export const getEmployeeById = async (userId: string) => {
       throw new Error("Employee data is empty or not found");
     } 
     return response.data; // Extract employee data from response
-  } catch (error) {
+  } catch (error: any) {
     console.error(`Failed to fetch employee with ID: ${userId}`, error);
     throw error;
   }
@@ -92,7 +106,7 @@ export const updateEmployee = async (userId: string, employeeData: object) => {
   try {
     const response = await apiService.put(`/employees/${userId}`, employeeData);
     console.log("API Response:", response);
-  } catch (error) {
+  } catch (error: any) {
     console.error("API Error:", error.response?.data || error);
     throw error;
   }

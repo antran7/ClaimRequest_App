@@ -15,8 +15,6 @@ import {
   TextField,
   FormControl,
   InputLabel,
-  Select,
-  MenuItem,
   InputAdornment,
   List,
   ListItem,
@@ -185,7 +183,7 @@ const ProjectDetail = () => {
         ...updatedMembers[index],
         _id: value,
         user_id: value, // Thêm user_id
-        user_name: selectedUser?.user_name,
+        user_name: selectedUser?.user_name || "",
         email: selectedUser?.email,
         project_role: updatedMembers[index].project_role || "",
       };

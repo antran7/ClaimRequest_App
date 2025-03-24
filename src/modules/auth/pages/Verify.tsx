@@ -35,7 +35,7 @@ const VerifyPage: React.FC = () => {
         setTimeout(() => {
           navigate("/login");
         }, 2000);
-      } catch (error) {
+      } catch (error: any) {
         toast(error.toString(), {
           icon: "❌",
         });
@@ -73,7 +73,7 @@ const VerifyPage: React.FC = () => {
       toast("Please check your email to receive new tokens.", {
         icon: "🔥",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast(error.toString(), {
         icon: "❌",
       });

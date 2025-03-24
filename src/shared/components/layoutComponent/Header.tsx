@@ -15,12 +15,13 @@ interface HeaderProps {
 
 const Header = ({ toggleSidebar = () => { } }: HeaderProps) => {
   const navigate = useNavigate();
-  const [anchorEl, setAnchorEl] = React.useState(null);
+  const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
+
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const token = localStorage.getItem("token") || null;
 
-  const handleMenu = (event) => {
+  const handleMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
   };
 
@@ -108,7 +109,7 @@ const Header = ({ toggleSidebar = () => { } }: HeaderProps) => {
                   columnGap: "8px",
                 }}
               >
-                <AccountCircleIcon sx={{ color: "#727273" }}/>
+                <AccountCircleIcon sx={{ color: "#727273" }} />
                 <span className="flex-1">My Profile</span>
               </MenuItem>
               <Divider />

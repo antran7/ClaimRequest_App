@@ -24,6 +24,9 @@ interface EmployeeData {
 export const getEmployeeInfo = async (_id: string): Promise<EmployeeData> => {
     try {
         const response = await apiService.get<EmployeeData>(`/employees/${_id}`);
+        if (!response.data) {
+            throw new Error("No employee data!");
+        }
         return response.data;
     } catch (error) {
         console.error("Error: ", error);
@@ -33,7 +36,7 @@ export const getEmployeeInfo = async (_id: string): Promise<EmployeeData> => {
 
 export const updateEmployeeInfo = async (_id: string): Promise<void> => {
     try {
-        const response = await apiService.put<EmployeeData>(`/employees/${_id}`);
+        await apiService.put<EmployeeData>(`/employees/${_id}`);
     } catch (error) {
         console.error("Error: ", error);
         throw error;

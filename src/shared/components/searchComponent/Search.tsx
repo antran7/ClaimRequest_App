@@ -1,9 +1,13 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
-const Search = ({ onSearch }) => {
+interface SearchProps {
+  onSearch: (value: string) => void;
+}
+
+const Search: React.FC<SearchProps> = ({ onSearch }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
     onSearch(value);

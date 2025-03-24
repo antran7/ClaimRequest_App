@@ -2,16 +2,16 @@ import React, { useCallback, useEffect } from 'react'
 import './ViewProjects.css'
 import Layout from '../../../shared/layouts/Layout'
 import Search from '../../../shared/components/searchComponent/Search'
-import { Autocomplete, Avatar, AvatarGroup, Button, Grid, InputLabel, Pagination, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableSortLabel, TextField, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material'
+import { Autocomplete, Button, Grid, InputLabel, Pagination, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableSortLabel, TextField, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material'
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { useForm } from 'react-hook-form'
 import { searchProjectWithData } from '../../admin/services/projectService'
-import { getEmployeeInfo } from '../../employee/services/employeeApi'
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import { debounce } from "lodash";
 import Footer from '../../../shared/components/layoutComponent/Footer'
 import { searchUsers } from '../../admin/services/userService'
+import { User } from '../../admin/types/user'
 
 
 interface SearchFormInputs {
@@ -42,26 +42,11 @@ interface ProjectData {
             employee_id: string,
             user_name: string,
             full_name: string,
-            avatar_url: string;
         }
     ]
 }
 
-interface UserData {
-    _id: string,
-    email: string,
-    user_name: string,
-    role_code: string,
-    is_verified: boolean,
-    is_blocked: boolean,
-    is_deleted: boolean,
-    created_at: string,
-    updated_at: string,
-    _v: number,
-    token_version: number
-}
-
-type Order = "asc" | "desc";
+// type Order = "asc" | "desc";
 
 const ViewProject: React.FC = () => {
     const [alignment, setAlignment] = React.useState('basic');
@@ -70,12 +55,12 @@ const ViewProject: React.FC = () => {
     const [curPage, setCurPage] = React.useState(1);
     const [totalPages, setTotalPages] = React.useState(1);
     const [totalItems, setTotalItems] = React.useState(0);
-    const [order, setOrder] = React.useState<Order>("asc");
-    const [orderBy, setOrderBy] = React.useState<{ key: keyof ProjectData, order: "asc" | "dsc" }[]>([]);
+    // const [order, setOrder] = React.useState<Order>("asc");
+    const [orderBy, setOrderBy] = React.useState<{ key: keyof ProjectData, order: "asc" | "desc" }[]>([]);
     // dành cho tìm user
     const [inputValue, setInputValue] = React.useState("");
-    const [selectedUser, setSelectedUser] = React.useState<UserData>(null);
-    const [filteredUsers, setFilteredUsers] = React.useState<UserData[]>([]);
+    const [selectedUser, setSelectedUser] = React.useState<User | null>(null);
+    const [filteredUsers, setFilteredUsers] = React.useState<User[]>([]);
 
     const {
         register,
@@ -132,20 +117,29 @@ const ViewProject: React.FC = () => {
         });
     };
 
-    const handleChange = (event, newAlignment: string) => {
+    const handleChange = (_event: React.ChangeEvent<unknown>, newAlignment: string) => {
         setAlignment(newAlignment);
     };
 
     const sortedRows = [...results].sort((a, b) => {
         for (const sortRule of orderBy) {
-            if (a[sortRule.key] < b[sortRule.key]) return sortRule.order === "asc" ? -1 : 1;
-            if (a[sortRule.key] > b[sortRule.key]) return sortRule.order === "asc" ? 1 : -1;
+            const valueA = a?.[sortRule.key];
+            const valueB = b?.[sortRule.key];
+
+            // Kiểm tra nếu một trong hai giá trị bị null hoặc undefined
+            if (valueA == null && valueB == null) return 0;
+            if (valueA == null) return 1; // Đẩy giá trị null xuống cuối
+            if (valueB == null) return -1; // Đẩy giá trị null lên đầu
+
+            // So sánh khi cả hai đều có giá trị hợp lệ
+            if (valueA > valueB) return sortRule.order === "asc" ? 1 : -1;
+            if (valueA < valueB) return sortRule.order === "asc" ? -1 : 1;
         }
         return 0;
     });
 
     const debounceSearchProject = useCallback(debounce(() => handleSubmitSearch(), 1000), []);
-    const debounceSearchUser = useCallback(debounce((text) => handleSearchUsers(text), 1000), []);
+    const debounceSearchUser = useCallback(debounce((text: string) => handleSearchUsers(text), 1000), []);
 
     const handleSearch = async (searchTerm: string) => {
         setValue("searchTerm", searchTerm);
@@ -267,14 +261,14 @@ const ViewProject: React.FC = () => {
                                 options={filteredUsers}
                                 getOptionLabel={(option) => option.user_name}
                                 value={selectedUser}
-                                onChange={(event, newValue) => {
-                                    setSelectedUser(newValue);
+                                onChange={(_, newValue) => {
+                                    setSelectedUser(newValue as User);
                                     setValue("user_id", newValue ? newValue._id : "");
                                     trigger("user_id");
                                     handleSubmitSearch();
                                 }}
                                 inputValue={inputValue}
-                                onInputChange={(event, newInputValue) => {
+                                onInputChange={(_, newInputValue) => {
                                     setInputValue(newInputValue);
                                     debounceSearchUser(newInputValue);
                                 }}
@@ -365,8 +359,8 @@ const ViewProject: React.FC = () => {
                                 <TableCell sx={{ width: "15%" }}>
                                     <TableSortLabel
                                         IconComponent={UnfoldMoreIcon}
-                                        active={orderBy === "project_name"}
-                                        direction={orderBy === "project_name" ? order : "asc"}
+                                        active={orderBy.some(o => o.key === "project_name")}
+                                        direction={orderBy.find(o => o.key === "project_name")?.order === "desc" ? "desc" : "asc"}
                                         onClick={() => handleSort("project_name")}
                                         sx={{
                                             "& .MuiTableSortLabel-icon": { opacity: 1 },
@@ -378,8 +372,8 @@ const ViewProject: React.FC = () => {
                                 <TableCell sx={{ width: "15%" }}>
                                     <TableSortLabel
                                         IconComponent={UnfoldMoreIcon}
-                                        active={orderBy === "project_code"}
-                                        direction={orderBy === "project_code" ? order : "asc"}
+                                        active={orderBy.some(o => o.key === "project_code")}
+                                        direction={orderBy.find(o => o.key === "project_code")?.order === "desc" ? "desc" : "asc"}
                                         onClick={() => handleSort("project_code")}
                                         sx={{
                                             "& .MuiTableSortLabel-icon": { opacity: 1 },
@@ -391,8 +385,8 @@ const ViewProject: React.FC = () => {
                                 <TableCell sx={{ width: "10%" }}>
                                     <TableSortLabel
                                         IconComponent={UnfoldMoreIcon}
-                                        active={orderBy === "project_start_date"}
-                                        direction={orderBy === "project_start_date" ? order : "asc"}
+                                        active={orderBy.some(o => o.key === "project_start_date")}
+                                        direction={orderBy.find(o => o.key === "project_start_date")?.order === "desc" ? "desc" : "asc"}
                                         onClick={() => handleSort("project_start_date")}
                                         sx={{
                                             "& .MuiTableSortLabel-icon": { opacity: 1 },
@@ -404,8 +398,8 @@ const ViewProject: React.FC = () => {
                                 <TableCell sx={{ width: "10%" }}>
                                     <TableSortLabel
                                         IconComponent={UnfoldMoreIcon}
-                                        active={orderBy === "project_end_date"}
-                                        direction={orderBy === "project_end_date" ? order : "asc"}
+                                        active={orderBy.some(o => o.key === "project_end_date")}
+                                        direction={orderBy.find(o => o.key === "project_end_date")?.order === "desc" ? "desc" : "asc"}
                                         onClick={() => handleSort("project_end_date")}
                                         sx={{
                                             "& .MuiTableSortLabel-icon": { opacity: 1 },

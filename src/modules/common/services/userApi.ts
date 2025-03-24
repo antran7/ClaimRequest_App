@@ -16,17 +16,17 @@ interface UserData {
 
 export const updateInfo = async (_id: string, updateData: { email: string; user_name: string }): Promise<void> => {
     try {
-        const response = await apiService.put<UserData>(`/users/${_id}`, updateData)
-    }catch (error) {
+        await apiService.put<UserData>(`/users/${_id}`, updateData)
+    } catch (error) {
         console.error("Error: ", error);
         throw error;
     }
 }
 
-export const updatePassword = async (updateData: {old_password: string; new_password: string}): Promise<void> => {
+export const updatePassword = async (updateData: { old_password: string; new_password: string }): Promise<void> => {
     try {
-        const response = await apiService.put('/users/change-password', updateData);
-    }catch (error) {
+        await apiService.put('/users/change-password', updateData);
+    } catch (error) {
         console.error("Error: ", error);
         throw error;
     }
