@@ -8,9 +8,6 @@ import {
   TableCell,
   Paper,
   TextField,
-  Typography,
-  IconButton,
-  Tooltip,
   TablePagination,
   Button,
   Dialog,
@@ -19,12 +16,28 @@ import {
   DialogActions,
   Snackbar,
   Alert,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
+  FormControl,
+  Select,
+  InputLabel,
 } from "@mui/material";
-import { Search, Download, AttachMoney } from "@mui/icons-material";
+import {
+  Search,
+  Download,
+  PictureAsPdf,
+  TableChart,
+  AttachMoney,
+} from "@mui/icons-material";
 import axios from "axios";
 import "./PaidPage.css";
 import moment from "moment";
 import Layout from "../../../shared/layouts/Layout";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 interface Claim {
   _id: string;
@@ -47,6 +60,7 @@ const API_URL = "https://management-claim-request.vercel.app/api";
 
 const PaidPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [claims, setClaims] = useState<Claim[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
@@ -55,6 +69,14 @@ const PaidPage = () => {
   const [token, setToken] = useState("");
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>("Approved");
+  const [downloadAnchorEl, setDownloadAnchorEl] = useState<null | HTMLElement>(
+    null
+  );
+  const [downloadAllAnchorEl, setDownloadAllAnchorEl] =
+    useState<null | HTMLElement>(null);
+  const [selectedClaimForDownload, setSelectedClaimForDownload] =
+    useState<Claim | null>(null);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -83,14 +105,25 @@ const PaidPage = () => {
     }
   }, []);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   const fetchClaims = async () => {
     try {
       setLoading(true);
       const response = await axios.post(
-        `${API_URL}/claims/finance-search`,
+        `${API_URL}/claims/search`,
         {
           searchCondition: {
-            keyword: searchTerm || "",
+            keyword: debouncedSearchTerm || "",
+            claim_status: statusFilter, // Thêm status filter
+            claim_start_date: "",
+            claim_end_date: "",
             is_delete: false,
           },
           pageInfo: {
@@ -119,7 +152,12 @@ const PaidPage = () => {
   useEffect(() => {
     if (!token) return;
     fetchClaims();
-  }, [token, page, rowsPerPage, searchTerm]);
+  }, [token, page, rowsPerPage, debouncedSearchTerm, statusFilter]);
+
+  const handleStatusFilterChange = (newStatus: string) => {
+    setStatusFilter(newStatus);
+    setPage(0);
+  };
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
@@ -191,6 +229,248 @@ const PaidPage = () => {
     return moment(dateString).format("DD/MM/YYYY");
   };
 
+  const handleDownloadClick = (
+    event: React.MouseEvent<HTMLElement>,
+    claim: Claim
+  ) => {
+    setDownloadAnchorEl(event.currentTarget);
+    setSelectedClaimForDownload(claim);
+  };
+
+  const handleDownloadClose = () => {
+    setDownloadAnchorEl(null);
+    setSelectedClaimForDownload(null);
+  };
+
+  const handleDownloadExcel = () => {
+    try {
+      if (!selectedClaimForDownload) return;
+
+      // Chuẩn bị dữ liệu cho file Excel
+      const data = [
+        {
+          "Claim Name": selectedClaimForDownload.claim_name,
+          Project: selectedClaimForDownload.project_info
+            ? `${selectedClaimForDownload.project_info.project_name} (${selectedClaimForDownload.project_info.project_code})`
+            : "N/A",
+          Requester: selectedClaimForDownload.staff_name,
+          Role: selectedClaimForDownload.role_in_project || "N/A",
+          "Start Date": formatDate(selectedClaimForDownload.claim_start_date),
+          "End Date": formatDate(selectedClaimForDownload.claim_end_date),
+          "Total Hours": `${selectedClaimForDownload.total_work_time} hours`,
+          Status: selectedClaimForDownload.claim_status,
+        },
+      ];
+
+      // Tạo worksheet
+      const ws = XLSX.utils.json_to_sheet(data);
+
+      // Tạo workbook
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Claim Details");
+
+      // Download file
+      XLSX.writeFile(wb, `claim-${selectedClaimForDownload.claim_name}.xlsx`);
+
+      setSnackbar({
+        open: true,
+        message: "Excel file downloaded successfully!",
+        severity: "success",
+      });
+    } catch (error) {
+      console.error("Error creating Excel:", error);
+      setSnackbar({
+        open: true,
+        message: "Failed to create Excel file. Please try again.",
+        severity: "error",
+      });
+    }
+    handleDownloadClose();
+  };
+
+  const handleDownloadPDF = () => {
+    try {
+      if (!selectedClaimForDownload) return;
+
+      // Tạo PDF document với orientation là portrait và đơn vị là pt
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "pt",
+        format: "a4",
+      });
+
+      // Thêm tiêu đề
+      doc.setFontSize(16);
+      doc.text("Claim Details", 40, 40);
+
+      // Chuẩn bị dữ liệu cho bảng
+      const data = [
+        ["Claim Name", selectedClaimForDownload.claim_name],
+        [
+          "Project",
+          selectedClaimForDownload.project_info
+            ? `${selectedClaimForDownload.project_info.project_name} (${selectedClaimForDownload.project_info.project_code})`
+            : "N/A",
+        ],
+        ["Requester", selectedClaimForDownload.staff_name],
+        ["Role", selectedClaimForDownload.role_in_project || "N/A"],
+        ["Start Date", formatDate(selectedClaimForDownload.claim_start_date)],
+        ["End Date", formatDate(selectedClaimForDownload.claim_end_date)],
+        ["Total Hours", `${selectedClaimForDownload.total_work_time} hours`],
+        ["Status", selectedClaimForDownload.claim_status],
+      ];
+
+      // Sử dụng autoTable
+      autoTable(doc, {
+        startY: 60,
+        head: [["Field", "Value"]],
+        body: data,
+        theme: "grid",
+        headStyles: {
+          fillColor: [128, 128, 128],
+          textColor: [255, 255, 255],
+        },
+        styles: {
+          fontSize: 12,
+          cellPadding: 8,
+        },
+        columnStyles: {
+          0: { fontStyle: "bold" },
+        },
+      });
+
+      // Download file
+      doc.save(`claim-${selectedClaimForDownload.claim_name}.pdf`);
+
+      setSnackbar({
+        open: true,
+        message: "PDF file downloaded successfully!",
+        severity: "success",
+      });
+    } catch (error) {
+      console.error("Error creating PDF:", error);
+      setSnackbar({
+        open: true,
+        message: "Failed to create PDF file. Please try again.",
+        severity: "error",
+      });
+    }
+    handleDownloadClose();
+  };
+
+  const handleDownloadAllClick = (event: React.MouseEvent<HTMLElement>) => {
+    setDownloadAllAnchorEl(event.currentTarget);
+  };
+
+  const handleDownloadAllClose = () => {
+    setDownloadAllAnchorEl(null);
+  };
+
+  // 4. Thêm functions để download all
+  const handleDownloadAllExcel = () => {
+    try {
+      const data = claims.map((claim) => ({
+        "Claim Name": claim.claim_name,
+        Project: claim.project_info
+          ? `${claim.project_info.project_name} (${claim.project_info.project_code})`
+          : "N/A",
+        Requester: claim.staff_name,
+        Role: claim.role_in_project || "N/A",
+        "Start Date": formatDate(claim.claim_start_date),
+        "End Date": formatDate(claim.claim_end_date),
+        "Total Hours": `${claim.total_work_time} hours`,
+        Status: claim.claim_status,
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "All Claims");
+      XLSX.writeFile(wb, `all-claims-${statusFilter.toLowerCase()}.xlsx`);
+
+      setSnackbar({
+        open: true,
+        message: "Excel file downloaded successfully!",
+        severity: "success",
+      });
+    } catch (error) {
+      console.error("Error creating Excel:", error);
+      setSnackbar({
+        open: true,
+        message: "Failed to create Excel file. Please try again.",
+        severity: "error",
+      });
+    }
+    handleDownloadAllClose();
+  };
+
+  const handleDownloadAllPDF = () => {
+    try {
+      const doc = new jsPDF({
+        orientation: "landscape",
+        unit: "pt",
+        format: "a4",
+      });
+
+      doc.setFontSize(16);
+      doc.text(`${statusFilter} Claims Report`, 40, 40);
+
+      const tableData = claims.map((claim) => [
+        claim.claim_name,
+        claim.project_info
+          ? `${claim.project_info.project_name} (${claim.project_info.project_code})`
+          : "N/A",
+        claim.staff_name,
+        claim.role_in_project || "N/A",
+        formatDate(claim.claim_start_date),
+        formatDate(claim.claim_end_date),
+        `${claim.total_work_time} hours`,
+        claim.claim_status,
+      ]);
+
+      autoTable(doc, {
+        startY: 60,
+        head: [
+          [
+            "Claim Name",
+            "Project",
+            "Requester",
+            "Role",
+            "Start Date",
+            "End Date",
+            "Hours",
+            "Status",
+          ],
+        ],
+        body: tableData,
+        theme: "grid",
+        headStyles: {
+          fillColor: [128, 128, 128],
+          textColor: [255, 255, 255],
+        },
+        styles: {
+          fontSize: 10,
+          cellPadding: 5,
+        },
+      });
+
+      doc.save(`all-claims-${statusFilter.toLowerCase()}.pdf`);
+
+      setSnackbar({
+        open: true,
+        message: "PDF file downloaded successfully!",
+        severity: "success",
+      });
+    } catch (error) {
+      console.error("Error creating PDF:", error);
+      setSnackbar({
+        open: true,
+        message: "Failed to create PDF file. Please try again.",
+        severity: "error",
+      });
+    }
+    handleDownloadAllClose();
+  };
+
   return (
     <Layout>
       <div className="min-h-screen bg-gray-100">
@@ -206,11 +486,43 @@ const PaidPage = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="search-field"
-                placeholder="Search by name, requester, project..."
+                placeholder="Search by claim name"
                 InputProps={{
                   startAdornment: <Search />,
                 }}
               />
+
+              <FormControl
+                variant="outlined"
+                size="small"
+                sx={{ minWidth: 200, ml: 2 }}
+              >
+                <InputLabel>Status</InputLabel>
+                <Select
+                  value={statusFilter}
+                  onChange={(e) => handleStatusFilterChange(e.target.value)}
+                  label="Status"
+                >
+                  <MenuItem value="Approved">Approved Claims</MenuItem>
+                  <MenuItem value="Paid">Paid Claims</MenuItem>
+                </Select>
+              </FormControl>
+
+              <Button
+                variant="contained"
+                size="small"
+                onClick={handleDownloadAllClick}
+                sx={{
+                  backgroundColor: "gray",
+                  color: "white",
+                  "&:hover": { backgroundColor: "darkgray" },
+                  textTransform: "none",
+                  ml: 2,
+                }}
+                startIcon={<Download />}
+              >
+                Download All
+              </Button>
             </div>
 
             {loading ? (
@@ -303,25 +615,50 @@ const PaidPage = () => {
                             sx={{ ...tableCellStyle, minWidth: "200px" }}
                           >
                             <div className="action-buttons">
-                              {claim.claim_status === "Approved" && (
+                              {claim.claim_status === "Approved" ? (
                                 <Button
                                   variant="contained"
-                                  size="small"
+                                  size="medium"
                                   sx={{
                                     backgroundColor: "gray",
                                     color: "white",
                                     "&:hover": { backgroundColor: "darkgray" },
+                                    textTransform: "none",
+                                    padding: "8px 32px",
+                                    fontSize: "14px",
+                                    minWidth: "120px",
+                                    height: "30px",
+                                    width: "100px",
                                   }}
+                                  startIcon={<AttachMoney />}
                                   onClick={() => handleOpenConfirmDialog(claim)}
                                 >
-                                  Mark as Paid
+                                  Paid
                                 </Button>
+                              ) : (
+                                claim.claim_status === "Paid" && (
+                                  <Button
+                                    variant="contained"
+                                    size="medium"
+                                    sx={{
+                                      backgroundColor: "gray",
+                                      color: "white",
+                                      "&:hover": {
+                                        backgroundColor: "darkgray",
+                                      },
+                                      textTransform: "none",
+                                      padding: "8px 16px",
+                                      fontSize: "14px",
+                                    }}
+                                    startIcon={<Download />}
+                                    onClick={(e) =>
+                                      handleDownloadClick(e, claim)
+                                    }
+                                  >
+                                    Download
+                                  </Button>
+                                )
                               )}
-                              <Tooltip title="Download">
-                                <IconButton color="default">
-                                  <Download />
-                                </IconButton>
-                              </Tooltip>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -391,10 +728,9 @@ const PaidPage = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Success/Error Snackbar */}
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={6000}
+        autoHideDuration={3000}
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
         sx={{ marginTop: "80px" }}
@@ -407,6 +743,44 @@ const PaidPage = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      <Menu
+        anchorEl={downloadAnchorEl}
+        open={Boolean(downloadAnchorEl)}
+        onClose={handleDownloadClose}
+      >
+        <MenuItem onClick={handleDownloadExcel}>
+          <ListItemIcon>
+            <TableChart fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Download Excel</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={handleDownloadPDF}>
+          <ListItemIcon>
+            <PictureAsPdf fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Download PDF</ListItemText>
+        </MenuItem>
+      </Menu>
+
+      <Menu
+        anchorEl={downloadAllAnchorEl}
+        open={Boolean(downloadAllAnchorEl)}
+        onClose={handleDownloadAllClose}
+      >
+        <MenuItem onClick={handleDownloadAllExcel}>
+          <ListItemIcon>
+            <TableChart fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Download All as Excel</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={handleDownloadAllPDF}>
+          <ListItemIcon>
+            <PictureAsPdf fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Download All as PDF</ListItemText>
+        </MenuItem>
+      </Menu>
     </Layout>
   );
 };

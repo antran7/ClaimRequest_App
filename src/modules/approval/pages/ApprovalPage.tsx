@@ -20,6 +20,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import moment from "moment";
 import { IconButton } from "@mui/material";
@@ -63,9 +65,12 @@ const ApprovalPage: React.FC = () => {
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [totalItems, setTotalItems] = useState<number>(0);
-  const [allClaims, setAllClaims] = useState<Claim[]>([]);
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success" as "success" | "error",
+  });
   const tableCellStyle = {
     borderRight: "2px solid rgba(224, 224, 224, 1)",
     borderBottom: "2px solid rgba(224, 224, 224, 1)",
@@ -123,7 +128,7 @@ const ApprovalPage: React.FC = () => {
             is_delete: false,
           },
           pageInfo: {
-            pageNum: page + 1, // Convert to 1-based for API
+            pageNum: page + 1,
             pageSize: rowsPerPage,
           },
         },
@@ -208,6 +213,7 @@ const ApprovalPage: React.FC = () => {
       );
 
       if (response.data.success) {
+        // Cập nhật UI
         setFilteredClaims((prevClaims) =>
           prevClaims.map((claim) =>
             claim._id === currentClaimId
@@ -216,19 +222,34 @@ const ApprovalPage: React.FC = () => {
           )
         );
 
+        // Hiển thị thông báo thành công
+        setSnackbar({
+          open: true,
+          message: `Claim ${
+            currentAction === "Approved" ? "approved" : "rejected"
+          } successfully!`,
+          severity: "success",
+        });
+
         // Reset modal state
         setIsModalOpen(false);
         setModalReason("");
         setCurrentClaimId(null);
         setCurrentAction(null);
         setError(null);
+
+        // Refresh data
+        fetchClaims();
       }
     } catch (error: any) {
       console.error(`Error updating claim status:`, error);
-      setError(
-        error.response?.data?.message ||
-          "Failed to update claim status. Please try again."
-      );
+      setSnackbar({
+        open: true,
+        message:
+          error.response?.data?.message ||
+          "Failed to update claim status. Please try again.",
+        severity: "error",
+      });
     }
   };
 
@@ -242,6 +263,10 @@ const ApprovalPage: React.FC = () => {
 
   const formatDate = (dateString: string) => {
     return moment(dateString).format("DD/MM/YYYY");
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar((prev) => ({ ...prev, open: false }));
   };
 
   return (
@@ -262,7 +287,7 @@ const ApprovalPage: React.FC = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="search-field"
-              placeholder="Search by name, requester, project..."
+              placeholder="Search by claim name"
             />
 
             <FormControl
@@ -424,6 +449,7 @@ const ApprovalPage: React.FC = () => {
                                 color: "white",
                                 "&:hover": { backgroundColor: "darkgray" },
                                 mr: 1,
+                                textTransform: "none",
                               }}
                               onClick={() => handleApprove(claim._id)}
                             >
@@ -434,7 +460,7 @@ const ApprovalPage: React.FC = () => {
                               size="small"
                               color="error"
                               onClick={() => handleReject(claim._id)}
-                              sx={{ mr: 1 }}
+                              sx={{ mr: 1, textTransform: "none" }}
                             >
                               Reject
                             </Button>
@@ -555,7 +581,7 @@ const ApprovalPage: React.FC = () => {
                 backgroundColor: "gray",
                 color: "white",
                 "&:hover": { backgroundColor: "darkgray" },
-                minWidth: "100px", // Tăng độ rộng tối thiểu của button
+                minWidth: "100px",
               }}
             >
               {currentAction === "Approved" ? "Approve" : "Submit"}
@@ -563,6 +589,21 @@ const ApprovalPage: React.FC = () => {
           </DialogActions>
         </Dialog>
       </div>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        sx={{ marginTop: "80px" }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };
