@@ -3,7 +3,6 @@ import axios from "axios";
 import "./ApprovalPage.css";
 import {
   Button,
-  Modal,
   TextField,
   Table,
   TableBody,
@@ -17,7 +16,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  CircularProgress,
   Dialog,
   DialogTitle,
   DialogContent,

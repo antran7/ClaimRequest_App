@@ -6,9 +6,7 @@ import { useForm } from "react-hook-form";
 import { TextField, Checkbox, FormControlLabel, Button, InputAdornment, IconButton, CircularProgress, Typography } from "@mui/material";
 import { forgotPassword, getUserInfo, login } from "../services/authService";
 import { Swiper, SwiperSlide } from "swiper/react";
-import "swiper/css";
-import "swiper/css/navigation";
-import "swiper/css/pagination";
+import 'swiper/react';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { Autoplay, Navigation, Pagination } from "swiper/modules";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
@@ -94,7 +92,7 @@ const Login: React.FC = () => {
       toast("Login successfully.", {
         icon: "🔥",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast(error.toString(), {
         icon: "❌",
       });
@@ -111,7 +109,7 @@ const Login: React.FC = () => {
       toast.success("Please check your email to get a new password!", {
         icon: "🔥",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast(error.toString(), {
         icon: "❌",
       });

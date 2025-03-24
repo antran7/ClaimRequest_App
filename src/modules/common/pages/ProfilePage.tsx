@@ -3,7 +3,7 @@ import Layout from '../../../shared/layouts/Layout'
 import './ProfilePage.css'
 import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined';
 import { useForm } from 'react-hook-form';
-import { Avatar, Button, CircularProgress, List, ListItem, ListItemText, Switch } from '@mui/material';
+import { Avatar, Button, List, ListItem, ListItemText, Switch } from '@mui/material';
 import { updateInfo, updatePassword } from '../services/userApi';
 import toast from 'react-hot-toast';
 import { getEmployeeInfo } from '../../employee/services/employeeApi';
@@ -19,12 +19,58 @@ type FormData = {
   newPassword?: string;
 };
 
+interface EmployeeData {
+  "_id": string,
+  "user_id": string,
+  "job_rank": string,
+  "contract_type": string,
+  "account": string,
+  "address": string,
+  "phone": string,
+  "full_name": string,
+  "avatar_url": string,
+  "department_code": string,
+  "salary": number,
+  "start_date": string,
+  "end_date": string,
+  "updated_by": string,
+  "created_at": string,
+  "updated_at": string,
+  "is_deleted": boolean,
+  "__v": number,
+}
+
+interface ProjectData {
+  _id: string,
+  project_name: string,
+  project_code: string,
+  project_department: string,
+  project_description: string,
+  project_status: string,
+  project_start_date: string,
+  project_end_date: string,
+  updated_by: string,
+  is_deleted: boolean,
+  created_at: string,
+  updated_at: string,
+  project_comment: string | null,
+  project_members: [
+    {
+      project_code: string,
+      user_id: string,
+      employee_id: string,
+      user_name: string,
+      full_name: string,
+    }
+  ]
+}
+
 const ProfilePage: React.FC = () => {
   const user = JSON.parse(localStorage.getItem("userData") || "{}");
-  const [employee, setEmployee] = useState(null);
+  const [employee, setEmployee] = useState<EmployeeData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isPasswordMode, setIsPasswordMode] = useState(false);
-  const [myProjects, setMyProjects] = useState([]);
+  const [myProjects, setMyProjects] = useState<ProjectData[]>([]);
   const [pageNum, setPageNum] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
@@ -52,20 +98,20 @@ const ProfilePage: React.FC = () => {
     try {
       if (isPasswordMode) {
         await updatePassword({
-          old_password: data.oldPassword,
-          new_password: data.newPassword,
+          old_password: data.oldPassword || '',
+          new_password: data.newPassword || '',
         });
       } else {
         await updateInfo(user?._id, {
-          email: data.email,
-          user_name: data.username
+          email: data.email || '',
+          user_name: data.username || ''
         });
       }
       toast("Update successfully.", {
         icon: "✅",
       });
       reset();
-    } catch (error) {
+    } catch (error: any) {
       toast(error.toString(), {
         icon: "❌",
       });
@@ -93,13 +139,13 @@ const ProfilePage: React.FC = () => {
     try {
       const response = await searchProjectWithData(projectData, pageNum);
       setMyProjects([...myProjects, ...response.pageData]);
-      if (response.pageData?.totalPages > pageNum) {
+      if (response.pageInfo?.totalPages > pageNum) {
         console.log("Co ne troi");
         setPageNum(prevPageNum => prevPageNum + 1);
       } else {
         setHasMore(false);
       }
-    } catch (error) {
+    } catch (error: any) {
       toast(error.toString(), {
         icon: "❌",
       });
@@ -322,7 +368,7 @@ const ProfilePage: React.FC = () => {
                       <Skeleton height={60} width={270} />
                       <Skeleton height={60} width={270} />
                     </div>
-                    <Skeleton height={60} width={570}/>
+                    <Skeleton height={60} width={570} />
                   </div>
                 )}
               </div>
@@ -372,7 +418,7 @@ const ProfilePage: React.FC = () => {
                   scrollableTarget="projectsScrollDiv"
                 >
                   <List>
-                    {myProjects.map((project, index) => (
+                    {myProjects.map((project: ProjectData, index: number) => (
                       <ListItem key={index} divider>
                         <ListItemText
                           primary={project.project_name}

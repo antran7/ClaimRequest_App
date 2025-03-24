@@ -28,7 +28,7 @@ export const login = async (email: string, password: string): Promise<void> => {
             password: password,
         }
         const response = await apiService.post<AuthResponse>('/auth', loginData);
-        if (response.success) {
+        if (response.success && response.data) {
             localStorage.setItem("token", response.data.token);
         }
     } catch (error) {
@@ -51,7 +51,7 @@ export const logout = async (): Promise<void> => {
 
 export const forgotPassword = async (email: string): Promise<void> => {
     try {
-        const response = await apiService.put<null>('/auth/forgot-password', { email });
+        await apiService.put<null>('/auth/forgot-password', { email });
     } catch (error) {
         console.error('Error: ', error);
         throw error;
@@ -73,7 +73,7 @@ export const getUserInfo = async (): Promise<ResponseModel<UserData>> => {
 
 export const verifyToken = async (token: string): Promise<void> => {
     try {
-        const response = await apiService.post<null>('/auth/verify-token', { token });
+        await apiService.post<null>('/auth/verify-token', { token });
     } catch (error) {
         console.error('Error: ', error);
         throw error;
@@ -82,7 +82,7 @@ export const verifyToken = async (token: string): Promise<void> => {
 
 export const resendToken = async (email: string): Promise<void> => {
     try {
-        const response = await apiService.post<null>('/auth/resend-token', { email });
+        await apiService.post<null>('/auth/resend-token', { email });
     } catch (error) {
         console.error('Error: ', error);
         throw error;
@@ -91,7 +91,7 @@ export const resendToken = async (email: string): Promise<void> => {
 
 export const triggerVerifyToken = async (email: string): Promise<void> => {
     try {
-        const response = await apiService.post<null>('/auth/trigger-verify-token', { email });
+        await apiService.post<null>('/auth/trigger-verify-token', { email });
     } catch (error) {
         console.error('Error: ', error);
         throw error;
