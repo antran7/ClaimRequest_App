@@ -54,15 +54,13 @@ interface ProjectData {
   created_at: string,
   updated_at: string,
   project_comment: string | null,
-  project_members: [
-    {
-      project_code: string,
-      user_id: string,
-      employee_id: string,
-      user_name: string,
-      full_name: string,
-    }
-  ]
+  project_members: {
+    project_code: string,
+    user_id: string,
+    employee_id: string,
+    user_name: string,
+    full_name: string,
+  }[];
 }
 
 const ProfilePage: React.FC = () => {

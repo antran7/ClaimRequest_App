@@ -2,7 +2,7 @@ import React from "react";
 
 const Preloader: React.FC = () => {
   return (
-    <div className="flex items-center justify-center min-h-screen">
+    <div className="flex items-center justify-center min-h-screen fixed inset-0 bg-white z-100">
       <div className="relative flex items-center">
         <div className="relative w-[20px] h-[45px]">
           <div
