@@ -1,6 +1,6 @@
 import axios from "axios";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from "chart.js";
-import React, { useEffect, useState } from "react";
+import  { useEffect, useState } from "react";
 import { Bar } from "react-chartjs-2";
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
@@ -104,10 +104,14 @@ function ClaimRequestBarChart() {
   };
   return (
     <div>
+      {loading ? (
+                <div>Loading...</div> 
+            ) : (
       <div className="bar-chart">
         <p style={{ textAlign: "center", margin: "20px", fontSize: "20px", color: "#418c9f" }}>Claim Request</p>
         <Bar data={claimRequestData} />
       </div>
+      )}
     </div>
   );
 }

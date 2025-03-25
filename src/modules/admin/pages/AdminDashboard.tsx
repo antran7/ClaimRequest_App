@@ -1,5 +1,5 @@
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from "chart.js";
-import { Bar, Doughnut } from "react-chartjs-2";
+import { Doughnut } from "react-chartjs-2";
 import "./AdminDashboard.css";
 import { AccountCircleOutlined, Folder } from "@mui/icons-material";
 import { Grid } from "@mui/material";
@@ -12,17 +12,15 @@ import { searchUsers } from "../services/userService";
 import { searchProject } from "../services/projectService";
 import ClaimRequestBarChart from "../components/ClaimRequestBarChart";
 
-
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
 function AdminDashboard() {
   const navigate = useNavigate();
-  const [pageNum, setPageNum] = useState(1); //  Track current page
+  const [pageNum] = useState(1); //  Track current page
   const [pageSize] = useState(100); //  Items per page
   const [totalPages, setTotalPages] = useState(1); // Total pages from API
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
   const [count, setCount] = useState(0);
   const [projects, setProjects] = useState([]);
   const [projectCount, setProjectCount] = useState(0);
@@ -36,6 +34,7 @@ function AdminDashboard() {
       if (response?.pageData && response?.pageInfo) {
         setUsers(response.pageData); //  Correctly setting users
         setTotalPages(response.pageInfo.totalPages || 1); //  Fix pagination
+        console.log(totalPages);
       } else {
         console.error("Invalid API response structure:", response);
         setUsers([]); // 🛠 Prevent crashes
@@ -52,11 +51,12 @@ function AdminDashboard() {
       const response = await searchProject("", pageNum);
       setProjectCount(response.data.pageInfo.totalItems);
       if (response?.data.pageData && response?.data.pageInfo) {
-        setProjectCount(response.data.pageInfo.totalItems); 
-        setTotalPages(response.data.pageInfo.totalPages || 1); 
+        setProjectCount(response.data.pageInfo.totalItems);
+        setTotalPages(response.data.pageInfo.totalPages || 1);
       } else {
         console.error("Invalid API response structure:", response);
         setProjects([]); // 🛠 Prevent crashes
+        console.log(projects)
       }
     } catch (error) {
       console.error("Failed to fetch project count", error);
@@ -68,7 +68,7 @@ function AdminDashboard() {
   useEffect(() => {
     fetchUsers();
     fetchProjects(); // Call fetchProjects to get project count
-  }, [pageNum, searchTerm]);
+  }, [pageNum]);
 
   const data = {
     labels: ["Admin", "Approval", "Finance", "User"],
@@ -91,9 +91,9 @@ function AdminDashboard() {
     ],
   };
 
-
   return (
     <div>
+  
       <Layout>
         <div className="admin-dashboard-container">
           <div className="content-dashboard">
@@ -146,22 +146,27 @@ function AdminDashboard() {
             </Grid>
             <Grid container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
               <Grid item xs={6}>
+              {loading ? (
+                <div>Loading...</div> 
+            ) : (
                 <div className="chart-container">
                   <p style={{ textAlign: "center", margin: "20px", fontSize: "20px", color: "#418c9f" }}>Users</p>
                   <Doughnut data={data} />
                 </div>
+                  )}
               </Grid>
               <Grid item xs={6}>
                 <div className="bar-chart">
-                <ClaimRequestBarChart/>
-
+                  <ClaimRequestBarChart />
                 </div>
               </Grid>
             </Grid>
           </div>
         </div>
       </Layout>
+          
     </div>
+            
   );
 }
 
