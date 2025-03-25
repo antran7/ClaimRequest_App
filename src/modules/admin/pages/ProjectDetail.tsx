@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
+import PersonIcon from "@mui/icons-material/Person";
 import {
   Card,
   CardContent,
@@ -199,13 +200,13 @@ const ProjectDetail = () => {
   const handleUserSearch = (index: number, searchValue: string) => {
     setUserSearchTerm(searchValue);
     setShowUserDropdown(index);
-    
+
     // Filter users based on search term
-    if (searchValue.trim() === '') {
+    if (searchValue.trim() === "") {
       setFilteredUsers(users);
     } else {
       const filtered = users.filter(
-        user => 
+        (user) =>
           user.email.toLowerCase().includes(searchValue.toLowerCase()) ||
           user.user_name.toLowerCase().includes(searchValue.toLowerCase())
       );
@@ -271,38 +272,44 @@ const ProjectDetail = () => {
               <p>
                 <strong>Department:</strong> {project.project_department}
               </p>
-              <p>
+              {/* <p>
                 <strong>Status:</strong> {project.project_status}
-              </p>
+                </p> */}
               <p>
                 <strong>Start date:</strong>{" "}
                 {new Date(project.project_start_date).toLocaleDateString()}
+              </p>
+              <p>
+                <strong>Description:</strong> {project.project_description}
               </p>
               <p>
                 <strong>End date:</strong>{" "}
                 {new Date(project.project_end_date).toLocaleDateString()}
               </p>
             </div>
-            <p className="mt-4">
-              <strong>Description:</strong> {project.project_description}
-            </p>
 
             <div className="mt-6">
               <h2 className="text-xl font-semibold mb-4">Members</h2>
               <div className="grid sm:grid-cols-2 gap-4">
                 {project.project_members &&
                 project.project_members.length > 0 ? (
-                  project.project_members.map((member) => (
+                  project.project_members.map((member, index) => (
                     <div
-                      key={member._id}
-                      className="bg-gray-50 p-4 rounded-lg shadow-sm border"
+                      key={member._id || `member-${index}`}
+                      className="bg-white p-6 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-300"
                     >
-                      <p className="font-medium text-gray-900">
-                        {member.user_name}
-                      </p>
-                      <p className="text-gray-600">
-                        Role: {member.project_role}
-                      </p>
+                      <div className="flex items-center gap-4">
+                        <PersonIcon className="text-gray-300 w-8 h-8" />
+                        <div>
+                          <p className="font-semibold text-gray-900 text-lg">
+                            {member.user_name}
+                          </p>
+                          <p className="text-gray-600 mt-1">
+                            <span className="font-medium">Role:</span>{" "}
+                            {member.project_role}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   ))
                 ) : (
@@ -521,10 +528,7 @@ const ProjectDetail = () => {
 
           <div className="mt-8">
             <div className="flex justify-between items-center mb-4 border-b border-gray-200 pb-2">
-              <Typography
-                variant="h6"
-                className="text-gray-700 font-semibold"
-              >
+              <Typography variant="h6" className="text-gray-700 font-semibold">
                 Project Members
               </Typography>
               <Button
@@ -541,120 +545,44 @@ const ProjectDetail = () => {
               </Button>
             </div>
 
-            {formik.values.project_members.map((member, index) => (
-              <div
-                key={index}
-                className="grid grid-cols-1 gap-4 mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200"
-              >
-                <div className="flex flex-row justify-between items-center">
-                  <div className="w-full pr-2">
-                    <div className="relative">
-                      <TextField
-                        fullWidth
-                        label="Search User"
-                        placeholder="Search by username or email"
-                        value={showUserDropdown === index ? userSearchTerm : users.find(u => u._id === member.user_id || u._id === member._id)?.user_name || member.user_name || ''}
-                        onChange={(e) => handleUserSearch(index, e.target.value)}
-                        onFocus={() => setShowUserDropdown(index)}
-                        className="bg-white rounded-md"
-                        InputProps={{
-                          endAdornment: (
-                            <InputAdornment position="end">
-                              <Search size={20} />
-                            </InputAdornment>
-                          ),
-                        }}
-                      />
-                      {showUserDropdown === index && (
-                        <Paper 
-                          style={{
-                            position: 'absolute',
-                            zIndex: 1000,
-                            width: '100%',
-                            maxHeight: '200px',
-                            overflow: 'auto'
-                          }}
-                        >
-                          <List>
-                            {filteredUsers.length > 0 ? (
-                              filteredUsers.map((user) => (
-                                <ListItem 
-                                  key={user._id}
-                                  onClick={() => handleSelectUser(index, user)}
-                                  divider
-                                  sx={{ cursor: 'pointer' }}
-                                >
-                                  <ListItemText 
-                                    primary={user.user_name} 
-                                    secondary={user.email} 
-                                  />
-                                </ListItem>
-                              ))
-                            ) : (
-                              <ListItem>
-                                <ListItemText primary="No users found" />
-                              </ListItem>
-                            )}
-                          </List>
-                        </Paper>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex-shrink-0">
-                    <Button
-                      color="error"
-                      onClick={() => handleRemoveMember(index)}
-                      disabled={formik.values.project_members.length <= 1}
-                      className="rounded-md"
-                      variant="outlined"
-                      size="small"
-                    >
-                      Remove
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="w-full">
-                  <FormControl
-                    fullWidth
-                    error={!!(
-                      formik.touched.project_members?.[index] && 
-                      formik.errors.project_members?.[index] && 
-                      typeof formik.errors.project_members[index] === 'object' &&
-                      'project_role' in (formik.errors.project_members[index] as any)
-                    )}
-                    className="bg-white rounded-md"
+            <div className="space-y-4">
+              {project.project_members && project.project_members.length > 0 ? (
+                project.project_members.map((member, index) => (
+                  <div
+                    key={member._id || `member-${index}`}
+                    className="bg-white rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300 w-full p-4"
                   >
-                    <InputLabel
-                      shrink
-                      id={`role-select-label-${index}`}
-                      className="bg-white px-1 text-gray-600"
-                    >
-                      Role
-                    </InputLabel>
-                    <div className="mt-2">
-                      <RoleSelect
-                        value={member.project_role || ''}
-                        onChange={(value) =>
-                          handleMemberChange(index, "project_role", value)
-                        }
-                        required
-                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="Select Role"
-                      />
+                    <div className="flex items-center gap-3">
+                      <PersonIcon className="text-gray-300 w-6 h-6" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <p className="font-medium text-gray-900 text-base truncate">
+                            {member.user_name}
+                          </p>
+                          <p className="text-gray-500 text-sm truncate">
+                            <span className="font-medium">Role:</span>{" "}
+                            {member.project_role}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        // onClick={() => handleRemoveMember(index)} 
+                        className="text-gray-400 hover:text-red-500 transition-colors duration-200"
+                        aria-label="Delete member"
+                      >
+                        <DeleteIcon className="w-5 h-5" />
+                      </button>
                     </div>
-                    {formik.touched.project_members?.[index] &&
-                      formik.errors.project_members?.[index] &&
-                      typeof formik.errors.project_members[index] === 'object' &&
-                      'project_role' in (formik.errors.project_members[index] as any) && (
-                        <p className="text-red-500 text-xs mt-1">
-                          {(formik.errors.project_members[index] as any).project_role}
-                        </p>
-                      )}
-                  </FormControl>
+                  </div>
+                ))
+              ) : (
+                <div className="w-full text-center py-8">
+                  <p className="text-gray-500 text-lg">
+                    Không có thành viên trong dự án
+                  </p>
                 </div>
-              </div>
-            ))}
+              )}
+            </div>
 
             {formik.touched.project_members &&
               typeof formik.errors.project_members === "string" && (

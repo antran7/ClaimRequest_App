@@ -12,7 +12,7 @@ export const searchUsers = async (
       pageInfo,
     });
 
-    console.log("Full API Response:", response); // ✅ Debug response
+    // console.log("Full API Response:", response); // ✅ Debug response
 
     return response.data ?? {
       pageData: [],
