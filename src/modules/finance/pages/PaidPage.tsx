@@ -159,7 +159,7 @@ const PaidPage = () => {
     setPage(0);
   };
 
-  const handleChangePage = (event: unknown, newPage: number) => {
+  const handleChangePage = (_: unknown, newPage: number) => {
     setPage(newPage);
   };
 
@@ -675,7 +675,7 @@ const PaidPage = () => {
                   page={page}
                   onPageChange={handleChangePage}
                   onRowsPerPageChange={handleChangeRowsPerPage}
-                  labelDisplayedRows={({ from, to, count }) => {
+                  labelDisplayedRows={({ count }) => {
                     const computedFrom = page * rowsPerPage + 1;
                     const computedTo = Math.min(
                       (page + 1) * rowsPerPage,
