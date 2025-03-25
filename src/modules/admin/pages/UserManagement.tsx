@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import Preloader from "../../../shared/components/Preloader";
 import BackButton from "../components/BackButton";
 import { toast } from "react-hot-toast";
 import { format } from "date-fns";
@@ -35,7 +36,7 @@ import {
   MenuItem,
   InputLabel,
 } from "@mui/material";
-
+import Avatar from "@mui/material/Avatar";
 import Select from "@mui/material/Select";
 import AccessibilityIcon from "@mui/icons-material/Accessibility";
 import { User, Employee } from "../types/user";
@@ -43,11 +44,11 @@ import { Pagination } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { IconButton } from "@mui/material";
 import { Pencil, CircleX, Plus, Search, Lock, Unlock, Eye } from "lucide-react";
-import { debounce } from "lodash";
+import { debounce} from "lodash";
 
 const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
-  const [, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [popupOpen, setPopupOpen] = useState(false);
   const [popupOpen2, setPopupOpen2] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -186,6 +187,7 @@ const UserManagement = () => {
   );
 
   const handleSave = async () => {
+    setLoading(true);
     try {
       if (!validateForm()) return;
       if (editingUser) {
@@ -213,11 +215,13 @@ const UserManagement = () => {
       fetchUsers(); // Refresh the user list
     } catch (error) {
       toast.error(`Failed to save users: ${error instanceof Error ? error.message : JSON.stringify(error)}`);
-
+    }finally {
+      setLoading(false); // Set loading to false
     }
   };
 
   const handleConfirmAction = async () => {
+    setLoading(true);
     if (!confirmDialog.user || !confirmDialog.action) return;
     try {
       if (confirmDialog.action === "block") {
@@ -240,6 +244,7 @@ const UserManagement = () => {
       toast.error(`Failed to ${confirmDialog.action} user: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setConfirmDialog({ open: false, user: null, action: null });
+      setLoading(false);
     }
   };
 
@@ -294,9 +299,9 @@ const UserManagement = () => {
   
       await updateEmployee(employeeData.user_id, { ...employeeData });
 
-      console.log("Employee updated successfully!");
+      toast.success("Employee updated successfully!");
     } catch (error) {
-      console.error("Error updating employee details:", error);
+      toast.error(`Error updating employee details: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
   
@@ -333,7 +338,7 @@ const UserManagement = () => {
 
     const userToUpdate = users.find((u) => u._id === userId);
     if (!userToUpdate || userToUpdate.role_code === newRoleCode) return;
-
+    setLoading(true);
     try {
       await changeUserRole(userId, newRoleCode);
 
@@ -344,7 +349,10 @@ const UserManagement = () => {
         )
       );
     } catch (error) {
-      console.error("Lỗi khi cập nhật vai trò:", error);
+      console.error("Error updating role:", error);
+      toast.error(`Error updating role: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setLoading(false); // Set loading to false
     }
   };
 
@@ -356,6 +364,7 @@ const UserManagement = () => {
           USER MANAGEMENT
         </h1>
         <div className="p-4 bg-gray-100">
+        {loading && <Preloader />}
           <div className="flex justify-end items-center gap-4 mb-4">
             <div className="w-[250px] min-w-[150px] ">
               <div className="relative">
@@ -935,6 +944,13 @@ const UserManagement = () => {
             {/* Employee Fields */}
             {employeeData && (
               <>
+                 <div style={{ display: "flex", justifyContent: "center", marginBottom: "20px" }}>
+                  <Avatar
+                    alt={employeeData.full_name}
+                    src={employeeData.avatar_url}
+                    sx={{ width: 150, height: 150 }}
+                  />
+                </div>
                 <TextField
                   label="Full Name"
                   value={employeeData.full_name}
@@ -1023,19 +1039,6 @@ const UserManagement = () => {
                   ))}
                 </Select>
               </FormControl>
-                <TextField
-                  label="Avatar URL"
-                  value={employeeData.avatar_url}
-                  onChange={(e) =>
-                    setEmployeeData({
-                      ...employeeData,
-                      avatar_url: e.target.value,
-                    })
-                  }
-                  fullWidth
-                  margin="dense"
-                  InputLabelProps={{ shrink: true }}
-                />
                 <FormControl fullWidth margin="dense">
                 <InputLabel>Contract Type</InputLabel>
                 <Select
