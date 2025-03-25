@@ -47,7 +47,6 @@ interface Claim {
 }
 
 const ApprovalPage: React.FC = () => {
-  const [claims, setClaims] = useState<Claim[]>([]);
   const [filteredClaims, setFilteredClaims] = useState<Claim[]>([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -145,7 +144,6 @@ const ApprovalPage: React.FC = () => {
             claim.claim_status !== "Draft" && claim.claim_status !== "Canceled"
         );
 
-        setClaims(filteredData);
         setFilteredClaims(filteredData);
         setTotalItems(response.data.data.pageInfo.totalItems);
       }
@@ -156,7 +154,7 @@ const ApprovalPage: React.FC = () => {
     }
   };
 
-  const handleChangePage = (event: unknown, newPage: number) => {
+  const handleChangePage = (_: unknown, newPage: number) => {
     setPage(newPage);
   };
 
@@ -482,7 +480,7 @@ const ApprovalPage: React.FC = () => {
             rowsPerPage={rowsPerPage}
             onRowsPerPageChange={handleChangeRowsPerPage}
             rowsPerPageOptions={[5, 10, 25, 50]}
-            labelDisplayedRows={({ from, to, count }) => {
+            labelDisplayedRows={({ to, count }) => {
               const computedFrom = count === 0 ? 0 : page * rowsPerPage + 1;
               const computedTo = Math.min((page + 1) * rowsPerPage, count);
               return `${computedFrom}-${computedTo} of ${
