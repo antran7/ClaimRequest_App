@@ -14,24 +14,14 @@ interface AdminSidebarDashboardProps {
   toggleSidebar: () => void;
 }
 
-export default function AdminSidebarDashboard({
-  isOpen,
-  toggleSidebar,
-}: AdminSidebarDashboardProps) {
+export default function AdminSidebarDashboard({ isOpen, toggleSidebar }: AdminSidebarDashboardProps) {
   const list = () => (
-    <Box
-      sx={{ width: 250 }}
-      role="presentation"
-      onClick={toggleSidebar}
-      onKeyDown={toggleSidebar}
-    >
+    <Box sx={{ width: 250 }} role="presentation" onClick={toggleSidebar} onKeyDown={toggleSidebar}>
       <List>
         {["Inbox", "Starred", "Send email", "Drafts"].map((text, index) => (
           <ListItem key={text} disablePadding>
             <ListItemButton>
-              <ListItemIcon>
-                {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
-              </ListItemIcon>
+              <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
               <ListItemText primary={text} />
             </ListItemButton>
           </ListItem>
@@ -42,9 +32,7 @@ export default function AdminSidebarDashboard({
         {["All mail", "Trash", "Spam"].map((text, index) => (
           <ListItem key={text} disablePadding>
             <ListItemButton>
-              <ListItemIcon>
-                {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
-              </ListItemIcon>
+              <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
               <ListItemText primary={text} />
             </ListItemButton>
           </ListItem>
