@@ -1,7 +1,7 @@
 import { RouteObject } from "react-router";
 import PrivateRoute from "../../shared/routes/PrivateRoute";
 import { Role } from "../../shared/constants/roles";
-import Home from "./pages/Home";
+import Home from "./pages/home/Home";
 import Login from "../auth/pages/Login";
 import Verify from "../auth/pages/Verify";
 import Error from "../auth/pages/Error";
