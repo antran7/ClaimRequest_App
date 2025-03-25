@@ -31,6 +31,7 @@ import Layout from "../../../../shared/layouts/Layout";
 import { SelectChangeEvent } from "@mui/material/Select";
 import CloseIcon from "@mui/icons-material/Close";
 import TablePagination from "@mui/material/TablePagination";
+import toast from "react-hot-toast";
 
 const API_URL = "https://management-claim-request.vercel.app/api";
 
@@ -451,9 +452,14 @@ const RequestPage = () => {
           total_work_time: 0,
         });
         setDateError(null);
+        toast.success("Request added sucessfully!", {
+          icon: "✅",
+        })
       } else {
         console.error("Failed to add request:", response.data.message);
-        alert(response.data.message);
+        toast(response.data.message, {
+          icon: "❌",
+        });
       }
     } catch (error) {
       console.error("Error adding request:", error);
@@ -521,30 +527,38 @@ const RequestPage = () => {
           requests.map((req) =>
             req._id === currentRequest._id
               ? {
-                  ...req,
-                  ...updatedRequest,
-                  claim_start_date: updatedRequest.claim_start_date,
-                  claim_end_date: updatedRequest.claim_end_date,
-                  project_info: projects.find((p) => p._id === updatedProjectId) || req.project_info,
-                  approval_info: approvers.find((a) => a._id === updatedApprovalId) || req.approval_info,
-                }
+                ...req,
+                ...updatedRequest,
+                claim_start_date: updatedRequest.claim_start_date,
+                claim_end_date: updatedRequest.claim_end_date,
+                project_info: projects.find((p) => p._id === updatedProjectId) || req.project_info,
+                approval_info: approvers.find((a) => a._id === updatedApprovalId) || req.approval_info,
+              }
               : req
           )
         );
         setIsEditModalVisible(false);
         setCurrentRequest(null);
         setDateError(null);
-        alert("Request updated successfully!");
+        toast.success("Request updated successfully!", {
+          icon: "✅",
+        });
       } else {
         console.error("Failed to update request:", response.data.message);
-        alert(`Failed to update request: ${response.data.message}`);
+        toast(`Failed to update request: ${response.data.message}`, {
+          icon: "❌",
+        });
       }
     } catch (error) {
       console.error("Error editing request:", error);
       if (axios.isAxiosError(error) && error.response) {
-        alert(`Error: ${error.response.data.message || "Failed to update request"}`);
+        toast(`Error: ${error.response.data.message || "Failed to update request"}`, {
+          icon: "❌",
+        });
       } else {
-        alert("An unexpected error occurred. Please try again.");
+        toast("An unexpected error occurred. Please try again.", {
+          icon: "❌",
+        });
       }
     }
   };
@@ -601,17 +615,25 @@ const RequestPage = () => {
         );
         setIsConfirmModalVisible(false);
         setRequestToApprove(null);
-        alert("Request has been submitted for approval!");
+        toast.success("Request has been submitted for approval!", {
+          icon: "✅",
+        });
       } else {
         console.error("Failed to update status:", response.data.message);
-        alert(`Failed to submit request: ${response.data.message}`);
+        toast(`Failed to submit request: ${response.data.message}`, {
+          icon: "❌",
+        });
       }
     } catch (error) {
       console.error("Error sending approval request:", error);
       if (axios.isAxiosError(error) && error.response) {
-        alert(`Error: ${error.response.data.message || "Failed to update status"}`);
+        toast(`Error: ${error.response.data.message || "Failed to update status"}`, {
+          icon: "❌",
+        });
       } else {
-        alert("An unexpected error occurred. Please try again.");
+        toast("An unexpected error occurred. Please try again.", {
+          icon: "❌",
+        });
       }
     }
   };
@@ -691,17 +713,25 @@ const RequestPage = () => {
         );
         setIsDeleteModalVisible(false);
         setRequestToDelete(null);
-        alert("Request has been canceled!");
+        toast("Request has been canceled!", {
+          icon: "✅",
+        });
       } else {
         console.error("Failed to cancel request:", response.data.message);
-        alert(`Failed to cancel request: ${response.data.message}`);
+        toast(`Failed to cancel request: ${response.data.message}`, {
+          icon: "❌",
+        });
       }
     } catch (error) {
       console.error("Error canceling request:", error);
       if (axios.isAxiosError(error) && error.response) {
-        alert(`Error: ${error.response.data.message || "Failed to cancel request"}`);
+        toast(`Error: ${error.response.data.message || "Failed to cancel request"}`, {
+          icon: "❌",
+        });
       } else {
-        alert("An unexpected error occurred. Please try again.");
+        toast("An unexpected error occurred. Please try again.", {
+          icon: "❌",
+        });
       }
     }
   };
@@ -855,22 +885,22 @@ const RequestPage = () => {
                             </Button>
                             {(req.claim_status === "Draft" ||
                               req.claim_status === "Returned") && (
-                              <Button
-                                variant="contained"
-                                size="small"
-                                onClick={() => handleRequestApproval(req._id)}
-                                sx={{
-                                  backgroundColor: "#46d179",
-                                  color: "white",
-                                  "&:hover": {
-                                    backgroundColor: "#16a34a",
-                                  },
-                                  mr: 1,
-                                }}
-                              >
-                                Request Approval
-                              </Button>
-                            )}
+                                <Button
+                                  variant="contained"
+                                  size="small"
+                                  onClick={() => handleRequestApproval(req._id)}
+                                  sx={{
+                                    backgroundColor: "#46d179",
+                                    color: "white",
+                                    "&:hover": {
+                                      backgroundColor: "#16a34a",
+                                    },
+                                    mr: 1,
+                                  }}
+                                >
+                                  Request Approval
+                                </Button>
+                              )}
                             <Button
                               variant="outlined"
                               size="small"

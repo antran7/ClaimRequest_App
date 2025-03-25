@@ -90,7 +90,7 @@ const Login: React.FC = () => {
           navigate("/");
       }
       toast("Login successfully.", {
-        icon: "🔥",
+        icon: "✅",
       });
     } catch (error: any) {
       toast(error.toString(), {
