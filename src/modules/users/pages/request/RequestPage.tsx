@@ -147,6 +147,14 @@ const RequestPage = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
+  const [fieldErrors, setFieldErrors] = useState({
+    claim_name: "",
+    project_id: "",
+    approval_id: "",
+    claim_start_date: "",
+    claim_end_date: "",
+    total_work_time: "",
+  });
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -380,34 +388,25 @@ const RequestPage = () => {
     event.preventDefault();
     console.log("handleAddModalOk called with formValues:", formValues);
 
-    if (
-      !formValues.claim_name ||
-      !formValues.project_id ||
-      !formValues.approval_id ||
-      !formValues.claim_start_date ||
-      !formValues.claim_end_date ||
-      formValues.total_work_time <= 0
-    ) {
-      console.error(
-        "All fields are required and total work time must be positive"
-      );
-      alert("Please fill in all fields and ensure total work time is positive.");
-      return;
-    }
+    const errors = {
+      claim_name: formValues.claim_name ? "" : "Claim name is required",
+      project_id: formValues.project_id ? "" : "Project is required",
+      approval_id: formValues.approval_id ? "" : "Approver is required",
+      claim_start_date: formValues.claim_start_date ? "" : "Start date is required",
+      claim_end_date: formValues.claim_end_date ? "" : "End date is required",
+      total_work_time: formValues.total_work_time > 0 ? "" : "Total work time must be positive",
+    };
 
-    if (
-      formValues.claim_end_date &&
-      formValues.claim_start_date &&
-      formValues.claim_end_date.isBefore(formValues.claim_start_date)
-    ) {
-      setDateError("End date cannot be before start date");
-      console.error("Date validation failed:", dateError);
+    setFieldErrors(errors);
+
+    const hasErrors = Object.values(errors).some((error) => error !== "");
+    if (hasErrors) {
       return;
     }
 
     if (!userId || !token) {
       console.error("Missing userId or token");
-      return;
+            return;
     }
 
     try {
@@ -416,8 +415,8 @@ const RequestPage = () => {
         project_id: formValues.project_id,
         approval_id: formValues.approval_id,
         claim_name: formValues.claim_name,
-        claim_start_date: formValues.claim_start_date.toISOString(),
-        claim_end_date: formValues.claim_end_date.toISOString(),
+        claim_start_date: formValues.claim_start_date?.toISOString(),
+        claim_end_date: formValues.claim_end_date?.toISOString(),
         total_work_time: Number(formValues.total_work_time),
         claim_status: "Draft",
         remark: "",
@@ -459,7 +458,7 @@ const RequestPage = () => {
       }
     } catch (error) {
       console.error("Error adding request:", error);
-    }
+          }
   };
 
   const handleEditModalOk = async (event: React.FormEvent) => {
@@ -970,11 +969,12 @@ const RequestPage = () => {
                   name="claim_name"
                   value={formValues.claim_name}
                   onChange={handleInputChange}
-                  required
                   fullWidth
                   margin="normal"
+                  error={!!fieldErrors.claim_name}
+                  helperText={fieldErrors.claim_name}
                 />
-                <FormControl fullWidth margin="normal">
+                <FormControl fullWidth margin="normal" error={!!fieldErrors.project_id}>
                   <Autocomplete
                     freeSolo
                     options={projects.map((project) => project.project_name)}
@@ -999,11 +999,16 @@ const RequestPage = () => {
                       }
                     }}
                     renderInput={(params) => (
-                      <TextField {...params} label="Project Name" required />
+                      <TextField
+                        {...params}
+                        label="Project Name"
+                        error={!!fieldErrors.project_id}
+                        helperText={fieldErrors.project_id}
+                      />
                     )}
                   />
                 </FormControl>
-                <FormControl fullWidth margin="normal">
+                <FormControl fullWidth margin="normal" error={!!fieldErrors.approval_id}>
                   <Autocomplete
                     freeSolo
                     options={approvers.map((approver) => approver.user_name)}
@@ -1033,7 +1038,12 @@ const RequestPage = () => {
                       }
                     }}
                     renderInput={(params) => (
-                      <TextField {...params} label="Approver" required />
+                      <TextField
+                        {...params}
+                        label="Approver"
+                        error={!!fieldErrors.approval_id}
+                        helperText={fieldErrors.approval_id}
+                      />
                     )}
                   />
                 </FormControl>
@@ -1046,7 +1056,8 @@ const RequestPage = () => {
                       slotProps={{
                         textField: {
                           fullWidth: true,
-                          required: true,
+                          error: !!fieldErrors.claim_start_date,
+                          helperText: fieldErrors.claim_start_date,
                         },
                       }}
                     />
@@ -1057,23 +1068,23 @@ const RequestPage = () => {
                       slotProps={{
                         textField: {
                           fullWidth: true,
-                          required: true,
+                          error: !!fieldErrors.claim_end_date,
+                          helperText: fieldErrors.claim_end_date,
                         },
                       }}
                     />
                   </div>
                 </LocalizationProvider>
-                {dateError && <p className="error-message">{dateError}</p>}
                 <TextField
                   label="Total Times"
                   name="total_work_time"
                   type="number"
                   value={formValues.total_work_time}
                   onChange={handleInputChange}
-                  required
                   fullWidth
                   margin="normal"
-                  inputProps={{ min: 1 }}
+                  error={!!fieldErrors.total_work_time}
+                  helperText={fieldErrors.total_work_time}
                 />
                 <DialogActions sx={{ p: 0, mt: 3 }}>
                   <Button onClick={handleModalCancel} variant="outlined">
@@ -1416,8 +1427,8 @@ const RequestPage = () => {
                             </TableCell>
                           </TableRow>
                         ))}
-                    </TableBody>
-                  </Table>
+                  </TableBody>
+        </Table>
                 </TableContainer>
               ) : (
                 <p>No logs available for this request.</p>
