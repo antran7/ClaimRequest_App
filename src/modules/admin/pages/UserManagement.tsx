@@ -47,7 +47,7 @@ import { debounce } from "lodash";
 
 const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
   const [popupOpen, setPopupOpen] = useState(false);
   const [popupOpen2, setPopupOpen2] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -55,7 +55,7 @@ const UserManagement = () => {
   const [pageSize] = useState(5); //  Items per page
   const [totalPages, setTotalPages] = useState(1); // Total pages from API
   const [viewUser, setViewUser] = useState<User | null>(null); //View detail
-  const [userId, setUserId] = useState("");
+ // const [userId, setUserId] = useState("");
   const [employeeData, setEmployeeData] = useState<Employee>({
     _id: "",
     user_id: "",
@@ -82,13 +82,15 @@ const UserManagement = () => {
     A004: "Member",
   };
 
-  const [form, setForm] = useState<{
+  interface UserForm {
     email: string;
     user_name: string;
     role_code: string;
     password?: string;
-    confirmPassword?: "";
-  }>({
+    confirmPassword?: string;
+  }
+  
+  const [form, setForm] = useState<UserForm>({
     email: "",
     user_name: "",
     role_code: "A001",
@@ -96,20 +98,18 @@ const UserManagement = () => {
     confirmPassword: "",
   });
 
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   useEffect(() => {
     if (editingUser) {
-      // When switching to edit mode, reset password-related fields & errors
-      setForm((prev) => ({
+      setForm((prev: UserForm) => ({
         ...prev,
         password: "",
         confirmPassword: "",
       }));
       setErrors({});
     } else {
-      // When switching to add mode, reset the form
       setForm({
         email: "",
         user_name: "",
@@ -122,11 +122,11 @@ const UserManagement = () => {
   }, [editingUser]);
 
   const validateForm = () => {
-    let newErrors = {};
+    const newErrors: Record<string, string> = {};
 
     if (!form.email.trim()) newErrors.email = "Email is required";
     if (!form.user_name.trim()) newErrors.user_name = "Username is required";
-    if (!editingUser && !form.password.trim())
+    if (!editingUser && !form.password?.trim())
       newErrors.password = "Password is required";
     if (!editingUser && form.password !== form.confirmPassword)
       newErrors.confirmPassword = "Passwords do not match";
@@ -158,11 +158,12 @@ const UserManagement = () => {
         setUsers(response.pageData); //  Correctly setting users
         setTotalPages(response.pageInfo.totalPages || 1); //  Fix pagination
       } else {
-        toast.error("Invalid API response structure:", response);
+        toast.error(`Invalid API response: ${JSON.stringify(response)}`);
         setUsers([]); // 🛠 Prevent crashes
       }
     } catch (error) {
-      toast.error("Failed to fetch users", error);
+      toast.error(`Failed to fetch users: ${error instanceof Error ? error.message : JSON.stringify(error)}`);
+
       setUsers([]); // 🛠 Prevent UI crash
     } finally {
       setLoading(false);
@@ -175,8 +176,7 @@ const UserManagement = () => {
   useEffect(() => {
     debouncedFetchUsers();
     return () => debouncedFetchUsers.cancel();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedFetchUsers]); // [pageNum, searchTerm]);
+  }, [debouncedFetchUsers]); 
 
   const filteredUsers = users.filter(
     (user) =>
@@ -205,14 +205,15 @@ const UserManagement = () => {
           email: form.email,
           user_name: form.user_name,
           role_code: form.role_code,
-          password: form.password, // Password required for new user
+          password: form.password ?? "", // Password required for new user
         });
       }
 
       setPopupOpen(false); // Close popup after saving
       fetchUsers(); // Refresh the user list
     } catch (error) {
-      toast.error("Failed to save user", error);
+      toast.error(`Failed to save users: ${error instanceof Error ? error.message : JSON.stringify(error)}`);
+
     }
   };
 
@@ -236,7 +237,7 @@ const UserManagement = () => {
         fetchUsers();
       }
     } catch (error) {
-      toast.error(`Failed to ${confirmDialog.action} user`, error);
+      toast.error(`Failed to ${confirmDialog.action} user: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setConfirmDialog({ open: false, user: null, action: null });
     }
@@ -252,62 +253,50 @@ const UserManagement = () => {
     }
 
     try {
-      const response = await getEmployeeById(id);
-
-      console.log("API Raw Response:", response);
-
-      // Ensure response.data is correctly accessed
-      const employee = response.data?.data ?? response.data ?? response;
-
+      const employee = await getEmployeeById(id); // Now TypeScript knows `employee` has all properties
+    
       console.log("Fixed Response Data:", employee);
-
+    
       if (!employee || Object.keys(employee).length === 0) {
         throw new Error("No employee data found");
       }
-
-      // Ensure all fields exist in state
+    
+      // Set state without TypeScript errors
       setEmployeeData({
-        _id: employee._id ?? "",
-        user_id: employee.user_id ?? "",
-        job_rank: employee.job_rank ?? "",
-        contract_type: employee.contract_type ?? "",
-        address: employee.address ?? "",
-        avatar_url: employee.avatar_url ?? "",
-        department_code: employee.department_code ?? "",
-        created_at: employee.created_at
-          ? new Date(employee.created_at)
-          : new Date(),
-        end_date: employee.end_date ? new Date(employee.end_date) : new Date(),
-        full_name: employee.full_name ?? "",
-        is_deleted: employee.is_deleted ?? false,
-        phone: employee.phone ?? "",
-        salary: employee.salary ?? 0,
-        start_date: employee.start_date
-          ? new Date(employee.start_date)
-          : new Date(),
-        updated_at: employee.updated_at
-          ? new Date(employee.updated_at)
-          : new Date(),
-        updated_by: employee.updated_by ?? "",
+        _id: employee._id,
+        user_id: employee.user_id,
+        job_rank: employee.job_rank,
+        contract_type: employee.contract_type,
+        address: employee.address,
+        avatar_url: employee.avatar_url,
+        department_code: employee.department_code,
+        created_at: employee.created_at ? new Date(employee.created_at) : new Date(),
+        end_date: new Date(employee.end_date),
+        full_name: employee.full_name,
+        is_deleted: employee.is_deleted,
+        phone: employee.phone,
+        salary: employee.salary,
+        start_date: new Date(employee.start_date),
+        updated_at: employee.updated_at ? new Date(employee.updated_at) : new Date(),
+        updated_by: employee.updated_by,
       });
+    
       setPopupOpen2(true);
     } catch (error) {
       console.error("Error fetching employee details:", error);
-      toast.error(error.message || "Error fetching employee details");
+      toast.error(error instanceof Error ? error.message : "Error fetching employee details");
     }
   };
 
   const handleSaveEmployeeDetails = async () => {
     try {
-      const { created_at, updated_at, ...employeeDataToSend } = employeeData; // Exclude date fields
+      console.log("Sending to API:", employeeData);
   
-      console.log("Sending to API:", employeeDataToSend);
-  
-      await updateEmployee(employeeData.user_id, employeeDataToSend);
-  
-      console.log(" Employee updated successfully!");
+      await updateEmployee(employeeData.user_id, { ...employeeData });
+
+      console.log("Employee updated successfully!");
     } catch (error) {
-      console.error(" Error updating employee details:", error);
+      console.error("Error updating employee details:", error);
     }
   };
   
@@ -640,7 +629,7 @@ const UserManagement = () => {
                           >
                             Created At
                           </Typography>
-                          <Typography>{viewUser.created_at}</Typography>
+                          <Typography>{viewUser.created_at?.toLocaleString()}</Typography>
                         </CardContent>
                       </Card>
                     </Grid>
@@ -657,7 +646,7 @@ const UserManagement = () => {
                           >
                             Updated At
                           </Typography>
-                          <Typography>{viewUser.updated_at}</Typography>
+                          <Typography>{viewUser.updated_at?.toLocaleString()}</Typography>
                         </CardContent>
                       </Card>
                     </Grid>
@@ -904,7 +893,7 @@ const UserManagement = () => {
         <Pagination
           count={totalPages}
           page={pageNum}
-          onChange={(event, newPage) => setPageNum(newPage)} // Change page
+          onChange={(_, newPage) => setPageNum(newPage)} // Ignore unused event
           color="primary"
         />
         <Dialog
@@ -972,16 +961,12 @@ const UserManagement = () => {
                 />
                 <TextField
                   label="Phone"
-                  type="number"
                   value={employeeData.phone}
                   onChange={(e) =>
                     setEmployeeData({ ...employeeData, phone: e.target.value })
                   }
                   fullWidth
                   margin="dense"
-                  slotProps={{
-                    htmlInput: { inputMode: "numeric", style: { textAlign: "right" } }, // ✅ Use slotProps.htmlInput
-                  }}
                 />
                 <TextField
                   label="Address"

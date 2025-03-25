@@ -1,5 +1,6 @@
 import apiService from "../../../core/api/api";
-import { User, UserResponse } from "../types/user";
+import { User, UserResponse, Employee } from "../types/user";
+
 
 export const searchUsers = async (
   searchCondition: object,
@@ -87,28 +88,41 @@ export const changeUserRole = async (userId : string, roleCode : string) => {
   }
 };
 
-export const getEmployeeById = async (userId: string) => {
+export const getEmployeeById = async (userId: string): Promise<Employee> => {
   try {
-    const response = await apiService.get(`/employees/${userId}`);
+    const response = await apiService.get<{ success: boolean; data: Employee }>(
+      `/employees/${userId}`
+    );
+
     console.log("Backend API Response:", response);
 
-    if (!response.data || Object.keys(response.data).length === 0) {
+    // Correcting the data extraction
+    const employeeData = response?.data?.data ?? response?.data;
+
+    if (!employeeData || Object.keys(employeeData).length === 0) {
       throw new Error("Employee data is empty or not found");
-    } 
-    return response.data; // Extract employee data from response
-  } catch (error: any) {
+    }
+
+    return employeeData;
+  } catch (error) {
     console.error(`Failed to fetch employee with ID: ${userId}`, error);
-    throw error;
+    throw new Error(error instanceof Error ? error.message : "An unknown error occurred");
   }
 };
 
-export const updateEmployee = async (userId: string, employeeData: object) => {
+export const updateEmployee = async (userId: string, employeeData: Record<string, unknown>): Promise<void> => {
   try {
     const response = await apiService.put(`/employees/${userId}`, employeeData);
     console.log("API Response:", response);
-  } catch (error: any) {
-    console.error("API Error:", error.response?.data || error);
-    throw error;
+  } catch (error) {
+    console.error("API Error:", error instanceof Error ? error.message : "Unknown error");
+
+    if (error instanceof Error && "response" in error) {
+      const axiosError = error as { response?: { data?: unknown } };
+      throw new Error(axiosError.response?.data ? JSON.stringify(axiosError.response.data) : error.message);
+    }
+
+    throw new Error("An unexpected error occurred");
   }
 };
 
