@@ -3,9 +3,6 @@ import {
   Modal,
   Button,
   TextField,
-  MenuItem,
-  Select,
-  InputLabel,
   FormControl,
   Autocomplete,
   Table,
@@ -28,7 +25,6 @@ import moment from "moment";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
 import Layout from "../../../../shared/layouts/Layout";
-import { SelectChangeEvent } from "@mui/material/Select";
 import CloseIcon from "@mui/icons-material/Close";
 import TablePagination from "@mui/material/TablePagination";
 import toast from "react-hot-toast";
@@ -668,12 +664,6 @@ const RequestPage = () => {
     setFormValues({ ...formValues, [name]: value });
   };
 
-  const handleSelectChange = (e: SelectChangeEvent<string>) => {
-    const { name, value } = e.target;
-    setFormValues({ ...formValues, [name as string]: value as string });
-    const project = projects.find((p) => p._id === value);
-    setSelectedProjectName(project?.project_name || "");
-  };
 
   const handleDateChange = (name: string, date: moment.Moment | null) => {
     setFormValues({ ...formValues, [name]: date });
