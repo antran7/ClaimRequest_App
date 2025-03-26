@@ -95,7 +95,7 @@ const ApprovalPage: React.FC = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
-    }, 1000); // Giảm thời gian debounce xuống 1 giây
+    }, 1000);
 
     return () => clearTimeout(timer);
   }, [searchTerm]);
