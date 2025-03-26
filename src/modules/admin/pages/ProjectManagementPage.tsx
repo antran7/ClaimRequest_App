@@ -24,7 +24,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Pagination,
+  TablePagination,
   Stack,
   InputAdornment,
   List,
@@ -64,40 +64,38 @@ const ProjectManagementPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [userSearchTerm, setUserSearchTerm] = useState("");
-  const debouncedSearchTerm = useDebounce(searchTerm, 500); // 500ms delay
-  const debouncedUserSearchTerm = useDebounce(userSearchTerm, 500); // 500ms delay
-  const itemPerPage = 10;
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const debouncedUserSearchTerm = useDebounce(userSearchTerm, 500);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
-    null
-  );
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [showUserDropdown, setShowUserDropdown] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchProjects = async () => {
       setLoading(true);
       try {
-        const response = await searchProject(debouncedSearchTerm, page);
+        const response = await searchProject(debouncedSearchTerm, page + 1, rowsPerPage);
         if (response.success && response.data) {
           setProjects(response.data.pageData);
-          setTotalPages(response.data.pageInfo.totalPages);
+          setTotalCount(response.data.pageInfo.totalItems);
         }
       } catch (error) {
         toast.error("Failed to fetch projects");
         setProjects([]);
-        setTotalPages(1);
+        setTotalCount(0);
       } finally {
         setLoading(false);
       }
     };
 
     fetchProjects();
-  }, [page, debouncedSearchTerm]);
+  }, [page, rowsPerPage, debouncedSearchTerm]);
 
   useEffect(() => {
     if (openDialog) {
@@ -183,8 +181,8 @@ const ProjectManagementPage: React.FC = () => {
         const response = await searchProject("", 1);
         if (response.success && response.data) {
           setProjects(response.data.pageData);
-          setTotalPages(response.data.pageInfo.totalPages);
-          setPage(1);
+          setTotalCount(response.data.pageInfo.totalItems);
+          setPage(0);
         }
 
         handleCloseDialog();
@@ -253,7 +251,7 @@ const ProjectManagementPage: React.FC = () => {
 
   const handleSearch = (searchTerm: string) => {
     setSearchTerm(searchTerm);
-    setPage(1); // Reset to first page when searching
+    setPage(0); // Reset to first page when searching
   };
 
   const formatDate = (dateString: string) => {
@@ -440,18 +438,24 @@ const ProjectManagementPage: React.FC = () => {
                 )}
               </TableBody>
             </Table>
+            <TablePagination
+              rowsPerPageOptions={[5, 10, 25]}
+              component="div"
+              count={totalCount}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              onPageChange={(event, newPage) => setPage(newPage)}
+              onRowsPerPageChange={(event) => {
+                setRowsPerPage(parseInt(event.target.value, 10));
+                setPage(0);
+              }}
+              labelDisplayedRows={({ from, to, count }) => {
+                return `${from}-${to} of ${count}`;
+              }}
+              showFirstButton
+              showLastButton
+            />
           </TableContainer>
-          <div className="w-1/3 ml-auto p-4">
-            <Stack spacing={2}>
-              <Pagination
-                count={totalPages}
-                page={page}
-                onChange={(_, value) => setPage(value)}
-                variant="outlined"
-                shape="rounded"
-              />
-            </Stack>
-          </div>
         </div>
 
         <Dialog
