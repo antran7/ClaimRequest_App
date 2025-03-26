@@ -14,15 +14,10 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Snackbar,
-  Alert,
   Menu,
   MenuItem,
   ListItemIcon,
   ListItemText,
-  FormControl,
-  Select,
-  InputLabel,
 } from "@mui/material";
 import {
   Search,
@@ -38,6 +33,7 @@ import Layout from "../../../shared/layouts/Layout";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import toast from "react-hot-toast";
 
 interface Claim {
   _id: string;
@@ -69,7 +65,6 @@ const PaidPage = () => {
   const [token, setToken] = useState("");
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string>("Approved");
   const [downloadAnchorEl, setDownloadAnchorEl] = useState<null | HTMLElement>(
     null
   );
@@ -77,11 +72,6 @@ const PaidPage = () => {
     useState<null | HTMLElement>(null);
   const [selectedClaimForDownload, setSelectedClaimForDownload] =
     useState<Claim | null>(null);
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "success" as "success" | "error",
-  });
 
   const tableCellStyle = {
     borderRight: "2px solid rgba(224, 224, 224, 1)",
@@ -117,11 +107,11 @@ const PaidPage = () => {
     try {
       setLoading(true);
       const response = await axios.post(
-        `${API_URL}/claims/search`,
+        `${API_URL}/claims/finance-search`,
         {
           searchCondition: {
             keyword: debouncedSearchTerm || "",
-            claim_status: statusFilter, // Thêm status filter
+            claim_status: "Approved",
             claim_start_date: "",
             claim_end_date: "",
             is_delete: false,
@@ -152,12 +142,7 @@ const PaidPage = () => {
   useEffect(() => {
     if (!token) return;
     fetchClaims();
-  }, [token, page, rowsPerPage, debouncedSearchTerm, statusFilter]);
-
-  const handleStatusFilterChange = (newStatus: string) => {
-    setStatusFilter(newStatus);
-    setPage(0);
-  };
+  }, [token, page, rowsPerPage, debouncedSearchTerm]);
 
   const handleChangePage = (_: unknown, newPage: number) => {
     setPage(newPage);
@@ -180,12 +165,9 @@ const PaidPage = () => {
     setSelectedClaim(null);
   };
 
-  const handleCloseSnackbar = () => {
-    setSnackbar((prev) => ({ ...prev, open: false }));
-  };
-
   const handlePaid = async (claim: Claim) => {
     try {
+      setLoading(true);
       const response = await axios.put(
         `${API_URL}/claims/change-status`,
         {
@@ -206,21 +188,18 @@ const PaidPage = () => {
             c._id === claim._id ? { ...c, claim_status: "Paid" } : c
           )
         );
-        setSnackbar({
-          open: true,
-          message: "Payment processed successfully!",
-          severity: "success",
+        toast.success("Payment processed successfully!", {
+          icon: "✅",
         });
         fetchClaims(); // Refresh the data
       }
     } catch (error) {
       console.error("Error marking as paid:", error);
-      setSnackbar({
-        open: true,
-        message: "Failed to process payment. Please try again.",
-        severity: "error",
+      toast("Failed to process payment. Please try again.", {
+        icon: "❌",
       });
     } finally {
+      setLoading(false);
       handleCloseConfirmDialog();
     }
   };
@@ -244,9 +223,12 @@ const PaidPage = () => {
 
   const handleDownloadExcel = () => {
     try {
+      setLoading(true);
       if (!selectedClaimForDownload) return;
 
-      // Chuẩn bị dữ liệu cho file Excel
+      const timestamp = moment().format("YYYY-MM-DD_HH-mm-ss");
+      const fileName = `claim-${selectedClaimForDownload.claim_name}_${timestamp}.xlsx`;
+
       const data = [
         {
           "Claim Name": selectedClaimForDownload.claim_name,
@@ -262,98 +244,129 @@ const PaidPage = () => {
         },
       ];
 
-      // Tạo worksheet
       const ws = XLSX.utils.json_to_sheet(data);
-
-      // Tạo workbook
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Claim Details");
+      XLSX.writeFile(wb, fileName);
 
-      // Download file
-      XLSX.writeFile(wb, `claim-${selectedClaimForDownload.claim_name}.xlsx`);
-
-      setSnackbar({
-        open: true,
-        message: "Excel file downloaded successfully!",
-        severity: "success",
+      toast.success("Excel file downloaded successfully!", {
+        icon: "✅",
       });
     } catch (error) {
       console.error("Error creating Excel:", error);
-      setSnackbar({
-        open: true,
-        message: "Failed to create Excel file. Please try again.",
-        severity: "error",
+      toast("Failed to create Excel file. Please try again.", {
+        icon: "❌",
       });
+    } finally {
+      setLoading(false);
+      handleDownloadClose();
     }
-    handleDownloadClose();
   };
 
   const handleDownloadPDF = () => {
     try {
+      setLoading(true);
       if (!selectedClaimForDownload) return;
 
-      // Tạo PDF document với orientation là portrait và đơn vị là pt
       const doc = new jsPDF({
-        orientation: "portrait",
+        orientation: "landscape",
         unit: "pt",
         format: "a4",
       });
 
-      // Thêm tiêu đề
-      doc.setFontSize(16);
-      doc.text("Claim Details", 40, 40);
+      doc.setFontSize(20);
+      doc.text("Claim Details", doc.internal.pageSize.getWidth() / 2, 40, {
+        align: "center",
+      });
 
-      // Chuẩn bị dữ liệu cho bảng
-      const data = [
-        ["Claim Name", selectedClaimForDownload.claim_name],
-        [
-          "Project",
-          selectedClaimForDownload.project_info
-            ? `${selectedClaimForDownload.project_info.project_name} (${selectedClaimForDownload.project_info.project_code})`
-            : "N/A",
+      const tableData = {
+        head: [
+          [
+            "Claim Name",
+            "Project",
+            "Requester",
+            "Role",
+            "Start Date",
+            "End Date",
+            "Total Hours",
+            "Status",
+          ],
         ],
-        ["Requester", selectedClaimForDownload.staff_name],
-        ["Role", selectedClaimForDownload.role_in_project || "N/A"],
-        ["Start Date", formatDate(selectedClaimForDownload.claim_start_date)],
-        ["End Date", formatDate(selectedClaimForDownload.claim_end_date)],
-        ["Total Hours", `${selectedClaimForDownload.total_work_time} hours`],
-        ["Status", selectedClaimForDownload.claim_status],
-      ];
+        body: [
+          [
+            selectedClaimForDownload.claim_name,
+            selectedClaimForDownload.project_info
+              ? `${selectedClaimForDownload.project_info.project_name} (${selectedClaimForDownload.project_info.project_code})`
+              : "N/A",
+            selectedClaimForDownload.staff_name,
+            selectedClaimForDownload.role_in_project || "N/A",
+            formatDate(selectedClaimForDownload.claim_start_date),
+            formatDate(selectedClaimForDownload.claim_end_date),
+            `${selectedClaimForDownload.total_work_time} hours`,
+            selectedClaimForDownload.claim_status,
+          ],
+        ],
+      };
 
-      // Sử dụng autoTable
       autoTable(doc, {
         startY: 60,
-        head: [["Field", "Value"]],
-        body: data,
+        head: tableData.head,
+        body: tableData.body,
         theme: "grid",
         headStyles: {
           fillColor: [128, 128, 128],
           textColor: [255, 255, 255],
-        },
-        styles: {
           fontSize: 12,
-          cellPadding: 8,
+          fontStyle: "bold",
+          halign: "center",
+          valign: "middle",
+        },
+        bodyStyles: {
+          fontSize: 11,
+          halign: "center",
+          valign: "middle",
         },
         columnStyles: {
-          0: { fontStyle: "bold" },
+          0: { cellWidth: 120 }, // Claim Name
+          1: { cellWidth: 180 }, // Project
+          2: { cellWidth: 100 }, // Requester
+          3: { cellWidth: 80 }, // Role
+          4: { cellWidth: 80 }, // Start Date
+          5: { cellWidth: 80 }, // End Date
+          6: { cellWidth: 80 }, // Hours
+          7: { cellWidth: 80 }, // Status
+        },
+        margin: { top: 60, right: 30, bottom: 30, left: 30 },
+        didDrawPage: (data) => {
+          // Add page number if there are multiple pages
+          doc.setFontSize(10);
+          doc.text(
+            `Page ${doc.getCurrentPageInfo().pageNumber}`,
+            data.settings.margin.left,
+            doc.internal.pageSize.height - 10
+          );
         },
       });
 
-      // Download file
-      doc.save(`claim-${selectedClaimForDownload.claim_name}.pdf`);
+      const timestamp = moment().format("YYYY-MM-DD_HH-mm-ss");
+      const fileName = `claim-${selectedClaimForDownload.claim_name}_${timestamp}.pdf`;
 
-      setSnackbar({
-        open: true,
-        message: "PDF file downloaded successfully!",
-        severity: "success",
-      });
+      doc
+        .save(fileName, {
+          returnPromise: true,
+        })
+        .then(() => {
+          toast.success("PDF file downloaded successfully!", {
+            icon: "✅",
+          });
+          setLoading(false);
+        });
     } catch (error) {
       console.error("Error creating PDF:", error);
-      setSnackbar({
-        open: true,
-        message: "Failed to create PDF file. Please try again.",
-        severity: "error",
+      toast("Failed to create PDF file. Please try again.", {
+        icon: "❌",
       });
+      setLoading(false);
     }
     handleDownloadClose();
   };
@@ -366,9 +379,9 @@ const PaidPage = () => {
     setDownloadAllAnchorEl(null);
   };
 
-  // 4. Thêm functions để download all
   const handleDownloadAllExcel = () => {
     try {
+      setLoading(true);
       const data = claims.map((claim) => ({
         "Claim Name": claim.claim_name,
         Project: claim.project_info
@@ -385,50 +398,41 @@ const PaidPage = () => {
       const ws = XLSX.utils.json_to_sheet(data);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "All Claims");
-      XLSX.writeFile(wb, `all-claims-${statusFilter.toLowerCase()}.xlsx`);
 
-      setSnackbar({
-        open: true,
-        message: "Excel file downloaded successfully!",
-        severity: "success",
+      const timestamp = moment().format("YYYY-MM-DD_HH-mm-ss");
+      const fileName = `all-claims_${timestamp}.xlsx`;
+
+      XLSX.writeFile(wb, fileName);
+
+      toast.success("Excel file downloaded successfully!", {
+        icon: "✅",
       });
     } catch (error) {
       console.error("Error creating Excel:", error);
-      setSnackbar({
-        open: true,
-        message: "Failed to create Excel file. Please try again.",
-        severity: "error",
+      toast("Failed to create Excel file. Please try again.", {
+        icon: "❌",
       });
+    } finally {
+      setLoading(false);
+      handleDownloadAllClose();
     }
-    handleDownloadAllClose();
   };
 
   const handleDownloadAllPDF = () => {
     try {
+      setLoading(true);
       const doc = new jsPDF({
         orientation: "landscape",
         unit: "pt",
         format: "a4",
       });
 
-      doc.setFontSize(16);
-      doc.text(`${statusFilter} Claims Report`, 40, 40);
+      doc.setFontSize(20);
+      doc.text("Claims Report", doc.internal.pageSize.getWidth() / 2, 40, {
+        align: "center",
+      });
 
-      const tableData = claims.map((claim) => [
-        claim.claim_name,
-        claim.project_info
-          ? `${claim.project_info.project_name} (${claim.project_info.project_code})`
-          : "N/A",
-        claim.staff_name,
-        claim.role_in_project || "N/A",
-        formatDate(claim.claim_start_date),
-        formatDate(claim.claim_end_date),
-        `${claim.total_work_time} hours`,
-        claim.claim_status,
-      ]);
-
-      autoTable(doc, {
-        startY: 60,
+      const tableData = {
         head: [
           [
             "Claim Name",
@@ -441,32 +445,79 @@ const PaidPage = () => {
             "Status",
           ],
         ],
-        body: tableData,
+        body: claims.map((claim) => [
+          claim.claim_name,
+          claim.project_info
+            ? `${claim.project_info.project_name} (${claim.project_info.project_code})`
+            : "N/A",
+          claim.staff_name,
+          claim.role_in_project || "N/A",
+          formatDate(claim.claim_start_date),
+          formatDate(claim.claim_end_date),
+          `${claim.total_work_time} hours`,
+          claim.claim_status,
+        ]),
+      };
+
+      autoTable(doc, {
+        startY: 60,
+        head: tableData.head,
+        body: tableData.body,
         theme: "grid",
         headStyles: {
           fillColor: [128, 128, 128],
           textColor: [255, 255, 255],
+          fontSize: 12,
+          fontStyle: "bold",
+          halign: "center",
+          valign: "middle",
         },
-        styles: {
-          fontSize: 10,
-          cellPadding: 5,
+        bodyStyles: {
+          fontSize: 11,
+          halign: "center",
+          valign: "middle",
+        },
+        columnStyles: {
+          0: { cellWidth: 120 }, // Claim Name
+          1: { cellWidth: 180 }, // Project
+          2: { cellWidth: 100 }, // Requester
+          3: { cellWidth: 80 }, // Role
+          4: { cellWidth: 80 }, // Start Date
+          5: { cellWidth: 80 }, // End Date
+          6: { cellWidth: 80 }, // Hours
+          7: { cellWidth: 80 }, // Status
+        },
+        margin: { top: 60, right: 30, bottom: 30, left: 30 },
+        didDrawPage: (data) => {
+          // Add page number if there are multiple pages
+          doc.setFontSize(10);
+          doc.text(
+            `Page ${doc.getCurrentPageInfo().pageNumber}`,
+            data.settings.margin.left,
+            doc.internal.pageSize.height - 10
+          );
         },
       });
 
-      doc.save(`all-claims-${statusFilter.toLowerCase()}.pdf`);
+      const timestamp = moment().format("YYYY-MM-DD_HH-mm-ss");
+      const fileName = `all-claims_${timestamp}.pdf`;
 
-      setSnackbar({
-        open: true,
-        message: "PDF file downloaded successfully!",
-        severity: "success",
-      });
+      doc
+        .save(fileName, {
+          returnPromise: true,
+        })
+        .then(() => {
+          toast.success("PDF file downloaded successfully!", {
+            icon: "✅",
+          });
+          setLoading(false);
+        });
     } catch (error) {
       console.error("Error creating PDF:", error);
-      setSnackbar({
-        open: true,
-        message: "Failed to create PDF file. Please try again.",
-        severity: "error",
+      toast("Failed to create PDF file. Please try again.", {
+        icon: "❌",
       });
+      setLoading(false);
     }
     handleDownloadAllClose();
   };
@@ -492,30 +543,17 @@ const PaidPage = () => {
                 }}
               />
 
-              <FormControl
-                variant="outlined"
-                size="small"
-                sx={{ minWidth: 200, ml: 2 }}
-              >
-                <InputLabel>Status</InputLabel>
-                <Select
-                  value={statusFilter}
-                  onChange={(e) => handleStatusFilterChange(e.target.value)}
-                  label="Status"
-                >
-                  <MenuItem value="Approved">Approved Claims</MenuItem>
-                  <MenuItem value="Paid">Paid Claims</MenuItem>
-                </Select>
-              </FormControl>
-
               <Button
                 variant="contained"
                 size="small"
                 onClick={handleDownloadAllClick}
                 sx={{
-                  backgroundColor: "gray",
+                  backgroundColor: "#3b82f6",
                   color: "white",
-                  "&:hover": { backgroundColor: "darkgray" },
+                  "&:hover": {
+                    backgroundColor: "#2563eb",
+                    color: "white",
+                  },
                   textTransform: "none",
                   ml: 2,
                 }}
@@ -615,40 +653,48 @@ const PaidPage = () => {
                             sx={{ ...tableCellStyle, minWidth: "200px" }}
                           >
                             <div className="action-buttons">
-                              {claim.claim_status === "Approved" ? (
-                                <Button
-                                  variant="contained"
-                                  size="medium"
-                                  sx={{
-                                    backgroundColor: "gray",
-                                    color: "white",
-                                    "&:hover": { backgroundColor: "darkgray" },
-                                    textTransform: "none",
-                                    padding: "8px 32px",
-                                    fontSize: "14px",
-                                    minWidth: "120px",
-                                    height: "30px",
-                                    width: "100px",
-                                  }}
-                                  startIcon={<AttachMoney />}
-                                  onClick={() => handleOpenConfirmDialog(claim)}
-                                >
-                                  Paid
-                                </Button>
-                              ) : (
-                                claim.claim_status === "Paid" && (
+                              {claim.claim_status === "Approved" && (
+                                <>
                                   <Button
                                     variant="contained"
                                     size="medium"
                                     sx={{
-                                      backgroundColor: "gray",
+                                      backgroundColor: "#46d179",
                                       color: "white",
                                       "&:hover": {
-                                        backgroundColor: "darkgray",
+                                        backgroundColor: "#16a34a",
+                                      },
+                                      textTransform: "none",
+                                      padding: "8px 32px",
+                                      fontSize: "14px",
+                                      minWidth: "120px",
+                                      height: "30px",
+                                      width: "100px",
+                                      mr: 1,
+                                    }}
+                                    startIcon={<AttachMoney />}
+                                    onClick={() =>
+                                      handleOpenConfirmDialog(claim)
+                                    }
+                                  >
+                                    Paid
+                                  </Button>
+                                  <Button
+                                    variant="contained"
+                                    size="medium"
+                                    sx={{
+                                      backgroundColor: "#3b82f6 ",
+                                      color: "white",
+                                      "&:hover": {
+                                        backgroundColor: "#2563eb",
+                                        color: "white",
                                       },
                                       textTransform: "none",
                                       padding: "8px 16px",
                                       fontSize: "14px",
+                                      minWidth: "120px",
+                                      height: "30px",
+                                      width: "100px",
                                     }}
                                     startIcon={<Download />}
                                     onClick={(e) =>
@@ -657,7 +703,7 @@ const PaidPage = () => {
                                   >
                                     Download
                                   </Button>
-                                )
+                                </>
                               )}
                             </div>
                           </TableCell>
@@ -667,25 +713,27 @@ const PaidPage = () => {
                   </Table>
                 </TableContainer>
 
-                <TablePagination
-                  rowsPerPageOptions={[5, 10, 25]}
-                  component="div"
-                  count={totalCount}
-                  rowsPerPage={rowsPerPage}
-                  page={page}
-                  onPageChange={handleChangePage}
-                  onRowsPerPageChange={handleChangeRowsPerPage}
-                  labelDisplayedRows={({ count }) => {
-                    const computedFrom = page * rowsPerPage + 1;
-                    const computedTo = Math.min(
-                      (page + 1) * rowsPerPage,
-                      count
-                    );
-                    return `${computedFrom}-${computedTo} of ${count}`;
-                  }}
-                  showFirstButton
-                  showLastButton
-                />
+                {claims.length > 0 && (
+                  <TablePagination
+                    rowsPerPageOptions={[5, 10, 25]}
+                    component="div"
+                    count={totalCount}
+                    rowsPerPage={rowsPerPage}
+                    page={page}
+                    onPageChange={handleChangePage}
+                    onRowsPerPageChange={handleChangeRowsPerPage}
+                    labelDisplayedRows={({ count }) => {
+                      const computedFrom = page * rowsPerPage + 1;
+                      const computedTo = Math.min(
+                        (page + 1) * rowsPerPage,
+                        count
+                      );
+                      return `${computedFrom}-${computedTo} of ${count}`;
+                    }}
+                    showFirstButton
+                    showLastButton
+                  />
+                )}
               </>
             )}
           </div>
@@ -727,22 +775,6 @@ const PaidPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-        sx={{ marginTop: "80px" }}
-      >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity={snackbar.severity}
-          sx={{ width: "100%" }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
 
       <Menu
         anchorEl={downloadAnchorEl}
