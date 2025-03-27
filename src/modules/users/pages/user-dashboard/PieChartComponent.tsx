@@ -38,7 +38,7 @@ function PieChartComponent() {
               claim_end_date: "",
               is_delete: false,
             },
-            pageInfo: { pageNum: 1, pageSize: 10 },
+            pageInfo: { pageNum: 1, pageSize: 100 },
           },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -67,20 +67,28 @@ function PieChartComponent() {
     };
 
     claims.forEach((claim) => {
-      const normalizedStatus = claim.claim_status.toLowerCase();
-
-      if (normalizedStatus.includes("pending")) {
-        statusCounts.Pending++;
-      } else if (normalizedStatus.includes("approved")) {
-        statusCounts.Approved++;
-      } else if (normalizedStatus.includes("reject")) {
-        statusCounts.Rejected++;
-      } else if (normalizedStatus.includes("paid")) {
-        statusCounts.Paid++;
-      } else if (normalizedStatus.includes("cancel")) {
-        statusCounts.Cancelled++;
-      } else if (normalizedStatus.includes("draft")) {
-        statusCounts.Draft++;
+      const normalizedStatus = claim.claim_status?.trim().toLowerCase();
+      switch (normalizedStatus) {
+        case "pending approval":
+          statusCounts.Pending++;
+          break;
+        case "approved":
+          statusCounts.Approved++;
+          break;
+        case "rejected":
+          statusCounts.Rejected++;
+          break;
+        case "paid":
+          statusCounts.Paid++;
+          break;
+        case "canceled":
+          statusCounts.Cancelled++;
+          break;
+        case "draft":
+          statusCounts.Draft++;
+          break;
+        default:
+          break;
       }
     });
 
