@@ -84,11 +84,7 @@ const ProjectManagementPage: React.FC = () => {
     const fetchProjects = async () => {
       setLoading(true);
       try {
-        const response = await searchProject(
-          debouncedSearchTerm,
-          page + 1,
-          rowsPerPage
-        );
+        const response = await searchProject(debouncedSearchTerm, page + 1, rowsPerPage);
         if (response.success && response.data) {
           setProjects(response.data.pageData);
           setTotalCount(response.data.pageInfo.totalItems);
@@ -290,6 +286,12 @@ const ProjectManagementPage: React.FC = () => {
     setUserSearchTerm("");
   };
 
+  const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newRowsPerPage = parseInt(event.target.value, 10);
+    setRowsPerPage(newRowsPerPage);
+    setPage(0); // Reset về trang đầu tiên khi thay đổi số lượng items/page
+  };
+
   return (
     <Layout>
       <div className="min-h-screen bg-gray-100">
@@ -433,14 +435,14 @@ const ProjectManagementPage: React.FC = () => {
                             <Status 
                               color={
                                 project.project_status === "New"
-                                  ? "#ffffff"
+                                  ? "#6b7280"
                                   : project.project_status === "Active"
                                   ? "#22c55e"
                                   : project.project_status === "Pending"
                                   ? "#eab308"
                                   : project.project_status === "Closed"
                                   ? "#ef4444"
-                                  : "#6b7280"
+                                  : "#ffffff"
                               }
                             />
                           </div>
@@ -473,10 +475,7 @@ const ProjectManagementPage: React.FC = () => {
               rowsPerPage={rowsPerPage}
               page={page}
               onPageChange={(event, newPage) => setPage(newPage)}
-              onRowsPerPageChange={(event) => {
-                setRowsPerPage(parseInt(event.target.value, 10));
-                setPage(0);
-              }}
+              onRowsPerPageChange={handleRowsPerPageChange}
               labelDisplayedRows={({ from, to, count }) => {
                 return `${from}-${to} of ${count}`;
               }}

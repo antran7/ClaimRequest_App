@@ -304,14 +304,14 @@ const ProjectDetail = () => {
                   <Status 
                     color={
                       project.project_status === "New"
-                        ? "#ffffff"
+                        ? "#6b7280"
                         : project.project_status === "Active"
                         ? "#22c55e"
                         : project.project_status === "Pending"
                         ? "#eab308"
                         : project.project_status === "Closed"
                         ? "#ef4444"
-                        : "#6b7280"
+                        : "#ffffff"
                     } 
                   />
                   <Select
