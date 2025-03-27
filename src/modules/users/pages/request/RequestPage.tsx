@@ -1037,7 +1037,22 @@ const RequestPage = () => {
                     <Controller
                       name="claim_start_date"
                       control={control}
-                      rules={{ required: "Start date is required" }}
+                      rules={{
+                        required: "Start date is required",
+                        validate: (value) => {
+                          const selectedProject = projects.find((p) => p._id === watch("project_id"));
+                          if (!selectedProject) return "Please select a project first";
+                          const projectStart = moment(selectedProject.project_start_date);
+                          const projectEnd = moment(selectedProject.project_end_date);
+                          if (value && value.isBefore(projectStart)) {
+                            return "Start date cannot be before project start date";
+                          }
+                          if (value && value.isAfter(projectEnd)) {
+                            return "Start date cannot be after project end date";
+                          }
+                          return true;
+                        },
+                      }}
                       render={({ field }) => (
                         <DatePicker
                           label="Start Date *"
@@ -1059,10 +1074,23 @@ const RequestPage = () => {
                       control={control}
                       rules={{
                         required: "End date is required",
-                        validate: (value) =>
-                          value && watch("claim_start_date") && value.isBefore(watch("claim_start_date"))
-                            ? "End date cannot be before start date"
-                            : true,
+                        validate: (value) => {
+                          const selectedProject = projects.find((p) => p._id === watch("project_id"));
+                          if (!selectedProject) return "Please select a project first";
+                          const projectEnd = moment(selectedProject.project_end_date);
+                          const projectStart = moment(selectedProject.project_start_date);
+                          const startDate = watch("claim_start_date");
+                          if (value && startDate && value.isBefore(startDate)) {
+                            return "End date cannot be before start date";
+                          }
+                          if (value && value.isAfter(projectEnd)) {
+                            return "End date cannot be after project end date";
+                          }
+                          if (value && value.isBefore(projectStart)) {
+                            return "End date cannot be before project start date";
+                          }
+                          return true;
+                        },
                       }}
                       render={({ field }) => (
                         <DatePicker
@@ -1242,7 +1270,22 @@ const RequestPage = () => {
                     <Controller
                       name="claim_start_date"
                       control={control}
-                      rules={{ required: "Start date is required" }}
+                      rules={{
+                        required: "Start date is required",
+                        validate: (value) => {
+                          const selectedProject = projects.find((p) => p._id === watch("project_id"));
+                          if (!selectedProject) return "Please select a project first";
+                          const projectStart = moment(selectedProject.project_start_date);
+                          const projectEnd = moment(selectedProject.project_end_date);
+                          if (value && value.isBefore(projectStart)) {
+                            return "Start date cannot be before project start date";
+                          }
+                          if (value && value.isAfter(projectEnd)) {
+                            return "Start date cannot be after project end date";
+                          }
+                          return true;
+                        },
+                      }}
                       render={({ field }) => (
                         <DatePicker
                           label="Start Date *"
@@ -1264,10 +1307,23 @@ const RequestPage = () => {
                       control={control}
                       rules={{
                         required: "End date is required",
-                        validate: (value) =>
-                          value && watch("claim_start_date") && value.isBefore(watch("claim_start_date"))
-                            ? "End date cannot be before start date"
-                            : true,
+                        validate: (value) => {
+                          const selectedProject = projects.find((p) => p._id === watch("project_id"));
+                          if (!selectedProject) return "Please select a project first";
+                          const projectEnd = moment(selectedProject.project_end_date);
+                          const projectStart = moment(selectedProject.project_start_date);
+                          const startDate = watch("claim_start_date");
+                          if (value && startDate && value.isBefore(startDate)) {
+                            return "End date cannot be before start date";
+                          }
+                          if (value && value.isAfter(projectEnd)) {
+                            return "End date cannot be after project end date";
+                          }
+                          if (value && value.isBefore(projectStart)) {
+                            return "End date cannot be before project start date";
+                          }
+                          return true;
+                        },
                       }}
                       render={({ field }) => (
                         <DatePicker
