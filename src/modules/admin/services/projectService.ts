@@ -79,11 +79,7 @@ export const fetchProjectById = async (projectId: string): Promise<Project> => {
   }
 };
 
-export const searchProject = async (
-  searchTerm: string = "", 
-  pageNum: number = 1,
-  pageSize: number = 10
-): Promise<ApiResponse> => {
+export const searchProject = async (searchTerm: string = "", pageNum: number = 1): Promise<ApiResponse> => {
   try {
     const bodyData = {
       searchCondition: {
@@ -95,7 +91,7 @@ export const searchProject = async (
       },
       pageInfo: {
         pageNum: pageNum,
-        pageSize: pageSize,
+        pageSize: 10,
       },
     };
 
@@ -189,3 +185,27 @@ export const searchProjectWithData = async (searchData: SearchData, pageNum: num
     throw error;
   }
 }
+
+export const changeProjectStatus = async (project_id: string, project_status: string, project_comment: string = ""): Promise<ApiResponse> => {
+  try {
+    const response = await fetch(`${API_URL}/projects/change-status`, {
+      method: "PUT",
+      headers: getHeaders(),
+      body: JSON.stringify({
+        _id: project_id,
+        project_status,
+        project_comment
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to change project status");
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error("Error changing project status:", error);
+    throw error;
+  }
+};
