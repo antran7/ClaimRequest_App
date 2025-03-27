@@ -201,6 +201,7 @@ const UserManagement = () => {
           email: form.email,
           user_name: form.user_name,
         });
+        toast.success("User updated successfully!");
       } else {
         // Creating a new user
         await createUser({
@@ -209,6 +210,7 @@ const UserManagement = () => {
           role_code: form.role_code,
           password: form.password ?? "", // Password required for new user
         });
+        toast.success("User created successfully!");
       }
 
       setPopupOpen(false); // Close popup after saving
@@ -332,6 +334,7 @@ const UserManagement = () => {
           user._id === userId ? { ...user, role_code: newRoleCode } : user
         )
       );
+      toast.success("User role updated successfully!");
     } catch (error) {
       console.error("Error updating role:", error);
       toast.error(`Error updating role: ${error instanceof Error ? error.message : String(error)}`);
