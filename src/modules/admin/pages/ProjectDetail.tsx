@@ -111,7 +111,7 @@ const ProjectDetail = () => {
         await updateProject({
           _id: project?._id!,
           ...values,
-          project_members: values.project_members, // Use the updated members
+          project_members: values.project_members, 
           project_status: project?.project_status || "ACTIVE",
         });
         toast.success("Project updated successfully!");
@@ -206,7 +206,6 @@ const ProjectDetail = () => {
     setUserSearchTerm(searchValue);
     setShowUserDropdown(index);
     
-    // Filter users based on search term
     if (searchValue.trim() === '') {
       setFilteredUsers(users);
     } else {
@@ -285,7 +284,7 @@ const ProjectDetail = () => {
   return (
     <Layout>
       <button
-        className="relative py-2 px-8 text-black text-base font-bold nded-full overflow-hidden bg-white rounded-full transition-all duration-400 ease-in-out shadow-md hover:scale-105 hover:text-white hover:shadow-lg active:scale-90 before:absolute before:top-0 before:-left-full before:w-full before:h-full before:bg-gradient-to-r before:from-gray-500 before:to-gray-300 before:transition-all before:duration-500 before:ease-in-out before:z-[-1] before:rounded-full hover:before:left-0"
+        className="mt-2 ml-2 relative py-2 px-8 text-black text-base font-bold nded-full overflow-hidden bg-white rounded-full transition-all duration-400 ease-in-out shadow-md hover:scale-105 hover:text-white hover:shadow-lg active:scale-90 before:absolute before:top-0 before:-left-full before:w-full before:h-full before:bg-gradient-to-r before:from-gray-500 before:to-gray-300 before:transition-all before:duration-500 before:ease-in-out before:z-[-1] before:rounded-full hover:before:left-0"
         onClick={() => navigate("/admin/manageproject")}
       >
         <ArrowBackIcon />
@@ -305,14 +304,14 @@ const ProjectDetail = () => {
                   <Status 
                     color={
                       project.project_status === "New"
-                        ? "#ffffff"
+                        ? "#6b7280"
                         : project.project_status === "Active"
                         ? "#22c55e"
                         : project.project_status === "Pending"
                         ? "#eab308"
                         : project.project_status === "Closed"
                         ? "#ef4444"
-                        : "#6b7280"
+                        : "#ffffff"
                     } 
                   />
                   <Select

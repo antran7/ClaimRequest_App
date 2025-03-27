@@ -79,7 +79,7 @@ export const fetchProjectById = async (projectId: string): Promise<Project> => {
   }
 };
 
-export const searchProject = async (searchTerm: string = "", pageNum: number = 1): Promise<ApiResponse> => {
+export const searchProject = async (searchTerm: string = "", pageNum: number = 1, pageSize: number = 10): Promise<ApiResponse> => {
   try {
     const bodyData = {
       searchCondition: {
@@ -91,7 +91,7 @@ export const searchProject = async (searchTerm: string = "", pageNum: number = 1
       },
       pageInfo: {
         pageNum: pageNum,
-        pageSize: 10,
+        pageSize: pageSize,
       },
     };
 

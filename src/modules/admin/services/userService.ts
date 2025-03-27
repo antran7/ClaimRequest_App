@@ -90,7 +90,7 @@ export const changeUserRole = async (userId : string, roleCode : string) => {
 
 export const getEmployeeById = async (userId: string): Promise<Employee> => {
   try {
-    const response = await apiService.get<{ success: boolean; data: Employee }>(
+    const response = await apiService.get<Employee>(
       `/employees/${userId}`
     );
 

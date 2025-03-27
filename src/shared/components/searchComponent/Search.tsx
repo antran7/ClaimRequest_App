@@ -17,7 +17,7 @@ const Search: React.FC<SearchProps> = ({ onSearch }) => {
     <div className="relative">
       <input
         placeholder="Search..."
-        className="input bg-white shadow-sm focus:border-2 border-gray-300 px-5 py-3 rounded-xl w-180 transition-all outline-none [&::-webkit-search-cancel-button]:hidden [&::-moz-search-clear-button]:hidden"
+        className="input shadow-lg focus:border-2 border-gray-300 px-5 py-3 rounded-xl w-180 transition-all focus:w-200 outline-none [appearance:textfield] [&::-webkit-search-cancel-button]:appearance-none"
         name="search"
         type="search"
         value={searchTerm}
