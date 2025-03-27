@@ -707,7 +707,7 @@ const RequestPage = () => {
                   onChange={(e) => setSearch(e.target.value)}
                   className="search-field"
                   placeholder="Search by name..."
-                  sx={{ width: "1200px" }}
+                  sx={{ width: "1000px" }}
                 />
                 <Autocomplete
                   options={["All", "Draft", "Pending Approval", "Rejected", "Approved"]}
