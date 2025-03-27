@@ -123,6 +123,7 @@ const RequestPage = () => {
   const [approvers, setApprovers] = useState<Approver[]>([]);
   const [claimLogs, setClaimLogs] = useState<ClaimLog[]>([]);
   const [search, setSearch] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState<string | null>("All");
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [isLogModalVisible, setIsLogModalVisible] = useState(false);
@@ -203,13 +204,12 @@ const RequestPage = () => {
   const fetchRequests = async () => {
     setLoading(true);
     try {
-      console.log("Fetching requests with page:", page + 1, "rowsPerPage:", rowsPerPage, "search:", search);
       const response = await axios.post(
         `${API_URL}/claims/claimer-search`,
         {
           searchCondition: {
             keyword: search,
-            claim_status: "",
+            claim_status: selectedStatus === "All" ? "" : selectedStatus,
             claim_start_date: "",
             claim_end_date: "",
             is_delete: false,
@@ -225,14 +225,9 @@ const RequestPage = () => {
           },
         }
       );
-      console.log("Response received:", response.data);
       if (response.data.success) {
-        console.log("Fetched requests:", response.data.data.pageData);
-        console.log("Total items:", response.data.data.pageInfo.totalItems);
         setRequests(response.data.data.pageData);
         setTotalCount(response.data.data.pageInfo.totalItems);
-      } else {
-        console.error("Failed to fetch requests:", response.data.message);
       }
     } catch (error) {
       console.error("Error fetching requests:", error);
@@ -245,7 +240,7 @@ const RequestPage = () => {
     if (userId && token) {
       fetchRequests();
     }
-  }, [userEmail, userId, token, page, rowsPerPage, search]);
+  }, [userEmail, userId, token, page, rowsPerPage, search, selectedStatus]);
 
   const fetchProjects = async (keyword: string = "") => {
     try {
@@ -702,16 +697,37 @@ const RequestPage = () => {
           <div className="request-content">
             <h1 className="request-title">Claim Request Management</h1>
 
-            <div className="request-filters">
-              <TextField
-                label="Search"
-                variant="outlined"
-                size="small"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="search-field"
-                placeholder="Search by name..."
-              />
+            <div className="request-filters" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
+                <TextField
+                  label="Search"
+                  variant="outlined"
+                  size="small"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="search-field"
+                  placeholder="Search by name..."
+                  sx={{ width: "1200px" }}
+                />
+                <Autocomplete
+                  options={["All", "Draft", "Pending Approval", "Rejected", "Approved"]}
+                  value={selectedStatus || "All"}
+                  onChange={(event, newValue) => {
+                    setSelectedStatus(newValue || "All");
+                    setPage(0); // Reset page to 0 when changing status
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Status"
+                      variant="outlined"
+                      size="small"
+                      placeholder="Filter by status"
+                    />
+                  )}
+                  sx={{ minWidth: "200px" }}
+                />
+              </div>
               <Button
                 variant="contained"
                 onClick={() => setIsAddModalVisible(true)}
@@ -800,65 +816,55 @@ const RequestPage = () => {
                           sx={{ ...tableCellStyle, minWidth: "300px" }}
                         >
                           <div className="action-buttons">
-                            <Button
-                              variant="contained"
-                              size="small"
-                              onClick={() => handleEditClick(req)}
-                              disabled={
-                                req.claim_status !== "Draft" &&
-                                req.claim_status !== "Returned"
-                              }
-                              sx={{
-                                backgroundColor: "#e6cb62",
-                                color: "black",
-                                "&:hover": {
-                                  backgroundColor: "#eab308",
-                                  color: "white",
-                                },
-                                mr: 1,
-                              }}
-                            >
-                              Edit
-                            </Button>
-                            <Button
-                              variant="contained"
-                              size="small"
-                              onClick={() => handleRequestCancel(req._id)}
-                              disabled={
-                                req.claim_status === "Canceled" ||
-                                req.claim_status === "Pending Approval" ||
-                                req.claim_status === "Paid" ||
-                                req.claim_status === "Rejected" ||
-                                req.claim_status === "Approved"
-                              }
-                              sx={{
-                                backgroundColor: "#dc2626",
-                                color: "white",
-                                "&:hover": {
-                                  backgroundColor: "#ef4444",
-                                },
-                                mr: 1,
-                              }}
-                            >
-                              Cancel
-                            </Button>
-                            {(req.claim_status === "Draft" ||
-                              req.claim_status === "Returned") && (
-                              <Button
-                                variant="contained"
-                                size="small"
-                                onClick={() => handleRequestApproval(req._id)}
-                                sx={{
-                                  backgroundColor: "#46d179",
-                                  color: "white",
-                                  "&:hover": {
-                                    backgroundColor: "#16a34a",
-                                  },
-                                  mr: 1,
-                                }}
-                              >
-                                Request Approval
-                              </Button>
+                            {(req.claim_status === "Draft" || req.claim_status === "Returned") && (
+                              <>
+                                <Button
+                                  variant="contained"
+                                  size="small"
+                                  onClick={() => handleEditClick(req)}
+                                  sx={{
+                                    backgroundColor: "#e6cb62",
+                                    color: "black",
+                                    "&:hover": {
+                                      backgroundColor: "#eab308",
+                                      color: "white",
+                                    },
+                                    mr: 1,
+                                  }}
+                                >
+                                  Edit
+                                </Button>
+                                <Button
+                                  variant="contained"
+                                  size="small"
+                                  onClick={() => handleRequestCancel(req._id)}
+                                  sx={{
+                                    backgroundColor: "#dc2626",
+                                    color: "white",
+                                    "&:hover": {
+                                      backgroundColor: "#ef4444",
+                                    },
+                                    mr: 1,
+                                  }}
+                                >
+                                  Cancel
+                                </Button>
+                                <Button
+                                  variant="contained"
+                                  size="small"
+                                  onClick={() => handleRequestApproval(req._id)}
+                                  sx={{
+                                    backgroundColor: "#46d179",
+                                    color: "white",
+                                    "&:hover": {
+                                      backgroundColor: "#16a34a",
+                                    },
+                                    mr: 1,
+                                  }}
+                                >
+                                  Request Approval
+                                </Button>
+                              </>
                             )}
                             <Button
                               variant="outlined"
