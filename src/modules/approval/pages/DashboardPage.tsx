@@ -1,16 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-  Box,
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-} from "@mui/material";
+import { Box, Grid, Card, CardContent, Typography } from "@mui/material";
 import {
   BarChart,
   Bar,
@@ -22,13 +11,31 @@ import {
   Tooltip,
   Legend,
   Cell,
+  ResponsiveContainer,
 } from "recharts";
+import axios from "axios";
+
+interface ClaimData {
+  _id: string;
+  claim_status: string;
+  claim_start_date: string;
+  claim_end_date: string;
+}
+
+interface ApiResponse {
+  success: boolean;
+  data: {
+    pageData: ClaimData[];
+    pageInfo: {
+      totalItems: number;
+    };
+  };
+}
 
 interface DashboardStats {
   pending: number;
   approved: number;
   rejected: number;
-  totalAmount: number;
 }
 
 const DashboardPage = () => {
@@ -36,21 +43,91 @@ const DashboardPage = () => {
     pending: 0,
     approved: 0,
     rejected: 0,
-    totalAmount: 0,
-  });
-  const [status, setStatus] = useState("all");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [dateRange, setDateRange] = useState({
-    start: "",
-    end: "",
   });
 
-  // Mock data for charts
-  const timelineData = [
-    { month: "Jan", pending: 4, approved: 24, rejected: 3 },
-    { month: "Feb", pending: 3, approved: 18, rejected: 2 },
-    { month: "Mar", pending: 5, approved: 28, rejected: 4 },
-  ];
+  // Fetch dashboard data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Get token from localStorage
+        const token = localStorage.getItem("token");
+
+        // Configure axios
+        const axiosInstance = axios.create({
+          baseURL: "https://management-claim-request.vercel.app",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        const pendingResponse = await axiosInstance.post(
+          "/api/claims/approval-search",
+          {
+            searchCondition: {
+              keyword: "",
+              claim_status: "Pending Approval",
+              claim_start_date: "",
+              claim_end_date: "",
+              is_delete: false,
+            },
+            pageInfo: {
+              pageNum: 1,
+              pageSize: 99999,
+            },
+          }
+        );
+
+        const approvedResponse = await axiosInstance.post(
+          "/api/claims/approval-search",
+          {
+            searchCondition: {
+              keyword: "",
+              claim_status: "Approved",
+              claim_start_date: "",
+              claim_end_date: "",
+              is_delete: false,
+            },
+            pageInfo: {
+              pageNum: 1,
+              pageSize: 99999,
+            },
+          }
+        );
+
+        const rejectedResponse = await axiosInstance.post(
+          "/api/claims/approval-search",
+          {
+            searchCondition: {
+              keyword: "",
+              claim_status: "Rejected",
+              claim_start_date: "",
+              claim_end_date: "",
+              is_delete: false,
+            },
+            pageInfo: {
+              pageNum: 1,
+              pageSize: 99999,
+            },
+          }
+        );
+
+        console.log("Pending Response:", pendingResponse.data);
+        console.log("Approved Response:", approvedResponse.data);
+        console.log("Rejected Response:", rejectedResponse.data);
+
+        setStats({
+          pending: pendingResponse.data.data.pageInfo.totalItems,
+          approved: approvedResponse.data.data.pageInfo.totalItems,
+          rejected: rejectedResponse.data.data.pageInfo.totalItems,
+        });
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const pieData = [
     { name: "Approved", value: stats.approved },
@@ -58,165 +135,221 @@ const DashboardPage = () => {
     { name: "Pending", value: stats.pending },
   ];
 
+  const timelineData = [
+    {
+      month: "Current",
+      pending: stats.pending,
+      approved: stats.approved,
+      rejected: stats.rejected,
+    },
+  ];
+
   const COLORS = ["#0088FE", "#FF8042", "#FFBB28"];
 
-  // Fetch dashboard data
-  useEffect(() => {
-    // TODO: Replace with actual API call
-    setStats({
-      pending: 12,
-      approved: 70,
-      rejected: 9,
-      totalAmount: 150000,
-    });
-  }, []);
-
   return (
-    <Box sx={{ p: 3 }}>
+    <Box
+      sx={{
+        p: 4,
+        backgroundColor: "#f5f5f5",
+        minHeight: "100vh",
+      }}
+    >
+      <Typography
+        variant="h4"
+        sx={{
+          mb: 4,
+          fontWeight: 600,
+          color: "#1a237e",
+        }}
+      >
+        Dashboard Overview
+      </Typography>
+
       {/* Overview Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Typography color="textSecondary" gutterBottom>
+      <Grid container spacing={4} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={4}>
+          <Card
+            sx={{
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+              transition: "transform 0.2s",
+              "&:hover": {
+                transform: "translateY(-4px)",
+                boxShadow: "0 6px 12px rgba(0, 0, 0, 0.15)",
+              },
+            }}
+          >
+            <CardContent sx={{ p: 3 }}>
+              <Typography
+                color="textSecondary"
+                gutterBottom
+                sx={{ fontSize: "1.1rem" }}
+              >
                 Pending Requests
               </Typography>
-              <Typography variant="h4">{stats.pending}</Typography>
+              <Typography
+                variant="h3"
+                sx={{
+                  fontWeight: 600,
+                  color: "#FFBB28",
+                }}
+              >
+                {stats.pending}
+              </Typography>
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Typography color="textSecondary" gutterBottom>
+        <Grid item xs={12} sm={6} md={4}>
+          <Card
+            sx={{
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+              transition: "transform 0.2s",
+              "&:hover": {
+                transform: "translateY(-4px)",
+                boxShadow: "0 6px 12px rgba(0, 0, 0, 0.15)",
+              },
+            }}
+          >
+            <CardContent sx={{ p: 3 }}>
+              <Typography
+                color="textSecondary"
+                gutterBottom
+                sx={{ fontSize: "1.1rem" }}
+              >
                 Approved Requests
               </Typography>
-              <Typography variant="h4">{stats.approved}</Typography>
+              <Typography
+                variant="h3"
+                sx={{
+                  fontWeight: 600,
+                  color: "#0088FE",
+                }}
+              >
+                {stats.approved}
+              </Typography>
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Typography color="textSecondary" gutterBottom>
+        <Grid item xs={12} sm={6} md={4}>
+          <Card
+            sx={{
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+              transition: "transform 0.2s",
+              "&:hover": {
+                transform: "translateY(-4px)",
+                boxShadow: "0 6px 12px rgba(0, 0, 0, 0.15)",
+              },
+            }}
+          >
+            <CardContent sx={{ p: 3 }}>
+              <Typography
+                color="textSecondary"
+                gutterBottom
+                sx={{ fontSize: "1.1rem" }}
+              >
                 Rejected Requests
               </Typography>
-              <Typography variant="h4">{stats.rejected}</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Typography color="textSecondary" gutterBottom>
-                Total Approved Amount
-              </Typography>
-              <Typography variant="h4">
-                ${stats.totalAmount.toLocaleString()}
+              <Typography
+                variant="h3"
+                sx={{
+                  fontWeight: 600,
+                  color: "#FF8042",
+                }}
+              >
+                {stats.rejected}
               </Typography>
             </CardContent>
           </Card>
-        </Grid>
-      </Grid>
-
-      {/* Filters */}
-      <Grid container spacing={2} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={4}>
-          <FormControl fullWidth>
-            <InputLabel>Status</InputLabel>
-            <Select
-              value={status}
-              label="Status"
-              onChange={(e) => setStatus(e.target.value)}
-            >
-              <MenuItem value="all">All</MenuItem>
-              <MenuItem value="pending">Pending</MenuItem>
-              <MenuItem value="approved">Approved</MenuItem>
-              <MenuItem value="rejected">Rejected</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <TextField
-            fullWidth
-            label="Search by requester or project"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </Grid>
-        <Grid item xs={12} md={2}>
-          <TextField
-            fullWidth
-            type="date"
-            label="Start Date"
-            value={dateRange.start}
-            onChange={(e) =>
-              setDateRange({ ...dateRange, start: e.target.value })
-            }
-            InputLabelProps={{ shrink: true }}
-          />
-        </Grid>
-        <Grid item xs={12} md={2}>
-          <TextField
-            fullWidth
-            type="date"
-            label="End Date"
-            value={dateRange.end}
-            onChange={(e) =>
-              setDateRange({ ...dateRange, end: e.target.value })
-            }
-            InputLabelProps={{ shrink: true }}
-          />
         </Grid>
       </Grid>
 
       {/* Charts */}
-      <Grid container spacing={3}>
+      <Grid container spacing={4}>
         <Grid item xs={12} md={8}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
+          <Card
+            sx={{
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+              height: "100%",
+            }}
+          >
+            <CardContent sx={{ p: 3 }}>
+              <Typography
+                variant="h5"
+                gutterBottom
+                sx={{
+                  fontWeight: 600,
+                  color: "#1a237e",
+                  mb: 3,
+                }}
+              >
                 Requests Timeline
               </Typography>
-              <BarChart width={700} height={300} data={timelineData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="approved" fill="#0088FE" />
-                <Bar dataKey="rejected" fill="#FF8042" />
-                <Bar dataKey="pending" fill="#FFBB28" />
-              </BarChart>
+              <Box sx={{ width: "100%", height: 400 }}>
+                <ResponsiveContainer>
+                  <BarChart data={timelineData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="approved" name="Approved" fill="#0088FE" />
+                    <Bar dataKey="rejected" name="Rejected" fill="#FF8042" />
+                    <Bar dataKey="pending" name="Pending" fill="#FFBB28" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </Box>
             </CardContent>
           </Card>
         </Grid>
         <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
+          <Card
+            sx={{
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+              height: "100%",
+            }}
+          >
+            <CardContent sx={{ p: 3 }}>
+              <Typography
+                variant="h5"
+                gutterBottom
+                sx={{
+                  fontWeight: 600,
+                  color: "#1a237e",
+                  mb: 3,
+                }}
+              >
                 Request Distribution
               </Typography>
-              <PieChart width={300} height={300}>
-                <Pie
-                  data={pieData}
-                  cx={150}
-                  cy={150}
-                  labelLine={false}
-                  outerRadius={100}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {pieData.map((_, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
+              <Box
+                sx={{
+                  width: "100%",
+                  height: 400,
+                  display: "flex",
+                  justifyContent: "center",
+                }}
+              >
+                <ResponsiveContainer>
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      outerRadius={130}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {pieData.map((_, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend verticalAlign="bottom" height={36} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </Box>
             </CardContent>
           </Card>
         </Grid>

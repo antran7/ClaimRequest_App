@@ -39,8 +39,8 @@ export interface Employee {
   start_date: Date;
   end_date: Date;
   updated_by?: string;
-  created_at?: Date;
-  updated_at?: Date;
+  created_at?: string | Date;
+  updated_at?: string| Date;
   is_deleted: boolean;
 }
 
