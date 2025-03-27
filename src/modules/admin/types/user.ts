@@ -29,6 +29,7 @@ export interface Employee {
   user_id: string;
   job_rank: string;
   contract_type: string;
+  account?: string;
   address: string;
   phone: string;
   full_name: string;
@@ -41,4 +42,19 @@ export interface Employee {
   created_at?: string | Date;
   updated_at?: string| Date;
   is_deleted: boolean;
+}
+
+export interface EmployeeData {
+  user_id: string,
+  job_rank: string,
+  contract_type: string,
+  account: string,
+  address: string,
+  phone: string,
+  full_name: string,
+  avatar_url: string,
+  department_code: string,
+  salary: number,
+  start_date: Date,
+  end_date: Date
 }

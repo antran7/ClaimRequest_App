@@ -1,25 +1,5 @@
 import apiService from "../../../core/api/api"
-
-interface EmployeeData {
-    "_id": string,
-    "user_id": string,
-    "job_rank": string,
-    "contract_type": string,
-    "account": string,
-    "address": string,
-    "phone": string,
-    "full_name": string,
-    "avatar_url": string,
-    "department_code": string,
-    "salary": number,
-    "start_date": string,
-    "end_date": string,
-    "updated_by": string,
-    "created_at": string,
-    "updated_at": string,
-    "is_deleted": boolean,
-    "__v": number,
-}
+import { EmployeeData, EmployeeInfo } from "../constants/employee";
 
 export const getEmployeeInfo = async (_id: string): Promise<EmployeeData> => {
     try {
@@ -34,9 +14,9 @@ export const getEmployeeInfo = async (_id: string): Promise<EmployeeData> => {
     }
 }
 
-export const updateEmployeeInfo = async (_id: string): Promise<void> => {
+export const updateEmployeeInfo = async (_id: string, employeeInfo: EmployeeInfo): Promise<void> => {
     try {
-        await apiService.put<EmployeeData>(`/employees/${_id}`);
+        await apiService.put<EmployeeData>(`/employees/${_id}`, employeeInfo);
     } catch (error) {
         console.error("Error: ", error);
         throw error;
