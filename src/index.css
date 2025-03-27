@@ -1,7 +1,6 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Darumadrop+One&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@@import url('https://fonts.googleapis.com/css2?family=Anton&family=Darumadrop+One&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Anton&family=Darumadrop+One&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 
 :root{
     margin: 0;
@@ -47,3 +46,44 @@ html {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   }
   
+
+  .fade-in {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+  }
+  
+  .fade-out {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  @keyframes fadeInLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  @keyframes fadeInRight {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  .animate-fadeInLeft {
+    animation: fadeInLeft 1s ease-in-out forwards;
+  }
+  
+  .animate-fadeInRight {
+    animation: fadeInRight 1s ease-in-out forwards;
+  }
