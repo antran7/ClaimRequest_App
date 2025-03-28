@@ -58,6 +58,7 @@ import {
 } from "../types/projectInterface";
 import { User } from "../types/user";
 import RoleSelect from "../components/RoleSelect";
+import { getRoleOptions } from "../services/roleService";
 import Status from "../components/Status";
 
 const ProjectManagementPage: React.FC = () => {
@@ -79,6 +80,8 @@ const ProjectManagementPage: React.FC = () => {
     null
   );
   const [showUserDropdown, setShowUserDropdown] = useState<number | null>(null);
+  const [roleOptions, setRoleOptions] = useState<{ value: string; label: string }[]>([]);
+  const [isRolesLoaded, setIsRolesLoaded] = useState(false);
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -120,6 +123,17 @@ const ProjectManagementPage: React.FC = () => {
     } catch (error) {
       console.error("Failed to fetch users:", error);
       toast.error("Failed to load users");
+    }
+  };
+
+  const fetchRoles = async () => {
+    try {
+      const options = await getRoleOptions();
+      setRoleOptions(options);
+      setIsRolesLoaded(true);
+    } catch (error) {
+      console.error('Failed to fetch roles:', error);
+      toast.error('Failed to load roles');
     }
   };
 
@@ -218,10 +232,20 @@ const ProjectManagementPage: React.FC = () => {
     formik.setFieldValue("project_members", updatedMembers);
   };
 
-  const handleOpenDialog = () => {
-    formik.resetForm();
-    fetchUsers();
-    setOpenDialog(true);
+  const handleOpenDialog = async () => {
+    try {
+      // Fetch users and roles in parallel
+      await Promise.all([
+        fetchUsers(),
+        !isRolesLoaded && fetchRoles()
+      ]);
+      
+      formik.resetForm();
+      setOpenDialog(true);
+    } catch (error) {
+      console.error('Error opening dialog:', error);
+      toast.error('Failed to load data');
+    }
   };
 
   const handleCloseDialog = () => {
@@ -775,8 +799,15 @@ const ProjectManagementPage: React.FC = () => {
                           }
                           required
                           className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="Select Role"
-                        />
+                          required
+                        >
+                          <option value="">Select Role</option>
+                          {roleOptions.map((role) => (
+                            <option key={role.value} value={role.value}>
+                              {role.label}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                       {formik.touched.project_members?.[index] &&
                         formik.errors.project_members?.[index] &&
