@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./UserDashboard.css";
 import {
@@ -20,37 +19,13 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import Layout from "../../../../shared/layouts/Layout"; // Ensure the correct path
 import { Grid } from "@mui/material";
-import { AccountCircleOutlined, Folder } from "@mui/icons-material";
+import { Folder } from "@mui/icons-material";
 
 // Register ChartJS components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-const Tableau10 = [
-  "#4e79a7",
-  "#f28e2c",
-  "#e15759",
-  "#76b7b2",
-  "#59a14f",
-  "#edc949",
-  "#af7aa1",
-  "#ff9da7",
-  "#9c755f",
-  "#bab0ab",
-];
-
-const chartsParams = {
-  margin: { bottom: 20, left: 25, right: 5 },
-  height: 300,
-};
-
 export default function UserDashboard() {
-  const [color, setColor] = useState("#4e79a7");
   const navigate = useNavigate();
-  const count = 0; // Dummy count value, replace with actual data fetching logic
-
-  const handleChange = (nextColor) => {
-    if (nextColor) setColor(nextColor);
-  };
 
   return (
     <div>

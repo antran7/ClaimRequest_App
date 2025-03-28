@@ -90,14 +90,14 @@ export const changeUserRole = async (userId : string, roleCode : string) => {
 
 export const getEmployeeById = async (userId: string): Promise<Employee> => {
   try {
-    const response = await apiService.get<{ success: boolean; data: Employee }>(
+    const response = await apiService.get<Employee>(
       `/employees/${userId}`
     );
 
     console.log("Backend API Response:", response);
 
     // Correcting the data extraction
-    const employeeData = response?.data?.data ?? response?.data;
+    const employeeData = response?.data?? response?.data;
 
     if (!employeeData || Object.keys(employeeData).length === 0) {
       throw new Error("Employee data is empty or not found");

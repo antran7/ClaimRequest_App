@@ -3,7 +3,6 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { useEffect, useState } from "react";
 import { Pie } from "react-chartjs-2";
 
-
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const API_URL = "https://management-claim-request.vercel.app/api";
@@ -30,9 +29,15 @@ function PieChartComponent() {
       try {
         setLoading(true);
         const response = await axios.post(
-          `${API_URL}/claims/search`,
+          `${API_URL}/claims/claimer-search`,
           {
-            searchCondition: { is_delete: false },
+            searchCondition: {
+              keyword: "",
+              claim_status: "",
+              claim_start_date: "",
+              claim_end_date: "",
+              is_delete: false,
+            },
             pageInfo: { pageNum: 1, pageSize: 100 },
           },
           { headers: { Authorization: `Bearer ${token}` } }
@@ -62,20 +67,28 @@ function PieChartComponent() {
     };
 
     claims.forEach((claim) => {
-      const normalizedStatus = claim.claim_status.toLowerCase();
-
-      if (normalizedStatus.includes("pending")) {
-        statusCounts.Pending++;
-      } else if (normalizedStatus.includes("approved")) {
-        statusCounts.Approved++;
-      } else if (normalizedStatus.includes("reject")) {
-        statusCounts.Rejected++;
-      } else if (normalizedStatus.includes("paid")) {
-        statusCounts.Paid++;
-      } else if (normalizedStatus.includes("cancel")) {
-        statusCounts.Cancelled++;
-      } else if (normalizedStatus.includes("draft")) {
-        statusCounts.Draft++;
+      const normalizedStatus = claim.claim_status?.trim().toLowerCase();
+      switch (normalizedStatus) {
+        case "pending approval":
+          statusCounts.Pending++;
+          break;
+        case "approved":
+          statusCounts.Approved++;
+          break;
+        case "rejected":
+          statusCounts.Rejected++;
+          break;
+        case "paid":
+          statusCounts.Paid++;
+          break;
+        case "canceled":
+          statusCounts.Cancelled++;
+          break;
+        case "draft":
+          statusCounts.Draft++;
+          break;
+        default:
+          break;
       }
     });
 
@@ -103,7 +116,7 @@ function PieChartComponent() {
   return (
     <div className="pie-chart-container">
       {loading ? (
-        <p style={{ textAlign: "center", fontSize: "18px" }}></p>
+        <p style={{ textAlign: "center", fontSize: "18px" }}>Loading...</p>
       ) : (
         <Pie data={pieChartData} />
       )}

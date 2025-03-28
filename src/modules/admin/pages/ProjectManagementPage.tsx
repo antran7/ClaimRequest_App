@@ -24,13 +24,14 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Pagination,
+  TablePagination,
   Stack,
   InputAdornment,
   List,
   ListItem,
   ListItemText,
   Paper,
+  Tooltip,
 } from "@mui/material";
 import {
   Delete as DeleteIcon,
@@ -58,6 +59,7 @@ import {
 import { User } from "../types/user";
 import RoleSelect from "../components/RoleSelect";
 import { getRoleOptions } from "../services/roleService";
+import Status from "../components/Status";
 
 const ProjectManagementPage: React.FC = () => {
   const navigate = useNavigate();
@@ -65,14 +67,14 @@ const ProjectManagementPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [userSearchTerm, setUserSearchTerm] = useState("");
-  const debouncedSearchTerm = useDebounce(searchTerm, 500); // 500ms delay
-  const debouncedUserSearchTerm = useDebounce(userSearchTerm, 500); // 500ms delay
-  const itemPerPage = 10;
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const debouncedUserSearchTerm = useDebounce(userSearchTerm, 500);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
     null
@@ -85,22 +87,22 @@ const ProjectManagementPage: React.FC = () => {
     const fetchProjects = async () => {
       setLoading(true);
       try {
-        const response = await searchProject(debouncedSearchTerm, page);
+        const response = await searchProject(debouncedSearchTerm, page + 1, rowsPerPage);
         if (response.success && response.data) {
           setProjects(response.data.pageData);
-          setTotalPages(response.data.pageInfo.totalPages);
+          setTotalCount(response.data.pageInfo.totalItems);
         }
       } catch (error) {
         toast.error("Failed to fetch projects");
         setProjects([]);
-        setTotalPages(1);
+        setTotalCount(0);
       } finally {
         setLoading(false);
       }
     };
 
     fetchProjects();
-  }, [page, debouncedSearchTerm]);
+  }, [page, rowsPerPage, debouncedSearchTerm]);
 
   useEffect(() => {
     if (openDialog) {
@@ -197,8 +199,8 @@ const ProjectManagementPage: React.FC = () => {
         const response = await searchProject("", 1);
         if (response.success && response.data) {
           setProjects(response.data.pageData);
-          setTotalPages(response.data.pageInfo.totalPages);
-          setPage(1);
+          setTotalCount(response.data.pageInfo.totalItems);
+          setPage(0);
         }
 
         handleCloseDialog();
@@ -277,7 +279,7 @@ const ProjectManagementPage: React.FC = () => {
 
   const handleSearch = (searchTerm: string) => {
     setSearchTerm(searchTerm);
-    setPage(1); // Reset to first page when searching
+    setPage(0); // Reset to first page when searching
   };
 
   const formatDate = (dateString: string) => {
@@ -288,13 +290,13 @@ const ProjectManagementPage: React.FC = () => {
   const handleUserSearch = (index: number, searchValue: string) => {
     setUserSearchTerm(searchValue);
     setShowUserDropdown(index);
-    
+
     // Filter users based on search term
-    if (searchValue.trim() === '') {
+    if (searchValue.trim() === "") {
       setFilteredUsers(users);
     } else {
       const filtered = users.filter(
-        user => 
+        (user) =>
           user.email.toLowerCase().includes(searchValue.toLowerCase()) ||
           user.user_name.toLowerCase().includes(searchValue.toLowerCase())
       );
@@ -308,13 +310,21 @@ const ProjectManagementPage: React.FC = () => {
     setUserSearchTerm("");
   };
 
+  const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newRowsPerPage = parseInt(event.target.value, 10);
+    setRowsPerPage(newRowsPerPage);
+    setPage(0); // Reset về trang đầu tiên khi thay đổi số lượng items/page
+  };
+
   return (
     <Layout>
       <div className="min-h-screen bg-gray-100">
         <div className="p-8">
           <BackButton to="/admin/dashboard" />
           <div className="flex justify-between items-center mb-6 ">
-            <Typography variant="h5" className="text-4xl">Project Management</Typography>
+            <Typography variant="h5" className="text-4xl">
+              Project Management
+            </Typography>
             <SearchComponent onSearch={handleSearch} />
             <button
               title="Add New"
@@ -377,17 +387,6 @@ const ProjectManagementPage: React.FC = () => {
                       textAlign: "center",
                     }}
                   >
-                    Department
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      color: "white",
-                      fontWeight: "bold",
-                      backgroundColor: "#6B7280",
-                      borderRight: "2px solid #ffff",
-                      textAlign: "center",
-                    }}
-                  >
                     Start Date
                   </TableCell>
                   <TableCell
@@ -408,7 +407,18 @@ const ProjectManagementPage: React.FC = () => {
                       backgroundColor: "#6B7280",
                       borderRight: "2px solid #ffff",
                       textAlign: "center",
-                      width: "18%",
+                    }}
+                  >
+                    Status
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      color: "white",
+                      fontWeight: "bold",
+                      backgroundColor: "#6B7280",
+                      borderRight: "2px solid #ffff",
+                      textAlign: "center",
+                      width: "13%",
                     }}
                   >
                     Actions
@@ -437,7 +447,6 @@ const ProjectManagementPage: React.FC = () => {
                     <TableRow key={project._id}>
                       <TableCell>{project.project_name}</TableCell>
                       <TableCell>{project.project_code}</TableCell>
-                      <TableCell>{project.project_department}</TableCell>
                       <TableCell sx={{ textAlign: "center" }}>
                         {formatDate(project.project_start_date)}
                       </TableCell>
@@ -445,9 +454,28 @@ const ProjectManagementPage: React.FC = () => {
                         {formatDate(project.project_end_date)}
                       </TableCell>
                       <TableCell sx={{ textAlign: "center" }}>
+                        <Tooltip title={project.project_status} arrow placement="top">
+                          <div className="flex items-center justify-center">
+                            <Status 
+                              color={
+                                project.project_status === "New"
+                                  ? "#6b7280"
+                                  : project.project_status === "Active"
+                                  ? "#22c55e"
+                                  : project.project_status === "Pending"
+                                  ? "#eab308"
+                                  : project.project_status === "Closed"
+                                  ? "#ef4444"
+                                  : "#ffffff"
+                              }
+                            />
+                          </div>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell sx={{ textAlign: "center" }}>
                         <Button
                           sx={{
-                            color: "gray"
+                            color: "gray",
                           }}
                           startIcon={<Eye />}
                           onClick={() => handleViewProject(project._id)}
@@ -464,18 +492,21 @@ const ProjectManagementPage: React.FC = () => {
                 )}
               </TableBody>
             </Table>
+            <TablePagination
+              rowsPerPageOptions={[5, 10, 25]}
+              component="div"
+              count={totalCount}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              onPageChange={(event, newPage) => setPage(newPage)}
+              onRowsPerPageChange={handleRowsPerPageChange}
+              labelDisplayedRows={({ from, to, count }) => {
+                return `${from}-${to} of ${count}`;
+              }}
+              showFirstButton
+              showLastButton
+            />
           </TableContainer>
-          <div className="w-1/3 ml-auto p-4">
-            <Stack spacing={2}>
-              <Pagination
-                count={totalPages}
-                page={page}
-                onChange={(_, value) => setPage(value)}
-                variant="outlined"
-                shape="rounded"
-              />
-            </Stack>
-          </div>
         </div>
 
         <Dialog
@@ -665,8 +696,15 @@ const ProjectManagementPage: React.FC = () => {
                           fullWidth
                           label="Search User"
                           placeholder="Search by username or email"
-                          value={showUserDropdown === index ? userSearchTerm : users.find(u => u._id === member.user_id)?.user_name || ''}
-                          onChange={(e) => handleUserSearch(index, e.target.value)}
+                          value={
+                            showUserDropdown === index
+                              ? userSearchTerm
+                              : users.find((u) => u._id === member.user_id)
+                                  ?.user_name || ""
+                          }
+                          onChange={(e) =>
+                            handleUserSearch(index, e.target.value)
+                          }
                           onFocus={() => setShowUserDropdown(index)}
                           className="bg-white rounded-md"
                           InputProps={{
@@ -678,27 +716,29 @@ const ProjectManagementPage: React.FC = () => {
                           }}
                         />
                         {showUserDropdown === index && (
-                          <Paper 
+                          <Paper
                             style={{
-                              position: 'absolute',
+                              position: "absolute",
                               zIndex: 1000,
-                              width: '100%',
-                              maxHeight: '200px',
-                              overflow: 'auto'
+                              width: "100%",
+                              maxHeight: "200px",
+                              overflow: "auto",
                             }}
                           >
                             <List>
                               {filteredUsers.length > 0 ? (
                                 filteredUsers.map((user) => (
-                                  <ListItem 
+                                  <ListItem
                                     key={user._id}
-                                    onClick={() => handleSelectUser(index, user)}
+                                    onClick={() =>
+                                      handleSelectUser(index, user)
+                                    }
                                     divider
-                                    sx={{ cursor: 'pointer' }}
+                                    sx={{ cursor: "pointer" }}
                                   >
-                                    <ListItemText 
-                                      primary={user.user_name} 
-                                      secondary={user.email} 
+                                    <ListItemText
+                                      primary={user.user_name}
+                                      secondary={user.email}
                                     />
                                   </ListItem>
                                 ))
@@ -729,12 +769,16 @@ const ProjectManagementPage: React.FC = () => {
                   <div className="w-full">
                     <FormControl
                       fullWidth
-                      error={!!(
-                        formik.touched.project_members?.[index] && 
-                        formik.errors.project_members?.[index] && 
-                        typeof formik.errors.project_members[index] === 'object' &&
-                        'project_role' in (formik.errors.project_members[index] as any)
-                      )}
+                      error={
+                        !!(
+                          formik.touched.project_members?.[index] &&
+                          formik.errors.project_members?.[index] &&
+                          typeof formik.errors.project_members[index] ===
+                            "object" &&
+                          "project_role" in
+                            (formik.errors.project_members[index] as any)
+                        )
+                      }
                       className="bg-white rounded-md"
                     >
                       <InputLabel
@@ -745,9 +789,15 @@ const ProjectManagementPage: React.FC = () => {
                         Role
                       </InputLabel>
                       <div className="mt-2">
-                        <select
-                          value={member.project_role || ''}
-                          onChange={(e) => handleMemberChange(index, "project_role", e.target.value)}
+                        <RoleSelect
+                          value={
+                            (formik.values.project_members[index] as any)
+                              .project_role || ""
+                          }
+                          onChange={(value) =>
+                            handleMemberChange(index, "project_role", value)
+                          }
+                          required
                           className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           required
                         >
@@ -761,10 +811,15 @@ const ProjectManagementPage: React.FC = () => {
                       </div>
                       {formik.touched.project_members?.[index] &&
                         formik.errors.project_members?.[index] &&
-                        typeof formik.errors.project_members[index] === 'object' &&
-                        'project_role' in (formik.errors.project_members[index] as any) && (
+                        typeof formik.errors.project_members[index] ===
+                          "object" &&
+                        "project_role" in
+                          (formik.errors.project_members[index] as any) && (
                           <p className="text-red-500 text-xs mt-1">
-                            {(formik.errors.project_members[index] as any).project_role}
+                            {
+                              (formik.errors.project_members[index] as any)
+                                .project_role
+                            }
                           </p>
                         )}
                     </FormControl>

@@ -35,12 +35,12 @@ import {
   Typography,
   MenuItem,
   InputLabel,
+  TablePagination
 } from "@mui/material";
 import Avatar from "@mui/material/Avatar";
 import Select from "@mui/material/Select";
 import AccessibilityIcon from "@mui/icons-material/Accessibility";
 import { User, Employee } from "../types/user";
-import { Pagination } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { IconButton } from "@mui/material";
 import { Pencil, CircleX, Plus, Search, Lock, Unlock, Eye } from "lucide-react";
@@ -53,7 +53,7 @@ const UserManagement = () => {
   const [popupOpen2, setPopupOpen2] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [pageNum, setPageNum] = useState(1); //  Track current page
-  const [pageSize] = useState(5); //  Items per page
+  const [pageSize, setPageSize] = useState(5); //  Items per page
   const [totalPages, setTotalPages] = useState(1); // Total pages from API
   const [viewUser, setViewUser] = useState<User | null>(null); //View detail
  // const [userId, setUserId] = useState("");
@@ -201,6 +201,7 @@ const UserManagement = () => {
           email: form.email,
           user_name: form.user_name,
         });
+        toast.success("User updated successfully!");
       } else {
         // Creating a new user
         await createUser({
@@ -209,6 +210,7 @@ const UserManagement = () => {
           role_code: form.role_code,
           password: form.password ?? "", // Password required for new user
         });
+        toast.success("User created successfully!");
       }
 
       setPopupOpen(false); // Close popup after saving
@@ -275,13 +277,13 @@ const UserManagement = () => {
         address: employee.address,
         avatar_url: employee.avatar_url,
         department_code: employee.department_code,
-        created_at: employee.created_at ? new Date(employee.created_at) : new Date(),
         end_date: new Date(employee.end_date),
         full_name: employee.full_name,
         is_deleted: employee.is_deleted,
         phone: employee.phone,
         salary: employee.salary,
         start_date: new Date(employee.start_date),
+        created_at: employee.created_at ? new Date(employee.created_at) : new Date(),
         updated_at: employee.updated_at ? new Date(employee.updated_at) : new Date(),
         updated_by: employee.updated_by,
       });
@@ -297,41 +299,25 @@ const UserManagement = () => {
     try {
       console.log("Sending to API:", employeeData);
   
+      // Validate the payload
+      if (!employeeData.user_id || !employeeData.job_rank || !employeeData.contract_type) {
+        throw new Error("Missing required fields in employee data");
+      }
+  
+      // Send the request to update the employee
       await updateEmployee(employeeData.user_id, { ...employeeData });
-
+  
       toast.success("Employee updated successfully!");
     } catch (error) {
-      toast.error(`Error updating employee details: ${error instanceof Error ? error.message : String(error)}`);
+      console.error("Error updating employee details:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Error updating employee details"
+      );
     }
   };
   
-  // const handleSaveEmployeeDetails = async () => {
-  //   try {
-  //     if (!employeeData.created_at) {
-  //       console.error("Error: created_at is missing!");
-  //       return;
-  //     }
-
-  //     const updatedEmployeeData = {
-  //       ...employeeData,
-  //       created_at: new Date(employeeData.created_at), // Ensure it's a Date
-  //       updated_at: new Date(),
-  //     };
-
-  //     console.log(
-  //       "Sending to API:",
-  //       JSON.stringify(updatedEmployeeData, null, 2)
-  //     );
-
-  //     await updateEmployee(userId, updatedEmployeeData);
-  //     setPopupOpen2(false);
-  //   } catch (error) {
-  //     console.error("Error updating employee details:", error);
-  //     toast.error("Error updating employee details");
-  //   }
-  // };
-
-
   
   const handleRoleChange = async (userId: string, newRoleCode: string) => {
     if (!userId) return;
@@ -348,6 +334,7 @@ const UserManagement = () => {
           user._id === userId ? { ...user, role_code: newRoleCode } : user
         )
       );
+      toast.success("User role updated successfully!");
     } catch (error) {
       console.error("Error updating role:", error);
       toast.error(`Error updating role: ${error instanceof Error ? error.message : String(error)}`);
@@ -392,7 +379,17 @@ const UserManagement = () => {
             </div>
             <Dialog
               open={popupOpen}
-              onClose={() => setPopupOpen(false)}
+              onClose={() => {
+                setPopupOpen(false); // Close the dialog
+                setForm({
+                  email: "",
+                  user_name: "",
+                  role_code: "A001",
+                  password: "",
+                  confirmPassword: "",
+                }); // Reset the form
+                setErrors({}); // Clear errors
+              }}
               sx={{
                 "& .MuiPaper-root": {
                   borderRadius: "12px",
@@ -533,9 +530,22 @@ const UserManagement = () => {
               </DialogContent>
 
               <DialogActions>
-                <Button onClick={() => setPopupOpen(false)} color="error">
-                  Cancel
-                </Button>
+              <Button 
+                onClick={() => {
+                  setPopupOpen(false); // Close the dialog
+                  setForm({
+                    email: "",
+                    user_name: "",
+                    role_code: "A001",
+                    password: "",
+                    confirmPassword: "",
+                  }); // Reset the form
+                  setErrors({}); // Clear errors
+                }}
+                color="error"
+              >
+                Cancel
+              </Button>
                 <Button onClick={handleSave} color="primary">
                   Save
                 </Button>
@@ -899,11 +909,17 @@ const UserManagement = () => {
             </Table>
           </TableContainer>
         </div>
-        <Pagination
-          count={totalPages}
-          page={pageNum}
-          onChange={(_, newPage) => setPageNum(newPage)} // Ignore unused event
-          color="primary"
+        <TablePagination
+          component="div"
+          count={totalPages * pageSize} // Total items
+          page={pageNum - 1} // Zero-based index
+          onPageChange={(_, newPage) => setPageNum(newPage + 1)} // Update pageNum
+          rowsPerPage={pageSize}
+          onRowsPerPageChange={(event) => {
+            setPageNum(1); // Reset to first page
+            setPageSize(parseInt(event.target.value, 10)); // Update pageSize
+          }}
+          rowsPerPageOptions={[5, 10, 20, 50]} // Items per page
         />
         <Dialog
           open={confirmDialog.open}

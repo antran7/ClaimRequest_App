@@ -2,7 +2,7 @@ import { Navigate, RouteObject } from "react-router-dom";
 import { Role } from "../../shared/constants/roles";
 import PrivateRoute from "../../shared/routes/PrivateRoute";
 import ApprovalDashboard from "./pages/ApprovalDashboard";
-import RequestPage from "./pages/ApproveRequestPage";
+import RequestPage from "../users/pages/request/RequestPage";
 
 export const approvalRoutes: RouteObject[] = [
   {

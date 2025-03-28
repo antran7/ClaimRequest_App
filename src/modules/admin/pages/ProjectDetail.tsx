@@ -20,6 +20,8 @@ import {
   ListItem,
   ListItemText,
   Paper,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import { fetchProjectById } from "../services/projectService";
 import { Project, User } from "../types/projectInterface";
@@ -27,7 +29,7 @@ import Layout from "../../../shared/layouts/Layout";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
-import { deleteProject } from "../services/projectService";
+import { deleteProject, changeProjectStatus } from "../services/projectService";
 import { updateProject } from "../services/projectService";
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -37,6 +39,8 @@ import DepartmentSelect from "../components/DepartmentSelect";
 import RoleSelect from "../components/RoleSelect";
 import useDebounce from "../../../shared/hooks/useDebounce";
 import { getRoleOptions } from "../services/roleService";
+import Status from "../components/Status";
+
 
 const ProjectDetail = () => {
   const { projectId } = useParams();
@@ -52,15 +56,18 @@ const ProjectDetail = () => {
   const [isRolesLoaded, setIsRolesLoaded] = useState(false);
   const debouncedUserSearchTerm = useDebounce(userSearchTerm, 500);
   const [showUserDropdown, setShowUserDropdown] = useState<number | null>(null);
+  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+  const [newStatus, setNewStatus] = useState("");
+  const [statusComment, setStatusComment] = useState("");
 
   useEffect(() => {
     if (projectId) {
       fetchProjectById(projectId)
         .then((response) => {
-          if (response.success) {
+          if (response.success && response.data) {
             setProject(response.data);
           } else {
-            toast.error("Failed to fetch project details");
+            toast.error(response.message || "Failed to fetch project details");
           }
         })
         .catch((err) => {
@@ -108,7 +115,7 @@ const ProjectDetail = () => {
         await updateProject({
           _id: project?._id!,
           ...values,
-          project_members: values.project_members, // Use the updated members
+          project_members: values.project_members, 
           project_status: project?.project_status || "ACTIVE",
         });
         toast.success("Project updated successfully!");
@@ -224,7 +231,6 @@ const ProjectDetail = () => {
     setUserSearchTerm(searchValue);
     setShowUserDropdown(index);
     
-    // Filter users based on search term
     if (searchValue.trim() === '') {
       setFilteredUsers(users);
     } else {
@@ -241,6 +247,31 @@ const ProjectDetail = () => {
     handleMemberChange(index, "user_id", user._id);
     setShowUserDropdown(null);
     setUserSearchTerm("");
+  };
+
+  const handleStatusChange = async () => {
+    if (!projectId) return;
+    
+    try {
+      const response = await changeProjectStatus(projectId, newStatus, statusComment);
+      if (response.success) {
+        const projectResponse = await fetchProjectById(projectId);
+        if (projectResponse.success && projectResponse.data) {
+          setProject(projectResponse.data);
+          toast.success("Project status updated successfully!");
+          setStatusDialogOpen(false);
+        }
+      } else {
+        toast.error(response.message || "Failed to update project status");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update project status");
+    }
+  };
+
+  const handleOpenStatusDialog = (status: string) => {
+    setNewStatus(status);
+    setStatusDialogOpen(true);
   };
 
   if (!project) {
@@ -278,7 +309,7 @@ const ProjectDetail = () => {
   return (
     <Layout>
       <button
-        className="relative py-2 px-8 text-black text-base font-bold nded-full overflow-hidden bg-white rounded-full transition-all duration-400 ease-in-out shadow-md hover:scale-105 hover:text-white hover:shadow-lg active:scale-90 before:absolute before:top-0 before:-left-full before:w-full before:h-full before:bg-gradient-to-r before:from-gray-500 before:to-gray-300 before:transition-all before:duration-500 before:ease-in-out before:z-[-1] before:rounded-full hover:before:left-0"
+        className="mt-2 ml-2 relative py-2 px-8 text-black text-base font-bold nded-full overflow-hidden bg-white rounded-full transition-all duration-400 ease-in-out shadow-md hover:scale-105 hover:text-white hover:shadow-lg active:scale-90 before:absolute before:top-0 before:-left-full before:w-full before:h-full before:bg-gradient-to-r before:from-gray-500 before:to-gray-300 before:transition-all before:duration-500 before:ease-in-out before:z-[-1] before:rounded-full hover:before:left-0"
         onClick={() => navigate("/admin/manageproject")}
       >
         <ArrowBackIcon />
@@ -286,17 +317,66 @@ const ProjectDetail = () => {
       <div className="max-w-4xl mx-auto p-6">
         <Card className="shadow-lg rounded-xl overflow-hidden">
           <CardHeader
-            title={project.project_name}
-            subheader={`Project code: ${project.project_code}`}
+            title={
+              <div className="flex justify-between items-center">
+                <div>
+                  <Typography variant="h5">{project.project_name}</Typography>
+                  <Typography variant="subtitle1" color="text.secondary">
+                    Project code: {project.project_code}
+                  </Typography>
+                </div>
+                <div className="flex items-center gap-2 p-1 bg-gray-300/75 rounded-xl">
+                  <Status 
+                    color={
+                      project.project_status === "New"
+                        ? "#6b7280"
+                        : project.project_status === "Active"
+                        ? "#22c55e"
+                        : project.project_status === "Pending"
+                        ? "#eab308"
+                        : project.project_status === "Closed"
+                        ? "#ef4444"
+                        : "#ffffff"
+                    } 
+                  />
+                  <Select
+                    value={project.project_status}
+                    onChange={(e) => handleOpenStatusDialog(e.target.value)}
+                    className={`rounded-full text-xl font-bold ${
+                      project.project_status === "New"
+                        ? "text-white"
+                        : project.project_status === "Active"
+                        ? "text-green-400"
+                        : project.project_status === "Pending"
+                        ? "text-yellow-400"
+                        : project.project_status === "Closed"
+                        ? "text-red-400"
+                        : "text-white"
+                    }`}
+                    variant="standard"
+                    sx={{
+                      '&:before': { borderBottom: 'none' },
+                      '&:after': { borderBottom: 'none' },
+                      '& .MuiSelect-select': { 
+                        paddingY: '8px',
+                        paddingX: '16px',
+                      }
+                    }}
+                  >
+                    <MenuItem value="New">New</MenuItem>
+                    <MenuItem value="Active">Active</MenuItem>
+                    <MenuItem value="Pending">Pending</MenuItem>
+                    <MenuItem value="Closed">Closed</MenuItem>
+                  </Select>
+                </div>
+              </div>
+            }
             className="bg-gray-100 px-6 py-4"
           />
           <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <p>
                 <strong>Department:</strong> {project.project_department}
-              </p>
-              <p>
-                <strong>Status:</strong> {project.project_status}
               </p>
               <p>
                 <strong>Start date:</strong>{" "}
@@ -307,6 +387,7 @@ const ProjectDetail = () => {
                 {new Date(project.project_end_date).toLocaleDateString()}
               </p>
             </div>
+            
             <p className="mt-4">
               <strong>Description:</strong> {project.project_description}
             </p>
@@ -720,6 +801,48 @@ const ProjectDetail = () => {
             ) : (
               "Save Changes"
             )}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={statusDialogOpen}
+        onClose={() => setStatusDialogOpen(false)}
+      >
+        <DialogTitle>Change Project Status</DialogTitle>
+        <DialogContent>
+          <div className="mt-4 space-y-4">
+            <Typography>
+              Are you sure you want to change the project status to{" "}
+              <strong>{newStatus}</strong>?
+            </Typography>
+            <TextField
+              fullWidth
+              label="Comment (Optional)"
+              multiline
+              rows={3}
+              value={statusComment}
+              onChange={(e) => setStatusComment(e.target.value)}
+              className="mt-4"
+            />
+          </div>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setStatusDialogOpen(false)}
+            sx={{ color: "gray" }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleStatusChange}
+            sx={{
+              backgroundColor: "gray",
+              color: "white",
+              "&:hover": { backgroundColor: "darkgray" },
+            }}
+            variant="contained"
+          >
+            Confirm
           </Button>
         </DialogActions>
       </Dialog>
