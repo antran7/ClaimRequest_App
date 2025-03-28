@@ -36,6 +36,7 @@ import { Search } from "lucide-react";
 import DepartmentSelect from "../components/DepartmentSelect";
 import RoleSelect from "../components/RoleSelect";
 import useDebounce from "../../../shared/hooks/useDebounce";
+import { getRoleOptions } from "../services/roleService";
 
 const ProjectDetail = () => {
   const { projectId } = useParams();
@@ -47,6 +48,8 @@ const ProjectDetail = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [userSearchTerm, setUserSearchTerm] = useState("");
+  const [roleOptions, setRoleOptions] = useState<{ value: string; label: string }[]>([]);
+  const [isRolesLoaded, setIsRolesLoaded] = useState(false);
   const debouncedUserSearchTerm = useDebounce(userSearchTerm, 500);
   const [showUserDropdown, setShowUserDropdown] = useState<number | null>(null);
 
@@ -124,20 +127,30 @@ const ProjectDetail = () => {
     },
   });
 
-  const handleOpenEditDialog = () => {
-    fetchUsers();
-    formik.resetForm({
-      values: {
-        project_name: project?.project_name || "",
-        project_code: project?.project_code || "",
-        project_department: project?.project_department || "",
-        project_description: project?.project_description || "",
-        project_start_date: project?.project_start_date?.split("T")[0] || "",
-        project_end_date: project?.project_end_date?.split("T")[0] || "",
-        project_members: project?.project_members || [],
-      },
-    });
-    setEditDialogOpen(true);
+  const handleOpenEditDialog = async () => {
+    try {
+      // Fetch users and roles in parallel
+      await Promise.all([
+        fetchUsers(),
+        !isRolesLoaded && fetchRoles()
+      ]);
+      
+      formik.resetForm({
+        values: {
+          project_name: project?.project_name || "",
+          project_code: project?.project_code || "",
+          project_department: project?.project_department || "",
+          project_description: project?.project_description || "",
+          project_start_date: project?.project_start_date?.split("T")[0] || "",
+          project_end_date: project?.project_end_date?.split("T")[0] || "",
+          project_members: project?.project_members || [],
+        },
+      });
+      setEditDialogOpen(true);
+    } catch (error) {
+      console.error('Error opening edit dialog:', error);
+      toast.error('Failed to load data');
+    }
   };
 
   const fetchUsers = async () => {
@@ -153,6 +166,17 @@ const ProjectDetail = () => {
     } catch (error) {
       console.error("Failed to fetch users:", error);
       toast.error("Failed to load users");
+    }
+  };
+
+  const fetchRoles = async () => {
+    try {
+      const options = await getRoleOptions();
+      setRoleOptions(options);
+      setIsRolesLoaded(true);
+    } catch (error) {
+      console.error('Failed to fetch roles:', error);
+      toast.error('Failed to load roles');
     }
   };
 
@@ -632,17 +656,19 @@ const ProjectDetail = () => {
                     >
                       Role
                     </InputLabel>
-                    <div className="mt-2">
-                      <RoleSelect
-                        value={member.project_role || ''}
-                        onChange={(value) =>
-                          handleMemberChange(index, "project_role", value)
-                        }
-                        required
-                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="Select Role"
-                      />
-                    </div>
+                    <select
+                      value={member.project_role || ''}
+                      onChange={(e) => handleMemberChange(index, "project_role", e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    >
+                      <option value="">Select Role</option>
+                      {roleOptions.map((role) => (
+                        <option key={role.value} value={role.value}>
+                          {role.label}
+                        </option>
+                      ))}
+                    </select>
                     {formik.touched.project_members?.[index] &&
                       formik.errors.project_members?.[index] &&
                       typeof formik.errors.project_members[index] === 'object' &&
