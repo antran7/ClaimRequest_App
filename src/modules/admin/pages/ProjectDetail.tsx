@@ -41,7 +41,6 @@ import useDebounce from "../../../shared/hooks/useDebounce";
 import { getRoleOptions } from "../services/roleService";
 import Status from "../components/Status";
 
-
 const ProjectDetail = () => {
   const { projectId } = useParams();
   const [project, setProject] = useState<Project | null>(null);
@@ -52,7 +51,9 @@ const ProjectDetail = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [userSearchTerm, setUserSearchTerm] = useState("");
-  const [roleOptions, setRoleOptions] = useState<{ value: string; label: string }[]>([]);
+  const [roleOptions, setRoleOptions] = useState<
+    { value: string; label: string }[]
+  >([]);
   const [isRolesLoaded, setIsRolesLoaded] = useState(false);
   const debouncedUserSearchTerm = useDebounce(userSearchTerm, 500);
   const [showUserDropdown, setShowUserDropdown] = useState<number | null>(null);
@@ -115,7 +116,7 @@ const ProjectDetail = () => {
         await updateProject({
           _id: project?._id!,
           ...values,
-          project_members: values.project_members, 
+          project_members: values.project_members,
           project_status: project?.project_status || "ACTIVE",
         });
         toast.success("Project updated successfully!");
@@ -136,12 +137,10 @@ const ProjectDetail = () => {
 
   const handleOpenEditDialog = async () => {
     try {
-      // Fetch users and roles in parallel
-      await Promise.all([
-        fetchUsers(),
-        !isRolesLoaded && fetchRoles()
-      ]);
-      
+      setLoading(true);
+
+      await Promise.all([fetchUsers(), !isRolesLoaded && fetchRoles()]);
+
       formik.resetForm({
         values: {
           project_name: project?.project_name || "",
@@ -155,8 +154,10 @@ const ProjectDetail = () => {
       });
       setEditDialogOpen(true);
     } catch (error) {
-      console.error('Error opening edit dialog:', error);
-      toast.error('Failed to load data');
+      console.error("Error opening edit dialog:", error);
+      toast.error("Failed to load data");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -182,14 +183,13 @@ const ProjectDetail = () => {
       setRoleOptions(options);
       setIsRolesLoaded(true);
     } catch (error) {
-      console.error('Failed to fetch roles:', error);
-      toast.error('Failed to load roles');
+      console.error("Failed to fetch roles:", error);
+      toast.error("Failed to load roles");
     }
   };
 
   const handleAddMember = () => {
     formik.setFieldValue("project_members", [
-      ...formik.values.project_members,
       {
         _id: "",
         user_id: "",
@@ -197,6 +197,7 @@ const ProjectDetail = () => {
         email: "",
         project_role: "",
       },
+      ...formik.values.project_members,
     ]);
   };
 
@@ -230,12 +231,12 @@ const ProjectDetail = () => {
   const handleUserSearch = (index: number, searchValue: string) => {
     setUserSearchTerm(searchValue);
     setShowUserDropdown(index);
-    
-    if (searchValue.trim() === '') {
+
+    if (searchValue.trim() === "") {
       setFilteredUsers(users);
     } else {
       const filtered = users.filter(
-        user => 
+        (user) =>
           user.email.toLowerCase().includes(searchValue.toLowerCase()) ||
           user.user_name.toLowerCase().includes(searchValue.toLowerCase())
       );
@@ -251,9 +252,13 @@ const ProjectDetail = () => {
 
   const handleStatusChange = async () => {
     if (!projectId) return;
-    
+
     try {
-      const response = await changeProjectStatus(projectId, newStatus, statusComment);
+      const response = await changeProjectStatus(
+        projectId,
+        newStatus,
+        statusComment
+      );
       if (response.success) {
         const projectResponse = await fetchProjectById(projectId);
         if (projectResponse.success && projectResponse.data) {
@@ -322,11 +327,12 @@ const ProjectDetail = () => {
                 <div>
                   <Typography variant="h5">{project.project_name}</Typography>
                   <Typography variant="subtitle1" color="text.secondary">
-                    Project code: {project.project_code}
+                    ({new Date(project.project_start_date).toLocaleDateString()}{" "}
+                    - {new Date(project.project_end_date).toLocaleDateString()})
                   </Typography>
                 </div>
                 <div className="flex items-center gap-2 p-1 bg-gray-300/75 rounded-xl">
-                  <Status 
+                  <Status
                     color={
                       project.project_status === "New"
                         ? "#6b7280"
@@ -337,7 +343,7 @@ const ProjectDetail = () => {
                         : project.project_status === "Closed"
                         ? "#ef4444"
                         : "#ffffff"
-                    } 
+                    }
                   />
                   <Select
                     value={project.project_status}
@@ -355,12 +361,12 @@ const ProjectDetail = () => {
                     }`}
                     variant="standard"
                     sx={{
-                      '&:before': { borderBottom: 'none' },
-                      '&:after': { borderBottom: 'none' },
-                      '& .MuiSelect-select': { 
-                        paddingY: '8px',
-                        paddingX: '16px',
-                      }
+                      "&:before": { borderBottom: "none" },
+                      "&:after": { borderBottom: "none" },
+                      "& .MuiSelect-select": {
+                        paddingY: "8px",
+                        paddingX: "16px",
+                      },
                     }}
                   >
                     <MenuItem value="New">New</MenuItem>
@@ -379,15 +385,10 @@ const ProjectDetail = () => {
                 <strong>Department:</strong> {project.project_department}
               </p>
               <p>
-                <strong>Start date:</strong>{" "}
-                {new Date(project.project_start_date).toLocaleDateString()}
-              </p>
-              <p>
-                <strong>End date:</strong>{" "}
-                {new Date(project.project_end_date).toLocaleDateString()}
+                <strong>Project code: </strong> {project.project_code}
               </p>
             </div>
-            
+
             <p className="mt-4">
               <strong>Description:</strong> {project.project_description}
             </p>
@@ -427,10 +428,25 @@ const ProjectDetail = () => {
                 color: "white",
                 "&:hover": { backgroundColor: "darkgray" },
               }}
-              startIcon={<EditIcon />}
+              startIcon={loading ? null : <EditIcon />}
               onClick={handleOpenEditDialog}
+              disabled={loading}
             >
-              Edit
+              {loading ? (
+                <div>
+                  <span className="animate-[ping_1.5s_0.5s_ease-in-out_infinite]">
+                    .
+                  </span>
+                  <span className="animate-[ping_1.5s_0.7s_ease-in-out_infinite]">
+                    .
+                  </span>
+                  <span className="animate-[ping_1.5s_0.9s_ease-in-out_infinite]">
+                    .
+                  </span>
+                </div>
+              ) : (
+                "Edit"
+              )}
             </Button>
             <Button
               variant="outlined"
@@ -626,10 +642,7 @@ const ProjectDetail = () => {
 
           <div className="mt-8">
             <div className="flex justify-between items-center mb-4 border-b border-gray-200 pb-2">
-              <Typography
-                variant="h6"
-                className="text-gray-700 font-semibold"
-              >
+              <Typography variant="h6" className="text-gray-700 font-semibold">
                 Project Members
               </Typography>
               <Button
@@ -658,8 +671,20 @@ const ProjectDetail = () => {
                         fullWidth
                         label="Search User"
                         placeholder="Search by username or email"
-                        value={showUserDropdown === index ? userSearchTerm : users.find(u => u._id === member.user_id || u._id === member._id)?.user_name || member.user_name || ''}
-                        onChange={(e) => handleUserSearch(index, e.target.value)}
+                        value={
+                          showUserDropdown === index
+                            ? userSearchTerm
+                            : users.find(
+                                (u) =>
+                                  u._id === member.user_id ||
+                                  u._id === member._id
+                              )?.user_name ||
+                              member.user_name ||
+                              ""
+                        }
+                        onChange={(e) =>
+                          handleUserSearch(index, e.target.value)
+                        }
                         onFocus={() => setShowUserDropdown(index)}
                         className="bg-white rounded-md"
                         InputProps={{
@@ -671,27 +696,27 @@ const ProjectDetail = () => {
                         }}
                       />
                       {showUserDropdown === index && (
-                        <Paper 
+                        <Paper
                           style={{
-                            position: 'absolute',
+                            position: "absolute",
                             zIndex: 1000,
-                            width: '100%',
-                            maxHeight: '200px',
-                            overflow: 'auto'
+                            width: "100%",
+                            maxHeight: "200px",
+                            overflow: "auto",
                           }}
                         >
                           <List>
                             {filteredUsers.length > 0 ? (
                               filteredUsers.map((user) => (
-                                <ListItem 
+                                <ListItem
                                   key={user._id}
                                   onClick={() => handleSelectUser(index, user)}
                                   divider
-                                  sx={{ cursor: 'pointer' }}
+                                  sx={{ cursor: "pointer" }}
                                 >
-                                  <ListItemText 
-                                    primary={user.user_name} 
-                                    secondary={user.email} 
+                                  <ListItemText
+                                    primary={user.user_name}
+                                    secondary={user.email}
                                   />
                                 </ListItem>
                               ))
@@ -722,12 +747,16 @@ const ProjectDetail = () => {
                 <div className="w-full">
                   <FormControl
                     fullWidth
-                    error={!!(
-                      formik.touched.project_members?.[index] && 
-                      formik.errors.project_members?.[index] && 
-                      typeof formik.errors.project_members[index] === 'object' &&
-                      'project_role' in (formik.errors.project_members[index] as any)
-                    )}
+                    error={
+                      !!(
+                        formik.touched.project_members?.[index] &&
+                        formik.errors.project_members?.[index] &&
+                        typeof formik.errors.project_members[index] ===
+                          "object" &&
+                        "project_role" in
+                          (formik.errors.project_members[index] as any)
+                      )
+                    }
                     className="bg-white rounded-md"
                   >
                     <InputLabel
@@ -738,8 +767,14 @@ const ProjectDetail = () => {
                       Role
                     </InputLabel>
                     <select
-                      value={member.project_role || ''}
-                      onChange={(e) => handleMemberChange(index, "project_role", e.target.value)}
+                      value={member.project_role || ""}
+                      onChange={(e) =>
+                        handleMemberChange(
+                          index,
+                          "project_role",
+                          e.target.value
+                        )
+                      }
                       className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       required
                     >
@@ -752,10 +787,15 @@ const ProjectDetail = () => {
                     </select>
                     {formik.touched.project_members?.[index] &&
                       formik.errors.project_members?.[index] &&
-                      typeof formik.errors.project_members[index] === 'object' &&
-                      'project_role' in (formik.errors.project_members[index] as any) && (
+                      typeof formik.errors.project_members[index] ===
+                        "object" &&
+                      "project_role" in
+                        (formik.errors.project_members[index] as any) && (
                         <p className="text-red-500 text-xs mt-1">
-                          {(formik.errors.project_members[index] as any).project_role}
+                          {
+                            (formik.errors.project_members[index] as any)
+                              .project_role
+                          }
                         </p>
                       )}
                   </FormControl>

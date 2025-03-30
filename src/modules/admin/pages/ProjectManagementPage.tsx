@@ -799,15 +799,7 @@ const ProjectManagementPage: React.FC = () => {
                           }
                           required
                           className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          required
-                        >
-                          <option value="">Select Role</option>
-                          {roleOptions.map((role) => (
-                            <option key={role.value} value={role.value}>
-                              {role.label}
-                            </option>
-                          ))}
-                        </select>
+                        />
                       </div>
                       {formik.touched.project_members?.[index] &&
                         formik.errors.project_members?.[index] &&
