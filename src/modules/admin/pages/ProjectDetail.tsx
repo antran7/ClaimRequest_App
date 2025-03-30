@@ -36,10 +36,11 @@ import * as Yup from "yup";
 import { searchUsers } from "../services/userService";
 import { Search } from "lucide-react";
 import DepartmentSelect from "../components/DepartmentSelect";
-import RoleSelect from "../components/RoleSelect";
 import useDebounce from "../../../shared/hooks/useDebounce";
 import { getRoleOptions } from "../services/roleService";
 import Status from "../components/Status";
+// import { User as ApiUser } from "../types/user";
+// import { ApiResponse } from "../types/apiResponse";
 
 const ProjectDetail = () => {
   const { projectId } = useParams();
@@ -123,7 +124,7 @@ const ProjectDetail = () => {
         setEditDialogOpen(false);
         if (projectId) {
           const response = await fetchProjectById(projectId);
-          if (response.success) {
+          if (response.success && response.data) {
             setProject(response.data);
           }
         }
@@ -168,8 +169,15 @@ const ProjectDetail = () => {
         { pageNum: 1, pageSize: 100 }
       );
       if (response?.pageData) {
-        setUsers(response.pageData);
-        setFilteredUsers(response.pageData);
+        // Map API users to project users format
+        const projectUsers: User[] = response.pageData.map(user => ({
+          _id: user._id,
+          user_name: user.user_name,
+          email: user.email || '',
+          project_role: ''
+        }));
+        setUsers(projectUsers);
+        setFilteredUsers(projectUsers);
       }
     } catch (error) {
       console.error("Failed to fetch users:", error);
@@ -214,9 +222,9 @@ const ProjectDetail = () => {
       updatedMembers[index] = {
         ...updatedMembers[index],
         _id: value,
-        user_id: value, // Thêm user_id
+        user_id: value,
         user_name: selectedUser?.user_name || "",
-        email: selectedUser?.email,
+        email: selectedUser?.email || "",
         project_role: updatedMembers[index].project_role || "",
       };
     } else {
@@ -316,6 +324,7 @@ const ProjectDetail = () => {
       <button
         className="mt-2 ml-2 relative py-2 px-8 text-black text-base font-bold nded-full overflow-hidden bg-white rounded-full transition-all duration-400 ease-in-out shadow-md hover:scale-105 hover:text-white hover:shadow-lg active:scale-90 before:absolute before:top-0 before:-left-full before:w-full before:h-full before:bg-gradient-to-r before:from-gray-500 before:to-gray-300 before:transition-all before:duration-500 before:ease-in-out before:z-[-1] before:rounded-full hover:before:left-0"
         onClick={() => navigate("/admin/manageproject")}
+        aria-label="Back to project list"
       >
         <ArrowBackIcon />
       </button>
@@ -777,6 +786,7 @@ const ProjectDetail = () => {
                       }
                       className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       required
+                      aria-label={`Select role for member ${index + 1}`}
                     >
                       <option value="">Select Role</option>
                       {roleOptions.map((role) => (
