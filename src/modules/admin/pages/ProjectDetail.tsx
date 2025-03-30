@@ -502,7 +502,7 @@ const ProjectDetail = () => {
             <div className="space-y-1">
               <TextField
                 fullWidth
-                label="Project Name"
+                label="Project Name *"
                 {...formik.getFieldProps("project_name")}
                 error={
                   formik.touched.project_name &&
@@ -521,7 +521,7 @@ const ProjectDetail = () => {
             <div className="space-y-1">
               <TextField
                 fullWidth
-                label="Project Code"
+                label="Project Code *"
                 {...formik.getFieldProps("project_code")}
                 error={
                   formik.touched.project_code &&
@@ -576,7 +576,7 @@ const ProjectDetail = () => {
             <div className="space-y-1 md:col-span-2">
               <TextField
                 fullWidth
-                label="Description"
+                label="Description *"
                 multiline
                 rows={3}
                 {...formik.getFieldProps("project_description")}
@@ -643,7 +643,7 @@ const ProjectDetail = () => {
           <div className="mt-8">
             <div className="flex justify-between items-center mb-4 border-b border-gray-200 pb-2">
               <Typography variant="h6" className="text-gray-700 font-semibold">
-                Project Members
+                Project Members *
               </Typography>
               <Button
                 sx={{
@@ -669,7 +669,7 @@ const ProjectDetail = () => {
                     <div className="relative">
                       <TextField
                         fullWidth
-                        label="Search User"
+                        label="Search User *"
                         placeholder="Search by username or email"
                         value={
                           showUserDropdown === index
@@ -764,7 +764,7 @@ const ProjectDetail = () => {
                       id={`role-select-label-${index}`}
                       className="bg-white px-1 text-gray-600"
                     >
-                      Role
+                      Role *
                     </InputLabel>
                     <select
                       value={member.project_role || ""}
