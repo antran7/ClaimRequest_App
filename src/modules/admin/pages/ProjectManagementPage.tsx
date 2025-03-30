@@ -22,10 +22,7 @@ import {
   TableRow,
   FormControl,
   InputLabel,
-  Select,
-  MenuItem,
   TablePagination,
-  Stack,
   InputAdornment,
   List,
   ListItem,
@@ -33,10 +30,6 @@ import {
   Paper,
   Tooltip,
 } from "@mui/material";
-import {
-  Delete as DeleteIcon,
-  Visibility as VisibilityIcon,
-} from "@mui/icons-material";
 //Import các component dùng chung
 import Layout from "../../../shared/layouts/Layout";
 import BackButton from "../components/BackButton";
@@ -54,14 +47,12 @@ import {
   Project,
   ProjectMember,
   User as ProjectUser,
-  ApiResponse,
 } from "../types/projectInterface";
 import { User } from "../types/user";
 import RoleSelect from "../components/RoleSelect";
 import { getRoleOptions } from "../services/roleService";
 import Status from "../components/Status";
 
-// Helper function to safely check nested form errors
 const hasFieldError = (formik: any, fieldName: string) => {
   const touched = getIn(formik.touched, fieldName);
   const error = getIn(formik.errors, fieldName);
@@ -92,7 +83,6 @@ const ProjectManagementPage: React.FC = () => {
     null
   );
   const [showUserDropdown, setShowUserDropdown] = useState<number | null>(null);
-  const [roleOptions, setRoleOptions] = useState<{ value: string; label: string }[]>([]);
   const [isRolesLoaded, setIsRolesLoaded] = useState(false);
 
   useEffect(() => {
@@ -140,8 +130,7 @@ const ProjectManagementPage: React.FC = () => {
 
   const fetchRoles = async () => {
     try {
-      const options = await getRoleOptions();
-      setRoleOptions(options);
+      await getRoleOptions();
       setIsRolesLoaded(true);
     } catch (error) {
       console.error('Failed to fetch roles:', error);
@@ -521,7 +510,7 @@ const ProjectManagementPage: React.FC = () => {
               count={totalCount}
               rowsPerPage={rowsPerPage}
               page={page}
-              onPageChange={(event, newPage) => setPage(newPage)}
+              onPageChange={(_, newPage) => setPage(newPage)}
               onRowsPerPageChange={handleRowsPerPageChange}
               labelDisplayedRows={({ from, to, count }) => {
                 return `${from}-${to} of ${count}`;

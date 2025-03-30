@@ -25,22 +25,10 @@ export interface Project {
 
 export interface User {
   _id: string;
+  user_id?: string;
   project_role: string;
   user_name: string;
   email: string;
-}
-
-export interface ApiResponse {
-  success: boolean;
-  data: {
-    pageData: Project[];
-    pageInfo: {
-      pageNum: number;
-      pageSize: number;
-      totalItems: number;
-      totalPages: number;
-    };
-  };
 }
 
 export interface SearchData {

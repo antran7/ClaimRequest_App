@@ -1,5 +1,6 @@
 import apiService from "../../../core/api/api";
-import { ApiResponse, Project, SearchData, ProjectSearchResponse } from "../types/projectInterface";
+import { Project, SearchData, ProjectSearchResponse } from "../types/projectInterface";
+import { ApiResponse } from "../types/apiResponse";
 
 const API_URL = "https://management-claim-request.vercel.app/api";
 
@@ -63,7 +64,7 @@ export const deleteProject = async (id: string): Promise<void> => {
   }
 };
 
-export const fetchProjectById = async (projectId: string): Promise<Project> => {
+export const fetchProjectById = async (projectId: string): Promise<ApiResponse<Project>> => {
   try {
     const response = await fetch(`${API_URL}/projects/${projectId}`, {
       headers: getHeaders(),
