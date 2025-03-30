@@ -16,7 +16,6 @@ interface HeaderProps {
 const Header = ({ toggleSidebar = () => { } }: HeaderProps) => {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
-
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const token = localStorage.getItem("token") || null;
@@ -46,7 +45,6 @@ const Header = ({ toggleSidebar = () => { } }: HeaderProps) => {
 
   return (
     <div className="layout-header">
-
       <div className="layout-header-left">
         {isLoggedIn && (
           <IconButton

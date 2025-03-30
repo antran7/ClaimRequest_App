@@ -1,14 +1,12 @@
 .layout-header {
+    background-color: white;
     display: flex;
     justify-content: space-between;
-    background-color: white;
     border-bottom: 1px solid #EAEAEA;
     padding: 20px;
     height: 50px;
     position: sticky;
     top: 0;
-    left: 0;
-    right: 0;
     z-index: 99;
 }
 

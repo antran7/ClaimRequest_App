@@ -2,13 +2,7 @@ import { Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
-interface LottieOptions {
-    loop: boolean;
-    autoplay: boolean;
-    animationData?: any;
-}
-
-const HomepageTitle = ({ lottieOptions }: { lottieOptions: LottieOptions }) => {
+const HomepageTitle = () => {
     const navigate = useNavigate();
 
     return (
@@ -26,7 +20,7 @@ const HomepageTitle = ({ lottieOptions }: { lottieOptions: LottieOptions }) => {
             
             <div className="w-full lg:w-1/2 flex justify-center items-center order-1 lg:order-2 mt-10 sm:mt-16 md:mt-0">
                 <div className="relative top-15 w-[250px] sm:w-[300px] md:w-[400px] lg:w-[600px] xl:w-[700px]">
-                    <DotLottieReact {...lottieOptions} />
+                    <DotLottieReact />
                 </div>
             </div>
         </div>
