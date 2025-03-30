@@ -1,6 +1,6 @@
 //Import từ React Router hoặc các hook liên quan
 import React, { useEffect, useState } from "react";
-import { useFormik } from "formik";
+import { useFormik, getIn } from "formik";
 import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
@@ -58,7 +58,19 @@ import {
 } from "../types/projectInterface";
 import { User } from "../types/user";
 import RoleSelect from "../components/RoleSelect";
+import { getRoleOptions } from "../services/roleService";
 import Status from "../components/Status";
+
+// Helper function to safely check nested form errors
+const hasFieldError = (formik: any, fieldName: string) => {
+  const touched = getIn(formik.touched, fieldName);
+  const error = getIn(formik.errors, fieldName);
+  return touched && error;
+};
+
+const getFieldError = (formik: any, fieldName: string) => {
+  return getIn(formik.errors, fieldName);
+};
 
 const ProjectManagementPage: React.FC = () => {
   const navigate = useNavigate();
@@ -70,6 +82,7 @@ const ProjectManagementPage: React.FC = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [addLoading, setAddLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [userSearchTerm, setUserSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
@@ -79,6 +92,8 @@ const ProjectManagementPage: React.FC = () => {
     null
   );
   const [showUserDropdown, setShowUserDropdown] = useState<number | null>(null);
+  const [roleOptions, setRoleOptions] = useState<{ value: string; label: string }[]>([]);
+  const [isRolesLoaded, setIsRolesLoaded] = useState(false);
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -123,6 +138,17 @@ const ProjectManagementPage: React.FC = () => {
     }
   };
 
+  const fetchRoles = async () => {
+    try {
+      const options = await getRoleOptions();
+      setRoleOptions(options);
+      setIsRolesLoaded(true);
+    } catch (error) {
+      console.error('Failed to fetch roles:', error);
+      toast.error('Failed to load roles');
+    }
+  };
+
   const validationSchema = Yup.object({
     project_name: Yup.string().required("Project name is required"),
     project_code: Yup.string().required("Project code is required"),
@@ -135,8 +161,8 @@ const ProjectManagementPage: React.FC = () => {
     project_members: Yup.array()
       .of(
         Yup.object().shape({
-          user_id: Yup.string(),
-          project_role: Yup.string(),
+          user_id: Yup.string().required("User is required"),
+          project_role: Yup.string().required("Role is required"),
           employee_id: Yup.string(),
           user_name: Yup.string(),
           full_name: Yup.string(),
@@ -198,9 +224,12 @@ const ProjectManagementPage: React.FC = () => {
 
   const handleAddMember = () => {
     formik.setFieldValue("project_members", [
-      ...formik.values.project_members,
       { user_id: "", project_role: "" } as ProjectMember,
+      ...formik.values.project_members,
     ]);
+    // Touch the fields to trigger validation
+    formik.setFieldTouched(`project_members[0].user_id`, true, false);
+    formik.setFieldTouched(`project_members[0].project_role`, true, false);
   };
 
   const handleRemoveMember = (index: number) => {
@@ -218,10 +247,22 @@ const ProjectManagementPage: React.FC = () => {
     formik.setFieldValue("project_members", updatedMembers);
   };
 
-  const handleOpenDialog = () => {
-    formik.resetForm();
-    fetchUsers();
-    setOpenDialog(true);
+  const handleOpenDialog = async () => {
+    try {
+      setAddLoading(true);
+      await Promise.all([
+        fetchUsers(),
+        !isRolesLoaded && fetchRoles()
+      ]);
+      
+      formik.resetForm();
+      setOpenDialog(true);
+    } catch (error) {
+      console.error('Error opening dialog:', error);
+      toast.error('Failed to load data');
+    } finally {
+      setAddLoading(false);
+    }
   };
 
   const handleCloseDialog = () => {
@@ -255,7 +296,7 @@ const ProjectManagementPage: React.FC = () => {
 
   const handleSearch = (searchTerm: string) => {
     setSearchTerm(searchTerm);
-    setPage(0); // Reset to first page when searching
+    setPage(0); 
   };
 
   const formatDate = (dateString: string) => {
@@ -267,7 +308,6 @@ const ProjectManagementPage: React.FC = () => {
     setUserSearchTerm(searchValue);
     setShowUserDropdown(index);
 
-    // Filter users based on search term
     if (searchValue.trim() === "") {
       setFilteredUsers(users);
     } else {
@@ -289,7 +329,7 @@ const ProjectManagementPage: React.FC = () => {
   const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newRowsPerPage = parseInt(event.target.value, 10);
     setRowsPerPage(newRowsPerPage);
-    setPage(0); // Reset về trang đầu tiên khi thay đổi số lượng items/page
+    setPage(0); 
   };
 
   return (
@@ -306,21 +346,28 @@ const ProjectManagementPage: React.FC = () => {
               title="Add New"
               className="group cursor-pointer outline-none hover:rotate-90 duration-300"
               onClick={handleOpenDialog}
+              disabled={addLoading}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="50px"
-                height="50px"
-                viewBox="0 0 24 24"
-                className="stroke-zinc-400 fill-none group-active:stroke-zinc-200 group-active:duration-0 duration-300"
-              >
-                <path
-                  d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z"
-                  strokeWidth="1.5"
-                ></path>
-                <path d="M8 12H16" strokeWidth="1.5"></path>
-                <path d="M12 16V8" strokeWidth="1.5"></path>
-              </svg>
+              {addLoading ? (
+                <div
+                className="w-10 h-10 border-4 border-t-gray-500 border-gray-300 rounded-full animate-spin"
+              ></div>
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="50px"
+                  height="50px"
+                  viewBox="0 0 24 24"
+                  className="stroke-zinc-400 fill-none group-active:stroke-zinc-200 group-active:duration-0 duration-300"
+                >
+                  <path
+                    d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z"
+                    strokeWidth="1.5"
+                  ></path>
+                  <path d="M8 12H16" strokeWidth="1.5"></path>
+                  <path d="M12 16V8" strokeWidth="1.5"></path>
+                </svg>
+              )}
             </button>
           </div>
 
@@ -500,7 +547,7 @@ const ProjectManagementPage: React.FC = () => {
               <div className="space-y-1">
                 <TextField
                   fullWidth
-                  label="Project Name"
+                  label="Project Name *"
                   {...formik.getFieldProps("project_name")}
                   error={
                     formik.touched.project_name &&
@@ -519,7 +566,7 @@ const ProjectManagementPage: React.FC = () => {
               <div className="space-y-1">
                 <TextField
                   fullWidth
-                  label="Project Code"
+                  label="Project Code *"
                   {...formik.getFieldProps("project_code")}
                   error={
                     formik.touched.project_code &&
@@ -549,7 +596,7 @@ const ProjectManagementPage: React.FC = () => {
                     id="department-select-label"
                     className="bg-white px-1 text-gray-600"
                   >
-                    Department
+                    Department *
                   </InputLabel>
                   <div className="mt-2">
                     <DepartmentSelect
@@ -574,7 +621,7 @@ const ProjectManagementPage: React.FC = () => {
               <div className="space-y-1 md:col-span-2">
                 <TextField
                   fullWidth
-                  label="Description"
+                  label="Description *"
                   multiline
                   rows={3}
                   {...formik.getFieldProps("project_description")}
@@ -644,7 +691,7 @@ const ProjectManagementPage: React.FC = () => {
                   variant="h6"
                   className="text-gray-700 font-semibold"
                 >
-                  Project Members
+                  Project Members *
                 </Typography>
                 <Button
                   sx={{
@@ -670,7 +717,7 @@ const ProjectManagementPage: React.FC = () => {
                       <div className="relative">
                         <TextField
                           fullWidth
-                          label="Search User"
+                          label="Search User *"
                           placeholder="Search by username or email"
                           value={
                             showUserDropdown === index
@@ -683,6 +730,7 @@ const ProjectManagementPage: React.FC = () => {
                           }
                           onFocus={() => setShowUserDropdown(index)}
                           className="bg-white rounded-md"
+                          error={hasFieldError(formik, `project_members[${index}].user_id`)}
                           InputProps={{
                             endAdornment: (
                               <InputAdornment position="end">
@@ -691,6 +739,11 @@ const ProjectManagementPage: React.FC = () => {
                             ),
                           }}
                         />
+                        {hasFieldError(formik, `project_members[${index}].user_id`) && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {getFieldError(formik, `project_members[${index}].user_id`)}
+                          </p>
+                        )}
                         {showUserDropdown === index && (
                           <Paper
                             style={{
@@ -745,16 +798,7 @@ const ProjectManagementPage: React.FC = () => {
                   <div className="w-full">
                     <FormControl
                       fullWidth
-                      error={
-                        !!(
-                          formik.touched.project_members?.[index] &&
-                          formik.errors.project_members?.[index] &&
-                          typeof formik.errors.project_members[index] ===
-                            "object" &&
-                          "project_role" in
-                            (formik.errors.project_members[index] as any)
-                        )
-                      }
+                      error={hasFieldError(formik, `project_members[${index}].project_role`)}
                       className="bg-white rounded-md"
                     >
                       <InputLabel
@@ -762,7 +806,7 @@ const ProjectManagementPage: React.FC = () => {
                         id={`role-select-label-${index}`}
                         className="bg-white px-1 text-gray-600"
                       >
-                        Role
+                        Role *
                       </InputLabel>
                       <div className="mt-2">
                         <RoleSelect
@@ -775,22 +819,13 @@ const ProjectManagementPage: React.FC = () => {
                           }
                           required
                           className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="Select Role"
                         />
                       </div>
-                      {formik.touched.project_members?.[index] &&
-                        formik.errors.project_members?.[index] &&
-                        typeof formik.errors.project_members[index] ===
-                          "object" &&
-                        "project_role" in
-                          (formik.errors.project_members[index] as any) && (
-                          <p className="text-red-500 text-xs mt-1">
-                            {
-                              (formik.errors.project_members[index] as any)
-                                .project_role
-                            }
-                          </p>
-                        )}
+                      {hasFieldError(formik, `project_members[${index}].project_role`) && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {getFieldError(formik, `project_members[${index}].project_role`)}
+                        </p>
+                      )}
                     </FormControl>
                   </div>
                 </div>

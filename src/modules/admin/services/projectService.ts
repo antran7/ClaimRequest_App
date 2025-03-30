@@ -1,5 +1,5 @@
 import apiService from "../../../core/api/api";
-import { ApiResponse, Project } from "../types/projectInterface";
+import { ApiResponse, Project, SearchData, ProjectSearchResponse } from "../types/projectInterface";
 
 const API_URL = "https://management-claim-request.vercel.app/api";
 
@@ -112,44 +112,6 @@ export const searchProject = async (searchTerm: string = "", pageNum: number = 1
   }
 };
 
-interface SearchData {
-  searchTerm?: string,
-  startDate?: string | "",
-  endDate?: string | "",
-  department?: string,
-  user_id?: string,
-}
-
-interface ProjectSearchResponse {
-  pageData: {
-    _id: string,
-    project_name: string,
-    project_code: string,
-    project_department: string,
-    project_description: string,
-    project_status: string,
-    project_start_date: string,
-    project_end_date: string,
-    updated_by: string,
-    is_deleted: boolean,
-    created_at: string,
-    updated_at: string,
-    project_comment: string | null,
-    project_members: {
-      project_code: string,
-      user_id: string,
-      employee_id: string,
-      user_name: string,
-      full_name: string,
-    }[];
-  }[],
-  pageInfo: {
-    pageNum: number,
-    pageSize: number,
-    totalItems: number,
-    totalPages: number,
-  }
-}
 
 export const searchProjectWithData = async (searchData: SearchData, pageNum: number = 1): Promise<ProjectSearchResponse> => {
   try {
