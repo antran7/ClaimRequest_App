@@ -74,6 +74,7 @@
       width: 200px;
       height: 200px;
       margin: 20px 0 10px 0;
+      cursor: pointer;
     }
 
     .profile-bio {
