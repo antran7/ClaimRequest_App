@@ -127,14 +127,18 @@ const UserManagement = () => {
 
     if (!form.email.trim()) newErrors.email = "Email is required";
     if (!form.user_name.trim()) newErrors.user_name = "Username is required";
-    if (!editingUser && !form.password?.trim())
-      newErrors.password = "Password is required";
-    if (!editingUser && form.password !== form.confirmPassword)
-      newErrors.confirmPassword = "Passwords do not match";
-
+    if (!editingUser && !form.password?.trim()) {
+        newErrors.password = "Password is required";
+    } else if (!editingUser && (form.password?.length ?? 0) < 6) {
+        newErrors.password = "Password must be at least 6 characters";
+    }
+    if (!editingUser && form.password !== form.confirmPassword) {
+        newErrors.confirmPassword = "Passwords do not match";
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0; // Returns true if no errors
-  };
+};
+
   const [searchTerm, setSearchTerm] = useState("");
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
@@ -967,6 +971,18 @@ const UserManagement = () => {
                     sx={{ width: 150, height: 150 }}
                   />
                 </div>
+                <TextField
+                  label="Avatar URL"
+                  value={employeeData.avatar_url}
+                  onChange={(e) =>
+                    setEmployeeData({
+                      ...employeeData,
+                      avatar_url: e.target.value,
+                    })
+                  }
+                  fullWidth
+                  margin="dense"
+                />
                 <TextField
                   label="Full Name"
                   value={employeeData.full_name}
