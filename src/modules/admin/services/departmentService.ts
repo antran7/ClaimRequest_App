@@ -1,6 +1,6 @@
 import apiService from "../../../core/api/api";
-import { Department, DepartmentResponse } from "../types/departmentInterface";
-import { ResponseModel } from "../../../shared/constants/responseModel";
+import { Department } from "../types/departmentInterface";
+
 
 
 export const getAllDepartments = async (): Promise<Department[]> => {

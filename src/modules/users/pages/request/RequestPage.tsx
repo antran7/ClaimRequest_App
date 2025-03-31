@@ -1044,10 +1044,10 @@ const RequestPage = () => {
                           if (!selectedProject) return "Please select a project first";
                           const projectStart = moment(selectedProject.project_start_date);
                           const projectEnd = moment(selectedProject.project_end_date);
-                          if (value && value.isBefore(projectStart)) {
+                          if (value && value.isBefore(projectStart, "day")) {
                             return "Start date cannot be before project start date";
                           }
-                          if (value && value.isAfter(projectEnd)) {
+                          if (value && value.isAfter(projectEnd, "day")) {
                             return "Start date cannot be after project end date";
                           }
                           return true;
@@ -1277,10 +1277,10 @@ const RequestPage = () => {
                           if (!selectedProject) return "Please select a project first";
                           const projectStart = moment(selectedProject.project_start_date);
                           const projectEnd = moment(selectedProject.project_end_date);
-                          if (value && value.isBefore(projectStart)) {
+                          if (value && value.isBefore(projectStart, "day")) {
                             return "Start date cannot be before project start date";
                           }
-                          if (value && value.isAfter(projectEnd)) {
+                          if (value && value.isAfter(projectEnd, "day")) {
                             return "Start date cannot be after project end date";
                           }
                           return true;
