@@ -19,6 +19,7 @@ const Header = ({ toggleSidebar = () => { } }: HeaderProps) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const token = localStorage.getItem("token") || null;
+  const [navbar, setNavbar] = useState(false);
 
   const handleMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -36,6 +37,21 @@ const Header = ({ toggleSidebar = () => { } }: HeaderProps) => {
   };
 
   useEffect(() => {
+    const changeBackground = () => {
+      if (window.scrollY >= 50) {
+        setNavbar(true);
+      } else {
+        setNavbar(false);
+      }
+    };
+  
+    window.addEventListener('scroll', changeBackground);
+    return () => {
+      window.removeEventListener('scroll', changeBackground);
+    };
+  }, []);
+
+  useEffect(() => {
     if (token) {
       setIsLoggedIn(true);
     } else {
@@ -44,7 +60,7 @@ const Header = ({ toggleSidebar = () => { } }: HeaderProps) => {
   }, [token]);
 
   return (
-    <div className="layout-header">
+    <div className={navbar ? 'layout-header active' : 'layout-header'}>
       <div className="layout-header-left">
         {isLoggedIn && (
           <IconButton
@@ -67,7 +83,7 @@ const Header = ({ toggleSidebar = () => { } }: HeaderProps) => {
         <Link to="/about" className="header-right-item">
           About
         </Link>
-        <Link to="/Contact" className="header-right-item">
+        <Link to="/contact" className="header-right-item">
           Contact
         </Link>
         {!isLoggedIn ? (
@@ -80,7 +96,7 @@ const Header = ({ toggleSidebar = () => { } }: HeaderProps) => {
               size="large"
               onClick={handleMenu}
             >
-              <AccountCircleIcon />
+              <AccountCircleIcon sx={{ color: "#fff" }}/>
             </IconButton>
             <Menu
               id="menu-appbar"

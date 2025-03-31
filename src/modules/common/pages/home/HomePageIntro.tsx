@@ -47,7 +47,7 @@ const AboutUs = () => {
       </Box>
 
       <div className="flex items-center h-[680px] mt-24">
-        <div className="flex-1 flex flex-col justify-center items-end max-w-[50%] bg-[#D1D7F1] h-full pr-12">
+        <div className="flex-1 flex flex-col justify-center items-end max-w-[50%] bg-[#BEDBFF] h-full pr-12">
           <h2 className="text-[60px] font-bold relative mb-8 flex items-center">
             ABOUT US
             <EastIcon
