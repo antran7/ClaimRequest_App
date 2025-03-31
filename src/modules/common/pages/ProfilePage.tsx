@@ -104,7 +104,7 @@ const ProfilePage: React.FC = () => {
 
   // Chuyển đổi ngày giờ
   const formatDateToUTC7 = (date?: Date | string | null): string => {
-    if (!date) return "N/A";  
+    if (!date) return "N/A";
     const dateObj = typeof date === "string" ? new Date(date) : date;
     return dateObj.toLocaleDateString("vi-VN", {
       timeZone: "Asia/Ho_Chi_Minh",
@@ -344,7 +344,11 @@ const ProfilePage: React.FC = () => {
                     onClick={() => setOpenDialog(true)}
                   />
                   <Dialog open={openDialog} onClose={handleClose} maxWidth="sm" fullWidth>
-                    <DialogTitle>Update your avatar</DialogTitle>
+                    <DialogTitle
+                      sx={{ textAlign: "center", fontWeight: "bold" }}
+                    >
+                      Update your avatar
+                    </DialogTitle>
                     <DialogContent>
                       {!imageSrc ? (
                         <div {...getRootProps()} style={{
