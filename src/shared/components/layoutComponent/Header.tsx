@@ -77,7 +77,7 @@ const Header = ({ toggleSidebar = () => { } }: HeaderProps) => {
       </div>
 
       <div className="layout-header-right">
-        <Link to="/#" className="header-right-item">
+        <Link to="/service" className="header-right-item">
           Services
         </Link>
         <Link to="/about" className="header-right-item">
