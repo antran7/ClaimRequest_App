@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import {
-  Modal,
   Button,
   TextField,
   FormControl,
@@ -17,6 +16,10 @@ import {
   DialogContent,
   DialogActions,
   IconButton,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
 } from "@mui/material";
 import axios from "axios";
 import { debounce } from "lodash";
@@ -29,6 +32,10 @@ import CloseIcon from "@mui/icons-material/Close";
 import TablePagination from "@mui/material/TablePagination";
 import toast from "react-hot-toast";
 import { useForm, Controller } from "react-hook-form";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { TableChart, PictureAsPdf } from "@mui/icons-material";
 
 const API_URL = "https://management-claim-request.vercel.app/api";
 
@@ -142,7 +149,8 @@ const RequestPage = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
-  const [projectSearchKeyword, setProjectSearchKeyword] = useState<string>("");
+  const [downloadAnchorEl, setDownloadAnchorEl] = useState<null | HTMLElement>(null);
+  const [selectedRequestForDownload, setSelectedRequestForDownload] = useState<Request | null>(null);
 
   const {
     control,
@@ -690,6 +698,112 @@ const RequestPage = () => {
     }
   };
 
+  const handleDownloadClick = (event: React.MouseEvent<HTMLElement>, request: Request) => {
+    setDownloadAnchorEl(event.currentTarget);
+    setSelectedRequestForDownload(request);
+  };
+
+  const handleDownloadClose = () => {
+    setDownloadAnchorEl(null);
+    setSelectedRequestForDownload(null);
+  };
+
+  const handleDownloadExcel = () => {
+    if (!selectedRequestForDownload) return;
+
+    const timestamp = moment().format("YYYY-MM-DD_HH-mm-ss");
+    const fileName = `request-${selectedRequestForDownload.claim_name}_${timestamp}.xlsx`;
+
+    const data = [
+      {
+        "Request Name": selectedRequestForDownload.claim_name,
+        Project: selectedRequestForDownload.project_info
+          ? `${selectedRequestForDownload.project_info.project_name} (${selectedRequestForDownload.project_info.project_code})`
+          : "N/A",
+        Approver: selectedRequestForDownload.approval_info?.user_name || "N/A",
+        "Start Date": moment(selectedRequestForDownload.claim_start_date).format("DD/MM/YYYY"),
+        "End Date": moment(selectedRequestForDownload.claim_end_date).format("DD/MM/YYYY"),
+        "Total Hours": `${selectedRequestForDownload.total_work_time} hours`,
+        Status: selectedRequestForDownload.claim_status,
+      },
+    ];
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Request Details");
+    XLSX.writeFile(wb, fileName);
+
+    handleDownloadClose();
+  };
+
+  const handleDownloadPDF = () => {
+    if (!selectedRequestForDownload) return;
+
+    const doc = new jsPDF({
+      orientation: "landscape",
+      unit: "pt",
+      format: "a4",
+    });
+
+    doc.setFontSize(20);
+    doc.text("Request Details", doc.internal.pageSize.getWidth() / 2, 40, {
+      align: "center",
+    });
+
+    const tableData = {
+      head: [["Request Name", "Project", "Approver", "Start Date", "End Date", "Total Hours", "Status"]],
+      body: [
+        [
+          selectedRequestForDownload.claim_name,
+          selectedRequestForDownload.project_info
+            ? `${selectedRequestForDownload.project_info.project_name} (${selectedRequestForDownload.project_info.project_code})`
+            : "N/A",
+          selectedRequestForDownload.approval_info?.user_name || "N/A",
+          moment(selectedRequestForDownload.claim_start_date).format("DD/MM/YYYY"),
+          moment(selectedRequestForDownload.claim_end_date).format("DD/MM/YYYY"),
+          `${selectedRequestForDownload.total_work_time} hours`,
+          selectedRequestForDownload.claim_status,
+        ],
+      ],
+    };
+
+    autoTable(doc, {
+      startY: 60,
+      head: tableData.head,
+      body: tableData.body,
+      theme: "grid",
+      headStyles: {
+        fillColor: [128, 128, 128],
+        textColor: [255, 255, 255],
+        fontSize: 12,
+        fontStyle: "bold",
+        halign: "center",
+        valign: "middle",
+      },
+      bodyStyles: {
+        fontSize: 11,
+        halign: "center",
+        valign: "middle",
+      },
+      columnStyles: {
+        0: { cellWidth: 120 },
+        1: { cellWidth: 180 },
+        2: { cellWidth: 100 },
+        3: { cellWidth: 80 },
+        4: { cellWidth: 80 },
+        5: { cellWidth: 80 },
+        6: { cellWidth: 80 },
+      },
+      margin: { top: 60, right: 30, bottom: 30, left: 30 },
+    });
+
+    const timestamp = moment().format("YYYY-MM-DD_HH-mm-ss");
+    const fileName = `request-${selectedRequestForDownload.claim_name}_${timestamp}.pdf`;
+
+    doc.save(fileName);
+    handleDownloadClose();
+  };
+
   return (
     <Layout>
       <div className="min-h-screen bg-gray-100">
@@ -710,9 +824,9 @@ const RequestPage = () => {
                   sx={{ width: "1000px" }}
                 />
                 <Autocomplete
-                  options={["All", "Draft", "Pending Approval", "Rejected", "Approved"]}
+                  options={["All", "Draft", "Pending Approval", "Rejected", "Approved","Canceled"]}
                   value={selectedStatus || "All"}
-                  onChange={(event, newValue) => {
+                  onChange={(_, newValue) => {
                     setSelectedStatus(newValue || "All");
                     setPage(0); // Reset page to 0 when changing status
                   }}
@@ -881,6 +995,57 @@ const RequestPage = () => {
                             >
                               View Logs
                             </Button>
+                            <Button
+                              variant="contained"
+                              size="small"
+                              onClick={(e) => handleDownloadClick(e, req)}
+                              sx={{
+                                backgroundColor: "#3b82f6",
+                                color: "white",
+                                "&:hover": {
+                                  backgroundColor: "#2563eb",
+                                },
+                                mr: 1,
+                              }}
+                            >
+                              Download
+                            </Button>
+<Menu
+                              anchorEl={downloadAnchorEl}
+                              open={Boolean(downloadAnchorEl)}
+                              onClose={handleDownloadClose}
+                            >
+                              <MenuItem onClick={handleDownloadExcel}>
+                                <ListItemIcon>
+                                  <TableChart fontSize="small" />
+                                </ListItemIcon>
+                                <ListItemText>Download Excel</ListItemText>
+                              </MenuItem>
+                              <MenuItem onClick={handleDownloadPDF}>
+                                <ListItemIcon>
+                                  <PictureAsPdf fontSize="small" />
+                                </ListItemIcon>
+                                <ListItemText>Download PDF</ListItemText>
+                              </MenuItem>
+                            </Menu>
+<Menu
+                              anchorEl={downloadAnchorEl}
+                              open={Boolean(downloadAnchorEl)}
+                              onClose={handleDownloadClose}
+                            >
+                              <MenuItem onClick={handleDownloadExcel}>
+                                <ListItemIcon>
+                                  <TableChart fontSize="small" />
+                                </ListItemIcon>
+                                <ListItemText>Download Excel</ListItemText>
+                              </MenuItem>
+                              <MenuItem onClick={handleDownloadPDF}>
+                                <ListItemIcon>
+                                  <PictureAsPdf fontSize="small" />
+                                </ListItemIcon>
+                                <ListItemText>Download PDF</ListItemText>
+                              </MenuItem>
+                            </Menu>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -893,7 +1058,7 @@ const RequestPage = () => {
                   count={totalCount}
                   rowsPerPage={rowsPerPage}
                   page={page}
-                  onPageChange={(event, newPage) => setPage(newPage)}
+                  onPageChange={(_, newPage) => setPage(newPage)}
                   onRowsPerPageChange={(event) => {
                     setRowsPerPage(parseInt(event.target.value, 10));
                     setPage(0);
@@ -965,7 +1130,7 @@ const RequestPage = () => {
                         freeSolo
                         options={projects.map((project) => project.project_name)}
                         value={selectedProjectName || ""}
-                        onInputChange={(event, newInputValue) => {
+                        onInputChange={(_, newInputValue) => {
                           setSelectedProjectName(newInputValue);
                           debouncedFetchProjects(newInputValue);
                           const selectedProject = projects.find(
@@ -973,7 +1138,7 @@ const RequestPage = () => {
                           );
                           field.onChange(selectedProject?._id || "");
                         }}
-                        onChange={(event, newValue) => {
+                        onChange={(_, newValue) => {
                           const selectedProject = projects.find(
                             (project) => project.project_name === newValue
                           );
@@ -1005,7 +1170,7 @@ const RequestPage = () => {
                         freeSolo
                         options={approvers.map((approver) => approver.user_name)}
                         value={selectedApproverName}
-                        onInputChange={(event, newInputValue) => {
+                        onInputChange={(_, newInputValue) => {
                           setSelectedApproverName(newInputValue);
                           debouncedFetchApprovers(newInputValue);
                           const selectedApprover = approvers.find(
@@ -1013,7 +1178,7 @@ const RequestPage = () => {
                           );
                           field.onChange(selectedApprover?._id || "");
                         }}
-                        onChange={(event, newValue) => {
+                        onChange={(_, newValue) => {
                           const selectedApprover = approvers.find(
                             (approver) => approver.user_name === newValue
                           );
@@ -1198,7 +1363,7 @@ const RequestPage = () => {
                         freeSolo
                         options={projects.map((project) => project.project_name)}
                         value={selectedProjectName || ""}
-                        onInputChange={(event, newInputValue) => {
+                        onInputChange={(_, newInputValue) => {
                           setSelectedProjectName(newInputValue);
                           debouncedFetchProjects(newInputValue);
                           const selectedProject = projects.find(
@@ -1206,7 +1371,7 @@ const RequestPage = () => {
                           );
                           field.onChange(selectedProject?._id || "");
                         }}
-                        onChange={(event, newValue) => {
+                        onChange={(_, newValue) => {
                           const selectedProject = projects.find(
                             (project) => project.project_name === newValue
                           );
@@ -1238,7 +1403,7 @@ const RequestPage = () => {
                         freeSolo
                         options={approvers.map((approver) => approver.user_name)}
                         value={selectedApproverName || ""}
-                        onInputChange={(event, newInputValue) => {
+                        onInputChange={(_, newInputValue) => {
                           setSelectedApproverName(newInputValue);
                           debouncedFetchApprovers(newInputValue);
                           const selectedApprover = approvers.find(
@@ -1246,7 +1411,7 @@ const RequestPage = () => {
                           );
                           field.onChange(selectedApprover?._id || "");
                         }}
-                        onChange={(event, newValue) => {
+                        onChange={(_, newValue) => {
                           const selectedApprover = approvers.find(
                             (approver) => approver.user_name === newValue
                           );
