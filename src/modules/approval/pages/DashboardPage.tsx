@@ -15,23 +15,6 @@ import {
 } from "recharts";
 import axios from "axios";
 
-interface ClaimData {
-  _id: string;
-  claim_status: string;
-  claim_start_date: string;
-  claim_end_date: string;
-}
-
-interface ApiResponse {
-  success: boolean;
-  data: {
-    pageData: ClaimData[];
-    pageInfo: {
-      totalItems: number;
-    };
-  };
-}
-
 interface DashboardStats {
   pending: number;
   approved: number;
