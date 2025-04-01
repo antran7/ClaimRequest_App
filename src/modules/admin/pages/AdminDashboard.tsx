@@ -17,7 +17,7 @@ ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarEle
 function AdminDashboard() {
   const navigate = useNavigate();
   const [pageNum] = useState(1); //  Track current page
-  const [pageSize] = useState(100); //  Items per page
+  const [pageSize] = useState(1000); //  Items per page
   const [totalPages, setTotalPages] = useState(1); // Total pages from API
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
@@ -121,28 +121,7 @@ function AdminDashboard() {
                   </div>
                 </div>
               </Grid>
-              <Grid item xs={2}>
-                <div className="processcing-card">
-                  <div className="processcing-card-left">
-                    <p>Request procescing</p>
-                    <p>20</p>
-                  </div>
-                  <div className="user-card-right">
-                    <Folder style={{ fontSize: "50px" }} />
-                  </div>
-                </div>
-              </Grid>
-              <Grid item xs={2}>
-                <div className="processced-card">
-                  <div className="processced-card-left">
-                    <p>Request processed</p>
-                    <p>20</p>
-                  </div>
-                  <div className="user-card-right">
-                    <Folder style={{ fontSize: "50px" }} />
-                  </div>
-                </div>
-              </Grid>
+            
             </Grid>
             <Grid container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
               <Grid item xs={6}>

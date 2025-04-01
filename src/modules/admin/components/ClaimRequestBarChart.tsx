@@ -53,7 +53,7 @@ function ClaimRequestBarChart() {
                 },
                 pageInfo: {
                   pageNum: 1,
-                  pageSize: 100, // Get more to handle client-side filtering
+                  pageSize: 1000, // Get more to handle client-side filtering
                 },
               },
               {
